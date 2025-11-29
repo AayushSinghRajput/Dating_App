@@ -1,0 +1,370 @@
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Animated,
+  Dimensions,
+  StatusBar,
+  ScrollView,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { login } from "../../utils/api";
+import Toast from "react-native-toast-message";
+
+const { width, height } = Dimensions.get("window");
+
+export default function AuthScreen() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // 👈 password toggle
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [slideAnim] = useState(new Animated.Value(50));
+  const router = useRouter();
+
+  // ---------------- ANIMATION ----------------
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  // ---------------- BACKEND LOGIN ----------------
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Toast.show({
+        type: "error",
+        text1: "Please enter both email and password",
+        position: "top",
+        visibilityTime: 3000,
+      });
+      return;
+    }
+
+    try {
+      const data = await login(email.trim(), password);
+      if (data?.token) {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Login successful !",
+          position: "top",
+          visibilityTime: 3000,
+        });
+        router.push("/(tabs)");
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Invalid credentials",
+          position: "top",
+          visibilityTime: 3000,
+        });
+      }
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Login Error",
+        text2: error.message || "Failed to login",
+        position: "top",
+        visibilityTime: 3000,
+      });
+      router.push('/auth/register');
+    }
+  };
+
+  return (
+    <>
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
+      <LinearGradient
+        colors={["#ff6b6b", "#ff8e8e", "#ffa8a8", "#ffb3ba"]}
+        style={styles.container}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardView}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            <Animated.View
+              style={[
+                styles.contentContainer,
+                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+              ]}
+            >
+              {/* Logo Section */}
+              <View style={styles.logoSection}>
+                <View style={styles.heartContainer}>
+                  <Ionicons name="heart" size={60} color="#fff" />
+                  <View style={styles.mountainAccent} />
+                </View>
+              </View>
+
+              {/* Title Section */}
+              <View style={styles.titleSection}>
+                <Text style={styles.title}>Soulmate</Text>
+                <View style={styles.titleUnderline} />
+                <Text style={styles.subtitle}>
+                  Discover love in the heart of Nepal 🏔️
+                </Text>
+                <Text style={styles.tagline}>
+                  &quot;जहाँ मन मिल्छ, त्यहीँ घर हुन्छ&quot;
+                </Text>
+              </View>
+
+              {/* Form Section */}
+              <View style={styles.formSection}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Email</Text>
+                  <TextInput
+                    placeholder="Enter your email"
+                    placeholderTextColor="#999"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    value={email}
+                    onChangeText={setEmail}
+                    style={styles.textInput}
+                  />
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Password</Text>
+                  <View style={styles.passwordWrapper}>
+                    <TextInput
+                      placeholder="Enter your password"
+                      placeholderTextColor="#999"
+                      secureTextEntry={!showPassword}
+                      value={password}
+                      onChangeText={setPassword}
+                      style={{
+                        flex: 1,
+                        fontSize: 16,
+                        color: "#333",
+                        paddingVertical: 14, // aligns text perfectly in center
+                      }}
+                    />
+
+                    <TouchableOpacity
+                      onPress={() => setShowPassword(!showPassword)}
+                      style={{ paddingHorizontal: 10 }}
+                    >
+                      <Ionicons
+                        name={showPassword ? "eye" : "eye-off"}
+                        size={24}
+                        color="#999"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={[
+                    styles.loginBtn,
+                    email && password && styles.loginBtnActive,
+                  ]}
+                  onPress={handleLogin}
+                  disabled={!email || !password}
+                >
+                  <Text style={styles.loginText}>Continue</Text>
+                </TouchableOpacity>
+
+                <View style={styles.registerContainer}>
+                  <Text style={styles.registerText}>
+                    Don&apos;t have an account?{" "}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => router.push("/auth/register")}
+                  >
+                    <Text style={styles.registerLink}>Create an account</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Animated.View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    padding: 24,
+    paddingTop: 60,
+  },
+  contentContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "space-between",
+    minHeight: height - 120,
+  },
+  logoSection: {
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 30,
+  },
+  heartContainer: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 140,
+    height: 140,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 70,
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.3)",
+    paddingTop: 10,
+  },
+  mountainAccent: {
+    position: "absolute",
+    bottom: 20,
+    width: 35,
+    height: 18,
+    backgroundColor: "rgba(255,255,255,0.8)",
+    borderRadius: 18,
+  },
+  titleSection: {
+    alignItems: "center",
+    marginBottom: 30,
+    flex: 1,
+    justifyContent: "center",
+  },
+  title: {
+    fontSize: 42,
+    fontWeight: "bold",
+    color: "#fff",
+    textAlign: "center",
+    marginBottom: 8,
+    textShadowColor: "rgba(0,0,0,0.3)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  titleUnderline: {
+    width: 60,
+    height: 3,
+    backgroundColor: "#fff",
+    borderRadius: 2,
+    marginBottom: 16,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: "#fff",
+    textAlign: "center",
+    marginBottom: 8,
+    fontWeight: "500",
+  },
+  tagline: {
+    fontSize: 14,
+    color: "rgba(255,255,255,0.9)",
+    textAlign: "center",
+    fontStyle: "italic",
+  },
+  formSection: {
+    width: "100%",
+    maxWidth: 320,
+    marginBottom: 40,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    color: "#fff",
+    fontWeight: "600",
+    marginBottom: 8,
+    marginLeft: 8,
+  },
+  textInput: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16, // reduced a bit for consistent alignment
+    fontSize: 16,
+    color: "#333",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  loginBtn: {
+    backgroundColor: "rgba(255,255,255,0.3)",
+    padding: 18,
+    borderRadius: 16,
+    alignItems: "center",
+    marginTop: 10,
+    marginBottom: 25,
+  },
+  loginBtnActive: {
+    backgroundColor: "rgba(255,106,136,0.9)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  loginText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  registerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 10,
+  },
+  registerText: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 14,
+  },
+  registerLink: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+    textDecorationLine: "underline",
+  },
+  passwordWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    paddingHorizontal: 12, // slightly less so inner input aligns nicely
+    height: 56, // same visual height as normal input
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+});
