@@ -1,8 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
-// 🌍 Base URL (adjust for your setup)
-export const BASE_URL = "http://192.168.1.70:5000";
+// 🌍 Base URL 
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 // 🔐 Token stored in memory
 let token: string | null = null;
@@ -27,7 +27,7 @@ export interface UserProfile {
 export interface Profile {
   _id?: string;
   user?: { username: string; email: string };
-  profileImage?: any; // File | { uri, name, type } for React Native
+  profileImage?: any; 
   location?: string;
   aboutMe?: string;
   gender?: string;

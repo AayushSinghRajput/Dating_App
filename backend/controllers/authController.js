@@ -1,12 +1,6 @@
 import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
-
-// Generate JWT
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
-  });
-};
+import { generateToken } from "../utils/generate_token.js";
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -56,12 +50,4 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// @desc    Get user profile (Protected)
-// @route   GET /api/auth/profile
 
-
-// export const getUserProfile = async (req, res) => {
-//   const user = await User.findById(req.user.id).select("-password");
-//   if (user) res.json(user);
-//   else res.status(404).json({ message: "User not found" });
-// };

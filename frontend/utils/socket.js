@@ -1,28 +1,28 @@
-import {io} from 'socket.io-client';
+import { io } from "socket.io-client";
 
-const SOCKET_URL = "http://192.168.1.66:5000";
+const SOCKET_URL = process.env.EXPO_PUBLIC_API_URL;
 
-export const socket = io(SOCKET_URL,{
-    autoConnect:false,
+export const socket = io(SOCKET_URL, {
+  autoConnect: false,
 });
 
 //optional helper functions
-export const connectSocket = () =>{
-    if(!socket.connected){
-        socket.connect();
-    }
+export const connectSocket = () => {
+  if (!socket.connected) {
+    socket.connect();
+  }
 };
 
-export const disconnectSocket = () =>{
-    if(socket.connected){
-        socket.disconnect();
-    }
+export const disconnectSocket = () => {
+  if (socket.connected) {
+    socket.disconnect();
+  }
 };
 
-export const joinRoom = (chatId) =>{
-    socket.emit("joinRoom",chatId);
+export const joinRoom = (chatId) => {
+  socket.emit("joinRoom", chatId);
 };
 
-export const sendMessage = (chatId,message) =>{
-    socket.emit("sendMessage",{chatId,message});
-}
+export const sendMessage = (chatId, message) => {
+  socket.emit("sendMessage", { chatId, message });
+};
