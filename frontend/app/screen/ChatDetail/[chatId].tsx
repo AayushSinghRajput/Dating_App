@@ -19,19 +19,21 @@ import { Message, getMessagesByChatId, sendMessageApi } from "@/utils/api";
 import {
   socket,
   connectSocket,
-  disconnectSocket,
   joinRoom,
   sendMessage as socketSendMessage,
 } from "@/utils/socket";
+import { useCall } from "@/contexts/CallContext";
 
 export default function ChatDetail() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { chatId, name, avatar } = params as {
+  const { chatId, name, avatar, otherUserId } = params as {
     chatId: string;
     name: string;
     avatar: string;
+    otherUserId: string;
   };
+  const { startCall } = useCall();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -80,7 +82,6 @@ export default function ChatDetail() {
     return () => {
       socket.off("newMessage");
       socket.off("messagesRead");
-      disconnectSocket();
     };
   }, [chatId]);
 
@@ -216,7 +217,12 @@ export default function ChatDetail() {
         item.fromMe ? styles.myMessageContainer : styles.theirMessageContainer,
       ]}
     >
-      <Image source={{ uri: item.senderAvatar }} style={styles.avatar} />
+      <Image
+        source={{
+          uri: item.senderAvatar || "https://placehold.co/100x100",
+        }}
+        style={styles.avatar}
+      />
 
       <Pressable
         onPress={() => item.failed && retrySendMessage(item)}
@@ -268,10 +274,16 @@ export default function ChatDetail() {
             <Text style={styles.profileName}>{name}</Text>
           </View>
           <View style={styles.headerIcons}>
-            <Pressable style={styles.iconButton}>
+            <Pressable
+              style={styles.iconButton}
+              onPress={() => startCall(otherUserId, chatId, "audio", name, avatar)}
+            >
               <Ionicons name="call-outline" size={22} color="#e63946" />
             </Pressable>
-            <Pressable style={styles.iconButton}>
+            <Pressable
+              style={styles.iconButton}
+              onPress={() => startCall(otherUserId, chatId, "video", name, avatar)}
+            >
               <Ionicons name="videocam-outline" size={22} color="#e63946" />
             </Pressable>
             <Pressable style={styles.iconButton}>
@@ -360,12 +372,12 @@ const styles = StyleSheet.create({
   theirMessageContainer: { justifyContent: "flex-start" },
   avatar: { width: 32, height: 32, borderRadius: 16, marginRight: 6 },
   messageBubble: { maxWidth: "75%", borderRadius: 16, padding: 10 },
-  myMessage: { backgroundColor: "#4A90E2", alignSelf: "flex-end" },
+  myMessage: { backgroundColor: "#e63946", alignSelf: "flex-end" },
   theirMessage: { backgroundColor: "#E5E5EA", alignSelf: "flex-start" },
   myMessageText: { color: "#fff" },
   theirMessageText: { color: "#000" },
   timestamp: { fontSize: 10, marginTop: 4 },
-  myTimestamp: { color: "#d0e8ff", textAlign: "right" },
+  myTimestamp: { color: "#ffd9dc", textAlign: "right" },
   theirTimestamp: { color: "#555", textAlign: "left" },
   inputRow: {
     flexDirection: "row",
@@ -385,7 +397,7 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     marginLeft: 6,
-    backgroundColor: "#4A90E2",
+    backgroundColor: "#e63946",
     borderRadius: 20,
     padding: 10,
   },

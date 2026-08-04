@@ -71,6 +71,7 @@ export interface Message {
 
 export interface Chat {
   id: string;
+  otherUserId?: string;
   userName: string;
   avatar: string;
   lastMessage?: string;
@@ -295,6 +296,25 @@ export const getAllChats = async () => {
     console.error("Error fetching chats:", error.message);
     throw error; // Re-throw error so calling code can handle it
   }
+};
+
+//Create a chat with another user, or get the existing one
+export const createOrGetChat = async (
+  receiverId: string
+): Promise<{ _id: string }> => {
+  const token = await AsyncStorage.getItem("token");
+  if (!token) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/chats`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ receiverId }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to create chat");
+  return data;
 };
 
 //Get chatbyId

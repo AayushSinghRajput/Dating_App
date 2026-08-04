@@ -17,6 +17,7 @@ import {
   likeProfile,
   passProfile,
   getMatches,
+  createOrGetChat,
 } from "@/utils/api";
 import Toast from "react-native-toast-message";
 
@@ -232,6 +233,30 @@ export default function UserCard({ user, index = 0 }) {
     }
   };
 
+  const handleMessage = async () => {
+    try {
+      const chat = await createOrGetChat(user.userId || user.id);
+      router.push({
+        pathname: "/screen/ChatDetail/[chatId]",
+        params: {
+          chatId: chat._id,
+          name: user.name,
+          avatar: user.profileImage,
+          currentUserId: user.id,
+          otherUserId: user.userId || user.id,
+        },
+      });
+    } catch (err) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: err.message || "Failed to open chat.",
+        position: "top",
+        visibilityTime: 3000,
+      });
+    }
+  };
+
   /** ✅ Fetch Matches when both liked */
   const fetchMatches = async () => {
     try {
@@ -326,20 +351,7 @@ export default function UserCard({ user, index = 0 }) {
                 </LinearGradient>
               </Pressable>
 
-              <Pressable
-                onPress={() =>
-                  router.push({
-                    pathname: "/screen/ChatDetail/[chatId]",
-                    params: {
-                      chatId: user?.chatId || user?.id,
-                      name: user.name,
-                      avatar: user.profileImage,
-                      currentUserId: user.id,
-                    },
-                  })
-                }
-                style={styles.messageButton}
-              >
+              <Pressable onPress={handleMessage} style={styles.messageButton}>
                 <Ionicons
                   name="chatbubble-ellipses"
                   size={20}

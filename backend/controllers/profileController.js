@@ -76,6 +76,7 @@ export const getAllProfiles = async (req, res) => {
 
     const users = profiles.map(p => ({
       id: p._id,
+      userId: p.user && p.user._id,
       name: p.name || (p.user && p.user.username),
       age: p.age,
       profileImage: p.profileImage,

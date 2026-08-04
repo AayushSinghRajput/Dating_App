@@ -23,10 +23,14 @@ app.use(
   }),
 );
 app.use(express.json());
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.originalUrl}`);
+  next();
+});
 
 //HTTP server + socket.io
 const server = http.createServer(app);
-const io = new Server(server, { cores: { origin: "*" } });
+const io = new Server(server, { cors: { origin: "*" } });
 //setup socket logic
 setupSocket(io);
 

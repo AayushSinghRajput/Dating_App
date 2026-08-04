@@ -9,31 +9,36 @@ export default function Navbar() {
   const notificationCount = notifications.length;
 
   return (
-    <SafeAreaView style={styles.navbar}>
-      {/* Left Side - Logo + App Name + Flag */}
-      <View style={styles.left}>
-        <Ionicons name="heart" size={26} color="#e63946" />
-        <Text style={styles.title}>Soulmate</Text>
-        <Text style={styles.flag}>🇳🇵</Text>
-      </View>
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <View style={styles.navbar}>
+        {/* Left Side - Logo + App Name + Flag */}
+        <View style={styles.left}>
+          <Ionicons name="heart" size={26} color="#e63946" />
+          <Text style={styles.title}>Soulmate</Text>
+          <Text style={styles.flag}>🇳🇵</Text>
+        </View>
 
-      {/* Right Side - Notifications */}
-      <Pressable
-        style={styles.notificationWrapper}
-        onPress={() => router.push("/screen/Notification")}
-      >
-        <Ionicons name="notifications-outline" size={26} color="#444" />
-        {notificationCount > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{notificationCount}</Text>
-          </View>
-        )}
-      </Pressable>
+        {/* Right Side - Notifications */}
+        <Pressable
+          style={styles.notificationWrapper}
+          onPress={() => router.push("/screen/Notification")}
+        >
+          <Ionicons name="notifications-outline" size={26} color="#444" />
+          {notificationCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{notificationCount}</Text>
+            </View>
+          )}
+        </Pressable>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    backgroundColor: "#fff",
+  },
   navbar: {
     height: 65,
     flexDirection: "row",

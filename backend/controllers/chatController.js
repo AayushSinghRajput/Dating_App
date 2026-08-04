@@ -10,29 +10,35 @@ export const getUserChats = async (req, res) => {
       .populate("lastMessage")
       .sort({ updatedAt: -1 });
 
-    const chatList = await Promise.all(
-      chats.map(async (chat) => {
-        const otherUser = chat.participants.find(
-          (p) => p._id.toString() !== userId
-        );
+    const chatList = (
+      await Promise.all(
+        chats.map(async (chat) => {
+          const otherUser = chat.participants.find(
+            (p) => p && p._id.toString() !== userId
+          );
 
-        const profile = await Profile.findOne({ user: otherUser._id });
+          // Skip chats with a missing/unresolvable participant (e.g. stale data)
+          if (!otherUser) return null;
 
-        return {
-          id: chat._id,
-          userName: otherUser.username,
-          avatar: profile?.profileImage || "https://placehold.co/100x100",
-          lastMessage: chat.lastMessage?.text || "Say hi 👋",
-          time: chat.lastMessage?.createdAt || chat.updatedAt,
-          unread: 0,
-        };
-      })
-    );
+          const profile = await Profile.findOne({ user: otherUser._id });
+
+          return {
+            id: chat._id,
+            otherUserId: otherUser._id,
+            userName: otherUser.username,
+            avatar: profile?.profileImage || "https://placehold.co/100x100",
+            lastMessage: chat.lastMessage?.text || "Say hi 👋",
+            time: chat.lastMessage?.createdAt || chat.updatedAt,
+            unread: 0,
+          };
+        })
+      )
+    ).filter(Boolean);
 
     res.status(200).json(chatList);
   } catch (error) {
     console.error("Error fetching chats:", error);
-    res.status(500).json({ message: "Error fetching chats", error });
+    res.status(500).json({ message: error.message || "Error fetching chats" });
   }
 };
 

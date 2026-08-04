@@ -1,4 +1,5 @@
 import { io } from "socket.io-client";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SOCKET_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -7,10 +8,12 @@ export const socket = io(SOCKET_URL, {
 });
 
 //optional helper functions
-export const connectSocket = () => {
-  if (!socket.connected) {
-    socket.connect();
-  }
+export const connectSocket = async () => {
+  if (socket.connected) return;
+  const token = await AsyncStorage.getItem("token");
+  if (!token) return;
+  socket.auth = { token };
+  socket.connect();
 };
 
 export const disconnectSocket = () => {

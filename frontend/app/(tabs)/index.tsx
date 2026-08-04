@@ -61,6 +61,7 @@ export default function Home() {
     <View style={styles.container}>
       <Navbar />
       <FlatList
+        style={styles.list}
         data={users}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <UserCard user={item} />}
@@ -79,6 +80,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+  },
+  list: {
+    flex: 1,
   },
   centered: {
     flex: 1,

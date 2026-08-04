@@ -1,0 +1,1143 @@
+env: load .env
+env: export EXPO_PUBLIC_API_URL
+› Port 8081 is being used by another process
+Input is required, but 'npx expo' is in non-interactive mode.
+Required input:
+> Use port 8082 instead?
+› Skipping dev server
+› Building app...
+Configuration on demand is an incubating feature.
+> Task :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:processResources UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:shared:compileKotlin UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:shared:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:compileJava NO-SOURCE
+> Task :gradle-plugin:shared:processResources NO-SOURCE
+> Task :gradle-plugin:shared:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:processResources NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:jar UP-TO-DATE
+> Task :gradle-plugin:shared:jar UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:settings-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:jar UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:compileKotlin UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:jar UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-module-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-dev-launcher-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-module-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-module-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:react-native-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:classes UP-TO-DATE
+> Task :expo-dev-launcher-gradle-plugin:pluginDescriptors
+> Task :gradle-plugin:react-native-gradle-plugin:jar UP-TO-DATE
+> Task :expo-dev-launcher-gradle-plugin:processResources
+> Task :expo-gradle-plugin:expo-autolinking-plugin:compileKotlin UP-TO-DATE
+> Task :expo-module-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:compileJava NO-SOURCE
+> Task :expo-module-gradle-plugin:compileJava NO-SOURCE
+> Task :expo-module-gradle-plugin:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:processResources UP-TO-DATE
+> Task :expo-module-gradle-plugin:jar UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:jar UP-TO-DATE
+> Task :expo-dev-launcher-gradle-plugin:compileKotlin
+> Task :expo-dev-launcher-gradle-plugin:compileJava NO-SOURCE
+> Task :expo-dev-launcher-gradle-plugin:classes
+> Task :expo-dev-launcher-gradle-plugin:jar
+
+> Configure project :
+[32m[ExpoRootProject][0m Using the following versions:
+  - buildTools:  [32m36.0.0[0m
+  - minSdk:      [32m24[0m
+  - compileSdk:  [32m36[0m
+  - targetSdk:   [32m36[0m
+  - ndk:         [32m27.1.12297006[0m
+  - kotlin:      [32m2.1.20[0m
+  - ksp:         [32m2.1.20-2.0.1[0m
+
+> Configure project :app
+ ??  [33mApplying gradle plugin[0m '[32mexpo-dev-launcher-gradle-plugin[0m'
+
+> Configure project :expo
+
+Using expo modules
+  - [32mexpo-constants[0m (18.0.8)
+  - [32mexpo-dev-client[0m (6.0.21)
+  - [32mexpo-dev-launcher[0m (6.0.21)
+  - [32mexpo-dev-menu[0m (7.0.19)
+  - [32mexpo-dev-menu-interface[0m (2.0.0)
+  - [32mexpo-json-utils[0m (0.15.0)
+  - [32mexpo-manifests[0m (1.0.11)
+  - [32mexpo-modules-core[0m (3.0.15)
+  - [32mexpo-updates-interface[0m (2.0.0)
+  - [33m[?][0m [32mexpo-asset[0m (12.0.8)
+  - [33m[?][0m [32mexpo-crypto[0m (15.0.7)
+  - [33m[?][0m [32mexpo-file-system[0m (19.0.11)
+  - [33m[?][0m [32mexpo-font[0m (14.0.7)
+  - [33m[?][0m [32mexpo-haptics[0m (15.0.6)
+  - [33m[?][0m [32mexpo-image[0m (3.0.7)
+  - [33m[?][0m [32mexpo-image-loader[0m (6.0.0)
+  - [33m[?][0m [32mexpo-image-picker[0m (17.0.8)
+  - [33m[?][0m [32mexpo-keep-awake[0m (15.0.6)
+  - [33m[?][0m [32mexpo-linear-gradient[0m (15.0.6)
+  - [33m[?][0m [32mexpo-linking[0m (8.0.8)
+  - [33m[?][0m [32mexpo-splash-screen[0m (31.0.8)
+  - [33m[?][0m [32mexpo-system-ui[0m (6.0.7)
+  - [33m[?][0m [32mexpo-web-browser[0m (15.0.6)
+
+
+> Task :expo-dev-launcher:preBuild UP-TO-DATE
+> Task :expo-manifests:preBuild UP-TO-DATE
+> Task :react-native-get-random-values:preBuild UP-TO-DATE
+> Task :expo-json-utils:preBuild UP-TO-DATE
+> Task :react-native-incall-manager:preBuild UP-TO-DATE
+> Task :expo-dev-menu:preBuild UP-TO-DATE
+> Task :expo-dev-client:preBuild UP-TO-DATE
+> Task :expo-modules-core:preBuild UP-TO-DATE
+> Task :expo-dev-menu-interface:preBuild UP-TO-DATE
+> Task :expo-updates-interface:preBuild UP-TO-DATE
+> Task :react-native-get-random-values:preDebugBuild UP-TO-DATE
+> Task :expo-dev-launcher:preDebugBuild UP-TO-DATE
+> Task :expo-dev-menu:preDebugBuild UP-TO-DATE
+> Task :expo-dev-client:preDebugBuild UP-TO-DATE
+> Task :expo-modules-core:preDebugBuild UP-TO-DATE
+> Task :expo-manifests:preDebugBuild UP-TO-DATE
+> Task :expo-dev-menu-interface:preDebugBuild UP-TO-DATE
+> Task :expo-json-utils:preDebugBuild UP-TO-DATE
+> Task :react-native-incall-manager:preDebugBuild UP-TO-DATE
+> Task :expo-updates-interface:preDebugBuild UP-TO-DATE
+> Task :expo-dev-menu:writeDebugAarMetadata
+> Task :react-native-incall-manager:writeDebugAarMetadata
+> Task :expo-manifests:writeDebugAarMetadata
+> Task :expo-json-utils:writeDebugAarMetadata
+> Task :expo-updates-interface:writeDebugAarMetadata
+> Task :react-native-get-random-values:writeDebugAarMetadata
+> Task :expo-dev-menu-interface:writeDebugAarMetadata
+> Task :expo-dev-client:writeDebugAarMetadata
+> Task :react-native-webrtc:preBuild UP-TO-DATE
+> Task :expo-modules-core:writeDebugAarMetadata
+> Task :expo-dev-launcher:writeDebugAarMetadata
+> Task :react-native-webrtc:preDebugBuild UP-TO-DATE
+> Task :react-native-webrtc:writeDebugAarMetadata
+> Task :expo-dev-menu:generateDebugResValues
+> Task :expo-dev-launcher:generateDebugResValues
+> Task :expo-json-utils:generateDebugResValues
+> Task :expo-dev-menu-interface:generateDebugResValues
+> Task :expo-dev-client:generateDebugResValues
+> Task :react-native-reanimated:assertMinimalReactNativeVersionTask
+> Task :react-native-reanimated:assertNewArchitectureEnabledTask SKIPPED
+> Task :expo-dev-menu:generateDebugResources
+> Task :expo-json-utils:generateDebugResources
+> Task :expo-dev-menu-interface:generateDebugResources
+> Task :expo-dev-client:generateDebugResources
+> Task :expo-manifests:generateDebugResValues FROM-CACHE
+> Task :expo-dev-launcher:generateDebugResources
+> Task :expo-manifests:generateDebugResources FROM-CACHE
+> Task :react-native-worklets:assertMinimalReactNativeVersionTask
+> Task :react-native-worklets:assertNewArchitectureEnabledTask SKIPPED
+> Task :expo-dev-menu-interface:packageDebugResources
+> Task :expo-modules-core:generateDebugResValues FROM-CACHE
+> Task :expo-json-utils:packageDebugResources
+> Task :expo-dev-client:packageDebugResources
+> Task :expo-modules-core:generateDebugResources FROM-CACHE
+> Task :expo-updates-interface:generateDebugResValues FROM-CACHE
+> Task :expo-manifests:packageDebugResources
+> Task :react-native-get-random-values:generateDebugResValues FROM-CACHE
+> Task :react-native-get-random-values:generateDebugResources FROM-CACHE
+> Task :expo-updates-interface:generateDebugResources FROM-CACHE
+> Task :expo-modules-core:packageDebugResources
+> Task :react-native-incall-manager:generateDebugResValues FROM-CACHE
+> Task :react-native-reanimated:assertWorkletsVersionTask
+> Task :react-native-webrtc:generateDebugResValues FROM-CACHE
+> Task :react-native-incall-manager:generateDebugResources FROM-CACHE
+> Task :react-native-get-random-values:packageDebugResources
+> Task :react-native-webrtc:generateDebugResources
+> Task :expo-updates-interface:packageDebugResources
+> Task :expo-dev-menu-interface:extractDeepLinksDebug
+> Task :expo-dev-client:extractDeepLinksDebug
+> Task :react-native-webrtc:packageDebugResources
+> Task :react-native-async-storage_async-storage:generateCodegenSchemaFromJavaScript
+> Task :expo-json-utils:extractDeepLinksDebug FROM-CACHE
+> Task :react-native-incall-manager:packageDebugResources
+> Task :expo-manifests:extractDeepLinksDebug FROM-CACHE
+> Task :expo-dev-launcher:packageDebugResources
+> Task :expo-dev-launcher:extractDeepLinksDebug FROM-CACHE
+> Task :react-native-gesture-handler:generateCodegenSchemaFromJavaScript
+> Task :expo-constants:createExpoConfig
+> Task :expo-constants:preBuild
+> Task :expo-constants:preDebugBuild
+> Task :expo-constants:writeDebugAarMetadata
+> Task :react-native-safe-area-context:generateCodegenSchemaFromJavaScript
+> Task :expo-constants:generateDebugResValues FROM-CACHE
+> Task :expo-constants:generateDebugResources FROM-CACHE
+> Task :react-native-screens:generateCodegenSchemaFromJavaScript
+> Task :react-native-webview:generateCodegenSchemaFromJavaScript
+> Task :expo-constants:packageDebugResources
+> Task :expo-constants:extractDeepLinksDebug FROM-CACHE
+> Task :expo-dev-menu-interface:processDebugManifest
+> Task :expo-constants:processDebugManifest
+> Task :expo-dev-launcher:processDebugManifest
+> Task :expo-manifests:processDebugManifest
+> Task :expo-json-utils:processDebugManifest
+> Task :expo-dev-menu:packageDebugResources
+> Task :expo-dev-client:processDebugManifest
+> Task :react-native-get-random-values:extractDeepLinksDebug FROM-CACHE
+> Task :expo-updates-interface:extractDeepLinksDebug FROM-CACHE
+> Task :expo-modules-core:extractDeepLinksDebug FROM-CACHE
+> Task :react-native-incall-manager:extractDeepLinksDebug FROM-CACHE
+> Task :expo-dev-menu:extractDeepLinksDebug FROM-CACHE
+> Task :react-native-webrtc:extractDeepLinksDebug FROM-CACHE
+> Task :expo-dev-menu:processDebugManifest
+
+> Task :react-native-get-random-values:processDebugManifest
+package="org.linusu" found in source AndroidManifest.xml: D:\Coding\Dating_App\frontend\node_modules\react-native-get-random-values\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="org.linusu" from the source AndroidManifest.xml: D:\Coding\Dating_App\frontend\node_modules\react-native-get-random-values\android\src\main\AndroidManifest.xml.
+
+> Task :expo-modules-core:processDebugManifest
+D:\Coding\Dating_App\frontend\node_modules\expo-modules-core\android\src\main\AndroidManifest.xml:8:9-11:45 Warning:
+	meta-data#com.facebook.soloader.enabled@android:value was tagged at AndroidManifest.xml:8 to replace other declarations but no other declaration present
+
+> Task :expo-updates-interface:processDebugManifest
+
+> Task :react-native-incall-manager:processDebugManifest
+package="com.zxcpoiu.incallmanager" found in source AndroidManifest.xml: D:\Coding\Dating_App\frontend\node_modules\react-native-incall-manager\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.zxcpoiu.incallmanager" from the source AndroidManifest.xml: D:\Coding\Dating_App\frontend\node_modules\react-native-incall-manager\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-webrtc:processDebugManifest
+package="com.oney.WebRTCModule" found in source AndroidManifest.xml: D:\Coding\Dating_App\frontend\node_modules\react-native-webrtc\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.oney.WebRTCModule" from the source AndroidManifest.xml: D:\Coding\Dating_App\frontend\node_modules\react-native-webrtc\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-worklets:generateCodegenSchemaFromJavaScript
+> Task :react-native-reanimated:generateCodegenSchemaFromJavaScript
+> Task :expo-constants:compileDebugLibraryResources
+> Task :expo-json-utils:compileDebugLibraryResources
+> Task :expo-dev-menu-interface:compileDebugLibraryResources
+> Task :expo-dev-client:compileDebugLibraryResources
+> Task :expo-manifests:compileDebugLibraryResources
+> Task :expo:generatePackagesList
+> Task :expo:preBuild
+> Task :expo:preDebugBuild
+> Task :react-native-async-storage_async-storage:generateCodegenArtifactsFromSchema
+> Task :react-native-async-storage_async-storage:preBuild
+> Task :react-native-async-storage_async-storage:preDebugBuild
+> Task :react-native-safe-area-context:generateCodegenArtifactsFromSchema
+> Task :react-native-safe-area-context:preBuild
+> Task :react-native-safe-area-context:preDebugBuild
+> Task :react-native-gesture-handler:generateCodegenArtifactsFromSchema
+> Task :react-native-gesture-handler:preBuild
+> Task :react-native-gesture-handler:preDebugBuild
+> Task :react-native-screens:generateCodegenArtifactsFromSchema
+> Task :react-native-screens:preBuild
+> Task :react-native-screens:preDebugBuild
+> Task :react-native-async-storage_async-storage:writeDebugAarMetadata
+> Task :expo:generateDebugResValues FROM-CACHE
+> Task :react-native-screens:writeDebugAarMetadata
+> Task :react-native-async-storage_async-storage:generateDebugResValues FROM-CACHE
+> Task :expo:generateDebugResources FROM-CACHE
+> Task :react-native-async-storage_async-storage:generateDebugResources FROM-CACHE
+> Task :expo:packageDebugResources
+> Task :react-native-async-storage_async-storage:packageDebugResources
+> Task :react-native-safe-area-context:generateDebugResValues FROM-CACHE
+> Task :react-native-gesture-handler:generateDebugResValues FROM-CACHE
+> Task :react-native-safe-area-context:generateDebugResources FROM-CACHE
+> Task :react-native-webview:generateCodegenArtifactsFromSchema
+> Task :react-native-webview:preBuild
+> Task :react-native-webview:preDebugBuild
+> Task :react-native-gesture-handler:generateDebugResources FROM-CACHE
+> Task :react-native-webview:writeDebugAarMetadata
+> Task :react-native-screens:generateDebugResValues FROM-CACHE
+> Task :react-native-safe-area-context:packageDebugResources
+> Task :react-native-webview:generateDebugResValues FROM-CACHE
+> Task :react-native-reanimated:generateCodegenArtifactsFromSchema
+> Task :react-native-webview:generateDebugResources
+> Task :react-native-worklets:generateCodegenArtifactsFromSchema
+> Task :react-native-webview:packageDebugResources
+> Task :expo:extractDeepLinksDebug FROM-CACHE
+> Task :react-native-gesture-handler:packageDebugResources
+> Task :react-native-gesture-handler:writeDebugAarMetadata
+> Task :react-native-async-storage_async-storage:extractDeepLinksDebug FROM-CACHE
+> Task :react-native-gesture-handler:extractDeepLinksDebug FROM-CACHE
+> Task :react-native-screens:generateDebugResources
+> Task :react-native-worklets:prepareWorkletsHeadersForPrefabs
+> Task :react-native-worklets:preBuild
+> Task :react-native-worklets:preDebugBuild
+> Task :react-native-screens:packageDebugResources
+> Task :react-native-worklets:generateDebugResValues FROM-CACHE
+> Task :react-native-worklets:generateDebugResources FROM-CACHE
+> Task :react-native-worklets:packageDebugResources
+> Task :react-native-safe-area-context:extractDeepLinksDebug FROM-CACHE
+> Task :react-native-reanimated:prepareReanimatedHeadersForPrefabs
+> Task :react-native-reanimated:preBuild
+> Task :react-native-reanimated:preDebugBuild
+> Task :react-native-safe-area-context:writeDebugAarMetadata
+> Task :react-native-worklets:writeDebugAarMetadata
+> Task :expo:writeDebugAarMetadata
+> Task :react-native-screens:extractDeepLinksDebug FROM-CACHE
+> Task :react-native-reanimated:generateDebugResValues FROM-CACHE
+> Task :react-native-gesture-handler:processDebugManifest
+> Task :react-native-webview:extractDeepLinksDebug FROM-CACHE
+> Task :react-native-reanimated:generateDebugResources FROM-CACHE
+> Task :react-native-worklets:extractDeepLinksDebug FROM-CACHE
+> Task :expo:processDebugManifest
+> Task :expo:compileDebugLibraryResources FROM-CACHE
+
+> Task :react-native-safe-area-context:processDebugManifest
+package="com.th3rdwave.safeareacontext" found in source AndroidManifest.xml: D:\Coding\Dating_App\frontend\node_modules\react-native-safe-area-context\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.th3rdwave.safeareacontext" from the source AndroidManifest.xml: D:\Coding\Dating_App\frontend\node_modules\react-native-safe-area-context\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-reanimated:packageDebugResources
+> Task :react-native-worklets:processDebugManifest
+> Task :react-native-reanimated:extractDeepLinksDebug FROM-CACHE
+> Task :react-native-reanimated:writeDebugAarMetadata
+> Task :expo-modules-core:compileDebugLibraryResources FROM-CACHE
+> Task :expo:parseDebugLocalResources
+> Task :expo-manifests:parseDebugLocalResources
+> Task :expo-modules-core:parseDebugLocalResources FROM-CACHE
+> Task :expo-dev-menu:parseDebugLocalResources
+> Task :expo-manifests:generateDebugRFile
+> Task :expo-dev-menu:generateDebugRFile
+> Task :expo-updates-interface:compileDebugLibraryResources FROM-CACHE
+> Task :react-native-async-storage_async-storage:compileDebugLibraryResources FROM-CACHE
+> Task :expo-constants:parseDebugLocalResources FROM-CACHE
+> Task :expo-updates-interface:parseDebugLocalResources FROM-CACHE
+> Task :react-native-async-storage_async-storage:parseDebugLocalResources FROM-CACHE
+> Task :expo-constants:generateDebugRFile
+> Task :expo-dev-menu-interface:parseDebugLocalResources
+> Task :react-native-gesture-handler:compileDebugLibraryResources FROM-CACHE
+> Task :expo-dev-client:parseDebugLocalResources
+> Task :expo-dev-launcher:parseDebugLocalResources
+> Task :react-native-gesture-handler:parseDebugLocalResources FROM-CACHE
+> Task :react-native-webview:processDebugManifest
+> Task :expo-modules-core:generateDebugRFile
+> Task :react-native-screens:processDebugManifest
+> Task :expo-json-utils:parseDebugLocalResources
+> Task :react-native-get-random-values:compileDebugLibraryResources FROM-CACHE
+> Task :expo-dev-menu-interface:generateDebugRFile
+> Task :react-native-incall-manager:compileDebugLibraryResources FROM-CACHE
+> Task :react-native-reanimated:compileDebugLibraryResources FROM-CACHE
+
+> Task :react-native-async-storage_async-storage:processDebugManifest
+package="com.reactnativecommunity.asyncstorage" found in source AndroidManifest.xml: D:\Coding\Dating_App\frontend\node_modules\@react-native-async-storage\async-storage\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.reactnativecommunity.asyncstorage" from the source AndroidManifest.xml: D:\Coding\Dating_App\frontend\node_modules\@react-native-async-storage\async-storage\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-get-random-values:parseDebugLocalResources FROM-CACHE
+> Task :expo-dev-client:generateDebugRFile
+> Task :react-native-incall-manager:parseDebugLocalResources FROM-CACHE
+> Task :react-native-safe-area-context:compileDebugLibraryResources FROM-CACHE
+> Task :react-native-gesture-handler:generateDebugRFile
+> Task :react-native-reanimated:parseDebugLocalResources FROM-CACHE
+> Task :react-native-safe-area-context:parseDebugLocalResources FROM-CACHE
+> Task :react-native-webrtc:compileDebugLibraryResources
+> Task :react-native-async-storage_async-storage:generateDebugRFile
+> Task :react-native-screens:parseDebugLocalResources
+> Task :react-native-get-random-values:generateDebugRFile
+> Task :react-native-reanimated:generateDebugRFile
+> Task :expo-updates-interface:generateDebugRFile
+> Task :expo-json-utils:generateDebugRFile
+> Task :expo-dev-launcher:generateDebugRFile
+> Task :expo:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-safe-area-context:generateDebugRFile
+> Task :expo-constants:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-worklets:compileDebugLibraryResources FROM-CACHE
+> Task :react-native-webrtc:parseDebugLocalResources
+> Task :expo:generateDebugRFile
+> Task :react-native-screens:generateDebugRFile
+> Task :expo-modules-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-worklets:parseDebugLocalResources FROM-CACHE
+> Task :react-native-incall-manager:generateDebugRFile
+> Task :react-native-reanimated:processDebugManifest
+> Task :expo-dev-launcher:compileDebugLibraryResources
+> Task :expo-dev-client:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-dev-menu:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-dev-launcher:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-webview:compileDebugLibraryResources
+> Task :expo-dev-menu-interface:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-webview:parseDebugLocalResources
+> Task :react-native-screens:compileDebugLibraryResources
+> Task :expo-json-utils:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-webrtc:generateDebugRFile
+> Task :expo-manifests:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo:generateDebugBuildConfig
+> Task :expo-dev-menu:generateDebugBuildConfig
+> Task :react-native-worklets:generateDebugRFile
+> Task :expo-updates-interface:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-dev-menu-interface:generateDebugBuildConfig
+> Task :expo-constants:generateDebugBuildConfig
+> Task :expo-modules-core:generateDebugBuildConfig
+> Task :expo-json-utils:generateDebugBuildConfig
+> Task :expo:javaPreCompileDebug
+> Task :expo-updates-interface:generateDebugBuildConfig
+> Task :expo-updates-interface:javaPreCompileDebug FROM-CACHE
+> Task :expo-manifests:generateDebugBuildConfig
+> Task :expo-manifests:javaPreCompileDebug FROM-CACHE
+> Task :react-native-gesture-handler:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-async-storage_async-storage:generateDebugBuildConfig
+> Task :react-native-async-storage_async-storage:javaPreCompileDebug FROM-CACHE
+> Task :react-native-gesture-handler:generateDebugBuildConfig
+> Task :react-native-reanimated:generateDebugBuildConfig
+> Task :react-native-reanimated:javaPreCompileDebug FROM-CACHE
+> Task :react-native-worklets:generateDebugBuildConfig
+> Task :react-native-worklets:javaPreCompileDebug FROM-CACHE
+> Task :expo-dev-menu-interface:javaPreCompileDebug
+> Task :react-native-gesture-handler:javaPreCompileDebug FROM-CACHE
+> Task :expo-dev-menu:compileDebugLibraryResources
+> Task :react-native-get-random-values:generateDebugBuildConfig
+> Task :react-native-get-random-values:javaPreCompileDebug FROM-CACHE
+> Task :react-native-incall-manager:generateDebugBuildConfig
+> Task :react-native-incall-manager:javaPreCompileDebug FROM-CACHE
+> Task :expo-constants:javaPreCompileDebug
+> Task :react-native-safe-area-context:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-safe-area-context:generateDebugBuildConfig
+> Task :expo-dev-menu:javaPreCompileDebug
+> Task :react-native-screens:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-screens:generateDebugBuildConfig
+> Task :expo-json-utils:javaPreCompileDebug
+> Task :react-native-webrtc:generateDebugBuildConfig
+> Task :react-native-webrtc:javaPreCompileDebug FROM-CACHE
+> Task :react-native-webview:generateDebugRFile
+> Task :expo-dev-client:dataBindingMergeDependencyArtifactsDebug
+> Task :react-native-webview:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-webview:generateDebugBuildConfig
+> Task :expo-dev-client:dataBindingGenBaseClassesDebug
+> Task :expo-dev-client:generateDebugBuildConfig
+> Task :expo-dev-client:javaPreCompileDebug FROM-CACHE
+> Task :expo:mergeDebugShaders
+> Task :expo:compileDebugShaders NO-SOURCE
+> Task :expo:generateDebugAssets UP-TO-DATE
+> Task :expo-constants:mergeDebugShaders
+> Task :expo-constants:compileDebugShaders NO-SOURCE
+> Task :expo-constants:generateDebugAssets UP-TO-DATE
+> Task :expo:mergeDebugAssets
+> Task :expo-dev-client:mergeDebugShaders
+> Task :expo-dev-menu:mergeDebugShaders
+> Task :expo-constants:mergeDebugAssets
+> Task :expo-dev-menu:compileDebugShaders NO-SOURCE
+> Task :expo-dev-client:compileDebugShaders NO-SOURCE
+> Task :expo-dev-menu:generateDebugAssets UP-TO-DATE
+> Task :expo-dev-client:generateDebugAssets UP-TO-DATE
+> Task :expo-dev-menu:mergeDebugAssets
+> Task :expo-dev-menu-interface:mergeDebugShaders
+> Task :expo-dev-menu-interface:compileDebugShaders NO-SOURCE
+> Task :expo-dev-client:mergeDebugAssets
+> Task :expo-dev-menu-interface:generateDebugAssets UP-TO-DATE
+> Task :expo-json-utils:mergeDebugShaders
+> Task :expo-json-utils:compileDebugShaders NO-SOURCE
+> Task :expo-json-utils:generateDebugAssets UP-TO-DATE
+> Task :expo-dev-menu-interface:mergeDebugAssets
+> Task :expo-manifests:mergeDebugShaders
+> Task :expo-json-utils:mergeDebugAssets
+> Task :expo-manifests:compileDebugShaders NO-SOURCE
+> Task :expo-manifests:generateDebugAssets UP-TO-DATE
+> Task :expo-updates-interface:mergeDebugShaders
+> Task :expo-updates-interface:compileDebugShaders NO-SOURCE
+> Task :expo-updates-interface:generateDebugAssets UP-TO-DATE
+> Task :react-native-gesture-handler:mergeDebugShaders
+> Task :react-native-gesture-handler:compileDebugShaders NO-SOURCE
+> Task :react-native-gesture-handler:generateDebugAssets UP-TO-DATE
+> Task :expo-manifests:mergeDebugAssets
+> Task :expo-updates-interface:mergeDebugAssets
+> Task :react-native-gesture-handler:mergeDebugAssets
+> Task :react-native-reanimated:mergeDebugShaders
+> Task :expo:mergeDebugJniLibFolders
+> Task :react-native-reanimated:compileDebugShaders NO-SOURCE
+> Task :react-native-reanimated:generateDebugAssets UP-TO-DATE
+> Task :expo-constants:mergeDebugJniLibFolders
+> Task :expo:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-constants:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-reanimated:mergeDebugAssets
+> Task :react-native-reanimated:processDebugJavaRes NO-SOURCE
+> Task :expo-dev-client:mergeDebugJniLibFolders
+> Task :expo-dev-client:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-constants:copyDebugJniLibsProjectOnly
+> Task :expo:copyDebugJniLibsProjectOnly
+> Task :expo-dev-client:copyDebugJniLibsProjectOnly
+> Task :expo-dev-menu:mergeDebugJniLibFolders
+> Task :expo-json-utils:mergeDebugJniLibFolders
+> Task :expo-dev-menu-interface:mergeDebugJniLibFolders
+> Task :expo-dev-menu:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-dev-menu-interface:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-json-utils:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-json-utils:copyDebugJniLibsProjectOnly
+> Task :expo-dev-menu-interface:copyDebugJniLibsProjectOnly
+> Task :expo-dev-menu:copyDebugJniLibsProjectOnly
+> Task :react-native-gesture-handler:mergeDebugJniLibFolders
+> Task :expo-updates-interface:mergeDebugJniLibFolders
+> Task :expo-manifests:mergeDebugJniLibFolders
+> Task :expo-updates-interface:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-manifests:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-updates-interface:copyDebugJniLibsProjectOnly
+> Task :expo-manifests:copyDebugJniLibsProjectOnly
+> Task :react-native-reanimated:mergeDebugJniLibFolders
+> Task :expo-modules-core:javaPreCompileDebug FROM-CACHE
+> Task :react-native-safe-area-context:javaPreCompileDebug FROM-CACHE
+> Task :react-native-screens:javaPreCompileDebug FROM-CACHE
+> Task :react-native-webview:javaPreCompileDebug FROM-CACHE
+> Task :expo-modules-core:mergeDebugShaders
+> Task :expo-modules-core:compileDebugShaders NO-SOURCE
+> Task :expo-modules-core:generateDebugAssets UP-TO-DATE
+> Task :expo-modules-core:mergeDebugAssets
+> Task :react-native-safe-area-context:mergeDebugShaders
+> Task :react-native-safe-area-context:compileDebugShaders NO-SOURCE
+> Task :react-native-safe-area-context:generateDebugAssets UP-TO-DATE
+> Task :react-native-safe-area-context:mergeDebugAssets
+> Task :react-native-screens:mergeDebugShaders
+> Task :react-native-screens:compileDebugShaders NO-SOURCE
+> Task :react-native-webview:mergeDebugShaders
+> Task :react-native-screens:generateDebugAssets UP-TO-DATE
+> Task :react-native-webview:compileDebugShaders NO-SOURCE
+> Task :react-native-webview:generateDebugAssets UP-TO-DATE
+> Task :react-native-safe-area-context:mergeDebugJniLibFolders
+> Task :react-native-safe-area-context:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-webview:mergeDebugAssets
+> Task :react-native-screens:mergeDebugAssets
+> Task :react-native-safe-area-context:copyDebugJniLibsProjectOnly
+> Task :react-native-webview:mergeDebugJniLibFolders
+> Task :react-native-webview:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-webview:copyDebugJniLibsProjectOnly
+> Task :app:generateAutolinkingNewArchitectureFiles
+> Task :app:generateAutolinkingPackageList
+> Task :app:generateCodegenSchemaFromJavaScript SKIPPED
+> Task :app:generateCodegenArtifactsFromSchema SKIPPED
+> Task :app:generateReactNativeEntryPoint
+> Task :app:preBuild
+> Task :app:preDebugBuild
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateDebugBuildConfig
+
+> Task :react-native-async-storage_async-storage:compileDebugJavaWithJavac
+D:\Coding\Dating_App\frontend\node_modules\@react-native-async-storage\async-storage\android\src\main\java\com\reactnativecommunity\asyncstorage\AsyncStorageModule.java:84: warning: [removal] onCatalystInstanceDestroy() in NativeModule has been deprecated and marked for removal
+  public void onCatalystInstanceDestroy() {
+              ^
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: D:\Coding\Dating_App\frontend\node_modules\@react-native-async-storage\async-storage\android\src\javaPackage\java\com\reactnativecommunity\asyncstorage\AsyncStoragePackage.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+1 warning
+
+> Task :react-native-worklets:compileDebugJavaWithJavac
+Note: D:\Coding\Dating_App\frontend\node_modules\react-native-worklets\android\src\main\java\com\swmansion\worklets\WorkletsPackage.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :react-native-get-random-values:compileDebugJavaWithJavac
+Note: D:\Coding\Dating_App\frontend\node_modules\react-native-get-random-values\android\src\main\java\org\linusu\RNGetRandomValuesPackage.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :react-native-worklets:mergeDebugShaders
+
+> Task :react-native-incall-manager:compileDebugJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: D:\Coding\Dating_App\frontend\node_modules\react-native-incall-manager\android\src\main\java\com\zxcpoiu\incallmanager\InCallManagerModule.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :react-native-worklets:compileDebugShaders NO-SOURCE
+> Task :react-native-worklets:generateDebugAssets UP-TO-DATE
+> Task :react-native-incall-manager:mergeDebugShaders
+> Task :react-native-incall-manager:compileDebugShaders NO-SOURCE
+> Task :react-native-incall-manager:generateDebugAssets UP-TO-DATE
+
+> Task :react-native-webrtc:compileDebugJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: D:\Coding\Dating_App\frontend\node_modules\react-native-webrtc\android\src\main\java\com\oney\WebRTCModule\StringUtils.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :react-native-incall-manager:bundleLibCompileToJarDebug
+> Task :react-native-worklets:mergeDebugAssets
+> Task :react-native-incall-manager:mergeDebugAssets
+> Task :react-native-incall-manager:processDebugJavaRes NO-SOURCE
+> Task :react-native-worklets:processDebugJavaRes NO-SOURCE
+> Task :react-native-worklets:bundleLibCompileToJarDebug
+> Task :react-native-incall-manager:mergeDebugJniLibFolders
+> Task :react-native-async-storage_async-storage:bundleLibCompileToJarDebug
+> Task :react-native-incall-manager:bundleLibRuntimeToJarDebug
+> Task :react-native-worklets:bundleLibRuntimeToJarDebug
+> Task :react-native-async-storage_async-storage:mergeDebugShaders
+> Task :react-native-async-storage_async-storage:compileDebugShaders NO-SOURCE
+> Task :react-native-async-storage_async-storage:generateDebugAssets UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mergeDebugAssets
+> Task :react-native-get-random-values:mergeDebugShaders
+> Task :react-native-get-random-values:compileDebugShaders NO-SOURCE
+> Task :react-native-get-random-values:generateDebugAssets UP-TO-DATE
+> Task :react-native-webrtc:bundleLibCompileToJarDebug
+> Task :react-native-get-random-values:bundleLibCompileToJarDebug
+> Task :react-native-async-storage_async-storage:processDebugJavaRes NO-SOURCE
+> Task :react-native-get-random-values:mergeDebugAssets
+> Task :react-native-get-random-values:bundleLibRuntimeToJarDebug
+> Task :react-native-async-storage_async-storage:bundleLibRuntimeToJarDebug
+> Task :react-native-get-random-values:processDebugJavaRes NO-SOURCE
+> Task :react-native-get-random-values:mergeDebugJniLibFolders
+> Task :react-native-get-random-values:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-webrtc:mergeDebugShaders
+> Task :react-native-webrtc:compileDebugShaders NO-SOURCE
+> Task :react-native-webrtc:generateDebugAssets UP-TO-DATE
+> Task :react-native-get-random-values:copyDebugJniLibsProjectOnly
+> Task :react-native-incall-manager:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-webrtc:mergeDebugAssets
+> Task :react-native-incall-manager:copyDebugJniLibsProjectOnly
+> Task :react-native-webrtc:processDebugJavaRes NO-SOURCE
+
+> Task :react-native-reanimated:compileDebugJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :react-native-webrtc:mergeDebugJniLibFolders
+> Task :react-native-webrtc:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-webrtc:copyDebugJniLibsProjectOnly
+> Task :react-native-async-storage_async-storage:mergeDebugJniLibFolders
+> Task :react-native-async-storage_async-storage:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-async-storage_async-storage:copyDebugJniLibsProjectOnly
+> Task :react-native-webrtc:bundleLibRuntimeToJarDebug
+> Task :react-native-reanimated:bundleLibCompileToJarDebug
+> Task :react-native-reanimated:bundleLibRuntimeToJarDebug
+
+> Task :react-native-safe-area-context:compileDebugKotlin
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaView.kt:59:23 'val uiImplementation: UIImplementation!' is deprecated. Deprecated in Java.
+
+> Task :react-native-webview:compileDebugKotlin
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:22:8 'object MapBuilder : Any' is deprecated. Use Kotlin's built-in collections extensions.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:82:18 'var allowFileAccessFromFileURLs: Boolean' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:83:18 'var allowUniversalAccessFromFileURLs: Boolean' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:124:21 'fun allowScanningByMediaScanner(): Unit' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:161:36 'var systemUiVisibility: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:300:14 'object MapBuilder : Any' is deprecated. Use Kotlin's built-in collections extensions.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:350:34 Condition is always 'true'.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:369:38 'var allowUniversalAccessFromFileURLs: Boolean' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:430:51 Unchecked cast of 'Any?' to 'HashMap<String, String>'.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:486:23 'var savePassword: Boolean' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:487:23 'var saveFormData: Boolean' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:557:23 'var allowFileAccessFromFileURLs: Boolean' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:602:52 'static field FORCE_DARK_ON: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:602:89 'static field FORCE_DARK_OFF: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:603:35 'static fun setForceDark(p0: @NonNull() WebSettings, p1: Int): Unit' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:612:35 'static fun setForceDarkStrategy(p0: @NonNull() WebSettings, p1: Int): Unit' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:614:39 'static field DARK_STRATEGY_PREFER_WEB_THEME_OVER_USER_AGENT_DARKENING: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:658:65 Unchecked cast of 'ArrayList<Any?>' to 'List<Map<String, String>>'.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt:679:23 'var saveFormData: Boolean' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/SubResourceErrorEvent.kt:5:8 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/SubResourceErrorEvent.kt:11:3 'constructor<T : Event<T>>(viewTag: Int): Event<T>' is deprecated. Use constructor with explicit surfaceId instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/SubResourceErrorEvent.kt:22:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/SubResourceErrorEvent.kt:22:42 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/SubResourceErrorEvent.kt:23:21 'fun receiveEvent(targetTag: Int, eventName: String, params: WritableMap?): Unit' is deprecated. Use [RCTModernEventEmitter.receiveEvent] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopCustomMenuSelectionEvent.kt:5:8 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopCustomMenuSelectionEvent.kt:11:3 'constructor<T : Event<T>>(viewTag: Int): Event<T>' is deprecated. Use constructor with explicit surfaceId instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopCustomMenuSelectionEvent.kt:22:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopCustomMenuSelectionEvent.kt:22:42 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopCustomMenuSelectionEvent.kt:23:21 'fun receiveEvent(targetTag: Int, eventName: String, params: WritableMap?): Unit' is deprecated. Use [RCTModernEventEmitter.receiveEvent] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopHttpErrorEvent.kt:5:8 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopHttpErrorEvent.kt:11:3 'constructor<T : Event<T>>(viewTag: Int): Event<T>' is deprecated. Use constructor with explicit surfaceId instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopHttpErrorEvent.kt:22:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopHttpErrorEvent.kt:22:42 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopHttpErrorEvent.kt:23:21 'fun receiveEvent(targetTag: Int, eventName: String, params: WritableMap?): Unit' is deprecated. Use [RCTModernEventEmitter.receiveEvent] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingErrorEvent.kt:5:8 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingErrorEvent.kt:11:3 'constructor<T : Event<T>>(viewTag: Int): Event<T>' is deprecated. Use constructor with explicit surfaceId instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingErrorEvent.kt:22:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingErrorEvent.kt:22:42 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingErrorEvent.kt:23:21 'fun receiveEvent(targetTag: Int, eventName: String, params: WritableMap?): Unit' is deprecated. Use [RCTModernEventEmitter.receiveEvent] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingFinishEvent.kt:5:8 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingFinishEvent.kt:11:3 'constructor<T : Event<T>>(viewTag: Int): Event<T>' is deprecated. Use constructor with explicit surfaceId instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingFinishEvent.kt:22:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingFinishEvent.kt:22:42 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingFinishEvent.kt:23:21 'fun receiveEvent(targetTag: Int, eventName: String, params: WritableMap?): Unit' is deprecated. Use [RCTModernEventEmitter.receiveEvent] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingProgressEvent.kt:5:8 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingProgressEvent.kt:11:3 'constructor<T : Event<T>>(viewTag: Int): Event<T>' is deprecated. Use constructor with explicit surfaceId instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingProgressEvent.kt:22:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingProgressEvent.kt:22:42 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingProgressEvent.kt:23:21 'fun receiveEvent(targetTag: Int, eventName: String, params: WritableMap?): Unit' is deprecated. Use [RCTModernEventEmitter.receiveEvent] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingStartEvent.kt:5:8 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingStartEvent.kt:11:3 'constructor<T : Event<T>>(viewTag: Int): Event<T>' is deprecated. Use constructor with explicit surfaceId instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingStartEvent.kt:22:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingStartEvent.kt:22:42 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopLoadingStartEvent.kt:23:21 'fun receiveEvent(targetTag: Int, eventName: String, params: WritableMap?): Unit' is deprecated. Use [RCTModernEventEmitter.receiveEvent] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopMessageEvent.kt:5:8 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopMessageEvent.kt:10:75 'constructor<T : Event<T>>(viewTag: Int): Event<T>' is deprecated. Use constructor with explicit surfaceId instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopMessageEvent.kt:21:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopMessageEvent.kt:21:42 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopMessageEvent.kt:22:21 'fun receiveEvent(targetTag: Int, eventName: String, params: WritableMap?): Unit' is deprecated. Use [RCTModernEventEmitter.receiveEvent] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopNewWindowEvent.kt:5:8 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopNewWindowEvent.kt:11:3 'constructor<T : Event<T>>(viewTag: Int): Event<T>' is deprecated. Use constructor with explicit surfaceId instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopNewWindowEvent.kt:22:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopNewWindowEvent.kt:22:42 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopNewWindowEvent.kt:23:21 'fun receiveEvent(targetTag: Int, eventName: String, params: WritableMap?): Unit' is deprecated. Use [RCTModernEventEmitter.receiveEvent] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopRenderProcessGoneEvent.kt:5:8 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopRenderProcessGoneEvent.kt:12:3 'constructor<T : Event<T>>(viewTag: Int): Event<T>' is deprecated. Use constructor with explicit surfaceId instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopRenderProcessGoneEvent.kt:23:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopRenderProcessGoneEvent.kt:23:42 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopRenderProcessGoneEvent.kt:24:21 'fun receiveEvent(targetTag: Int, eventName: String, params: WritableMap?): Unit' is deprecated. Use [RCTModernEventEmitter.receiveEvent] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopShouldStartLoadWithRequestEvent.kt:5:8 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopShouldStartLoadWithRequestEvent.kt:10:89 'constructor<T : Event<T>>(viewTag: Int): Event<T>' is deprecated. Use constructor with explicit surfaceId instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopShouldStartLoadWithRequestEvent.kt:27:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopShouldStartLoadWithRequestEvent.kt:27:42 'interface RCTEventEmitter : JavaScriptModule' is deprecated. Use [RCTModernEventEmitter] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopShouldStartLoadWithRequestEvent.kt:28:21 'fun receiveEvent(targetTag: Int, eventName: String, params: WritableMap?): Unit' is deprecated. Use [RCTModernEventEmitter.receiveEvent] instead.
+
+> Task :react-native-safe-area-context:compileDebugJavaWithJavac
+> Task :react-native-safe-area-context:bundleLibRuntimeToJarDebug
+> Task :react-native-safe-area-context:bundleLibCompileToJarDebug
+> Task :react-native-safe-area-context:processDebugJavaRes
+> Task :expo-dev-launcher:dataBindingMergeDependencyArtifactsDebug
+> Task :expo-modules-core:compileDebugKotlin
+
+> Task :react-native-webview:compileDebugJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :react-native-webview:processDebugJavaRes
+> Task :react-native-webview:bundleLibRuntimeToJarDebug
+> Task :react-native-webview:bundleLibCompileToJarDebug
+> Task :react-native-screens:compileDebugKotlin
+> Task :expo-modules-core:configureCMakeDebug[arm64-v8a]
+> Task :react-native-screens:configureCMakeDebug[arm64-v8a]
+> Task :app:checkDebugAarMetadata
+
+> Task :react-native-gesture-handler:compileDebugKotlin
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerRootView.kt:41:43 The corresponding parameter in the supertype 'ReactViewGroup' is named 'ev'. This may cause problems when calling this function with named arguments.
+
+> Task :react-native-gesture-handler:compileDebugJavaWithJavac
+> Task :react-native-gesture-handler:processDebugJavaRes
+> Task :react-native-gesture-handler:bundleLibCompileToJarDebug
+> Task :react-native-gesture-handler:bundleLibRuntimeToJarDebug
+> Task :react-native-worklets:configureCMakeDebug[arm64-v8a]
+
+> Task :react-native-screens:compileDebugKotlin
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt:56:9 The corresponding parameter in the supertype 'BaseReactPackage' is named 'name'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt:57:9 The corresponding parameter in the supertype 'BaseReactPackage' is named 'reactContext'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt:70:17 'constructor(name: String, className: String, canOverrideExistingModule: Boolean, needsEagerInit: Boolean, hasConstants: Boolean, isCxxModule: Boolean, isTurboModule: Boolean): ReactModuleInfo' is deprecated. This constructor is deprecated and will be removed in the future. Use ReactModuleInfo(String, String, boolean, boolean, boolean, boolean)].
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt:48:77 Unchecked cast of '(CoordinatorLayout.Behavior<View!>?..CoordinatorLayout.Behavior<*>?)' to 'BottomSheetBehavior<Screen>'.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt:383:36 'fun setTranslucent(screen: Screen, activity: Activity?, context: ReactContext?): Unit' is deprecated. For apps targeting SDK 35 or above this prop has no effect because edge-to-edge is enabled by default and the status bar is always translucent.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt:402:36 'fun setColor(screen: Screen, activity: Activity?, context: ReactContext?): Unit' is deprecated. For apps targeting SDK 35 or above this prop has no effect because edge-to-edge is enabled by default and the status bar is always translucent.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt:420:36 'fun setNavigationBarColor(screen: Screen, activity: Activity?): Unit' is deprecated. For all apps targeting Android SDK 35 or above edge-to-edge is enabled by default.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt:437:36 'fun setNavigationBarTranslucent(screen: Screen, activity: Activity?): Unit' is deprecated. For all apps targeting Android SDK 35 or above edge-to-edge is enabled by default.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:217:31 'var targetElevation: Float' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:220:13 'fun setHasOptionsMenu(p0: Boolean): Unit' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:397:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:404:22 'fun onPrepareOptionsMenu(p0: Menu): Unit' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:407:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:412:22 'fun onCreateOptionsMenu(p0: Menu, p1: MenuInflater): Unit' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackHeaderConfig.kt:435:18 'val reactNativeHost: ReactNativeHost' is deprecated. You should not use ReactNativeHost directly in the New Architecture. Use ReactHost instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt:203:14 'var statusBarColor: Int?' is deprecated. For apps targeting SDK 35 or above this prop has no effect because edge-to-edge is enabled by default and the status bar is always translucent.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt:220:14 'var isStatusBarTranslucent: Boolean?' is deprecated. For apps targeting SDK 35 or above this prop has no effect because edge-to-edge is enabled by default and the status bar is always translucent.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt:237:14 'var navigationBarColor: Int?' is deprecated. For all apps targeting Android SDK 35 or above edge-to-edge is enabled by default.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt:246:14 'var isNavigationBarTranslucent: Boolean?' is deprecated. For all apps targeting Android SDK 35 or above edge-to-edge is enabled by default.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:55:42 'fun replaceSystemWindowInsets(p0: Int, p1: Int, p2: Int, p3: Int): WindowInsetsCompat' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:56:39 'val systemWindowInsetLeft: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:58:39 'val systemWindowInsetRight: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:59:39 'val systemWindowInsetBottom: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:102:53 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:106:37 'var statusBarColor: Int?' is deprecated. For apps targeting SDK 35 or above this prop has no effect because edge-to-edge is enabled by default and the status bar is always translucent.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:113:48 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:116:32 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:162:49 'var isStatusBarTranslucent: Boolean?' is deprecated. For apps targeting SDK 35 or above this prop has no effect because edge-to-edge is enabled by default and the status bar is always translucent.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:218:43 'var navigationBarColor: Int?' is deprecated. For all apps targeting Android SDK 35 or above edge-to-edge is enabled by default.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:218:72 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:224:16 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:241:55 'var isNavigationBarTranslucent: Boolean?' is deprecated. For all apps targeting Android SDK 35 or above edge-to-edge is enabled by default.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:283:13 'fun setColor(screen: Screen, activity: Activity?, context: ReactContext?): Unit' is deprecated. For apps targeting SDK 35 or above this prop has no effect because edge-to-edge is enabled by default and the status bar is always translucent.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:285:13 'fun setTranslucent(screen: Screen, activity: Activity?, context: ReactContext?): Unit' is deprecated. For apps targeting SDK 35 or above this prop has no effect because edge-to-edge is enabled by default and the status bar is always translucent.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:289:13 'fun setNavigationBarColor(screen: Screen, activity: Activity?): Unit' is deprecated. For all apps targeting Android SDK 35 or above edge-to-edge is enabled by default.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:290:13 'fun setNavigationBarTranslucent(screen: Screen, activity: Activity?): Unit' is deprecated. For all apps targeting Android SDK 35 or above edge-to-edge is enabled by default.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:354:42 'var statusBarColor: Int?' is deprecated. For apps targeting SDK 35 or above this prop has no effect because edge-to-edge is enabled by default and the status bar is always translucent.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:356:48 'var isStatusBarTranslucent: Boolean?' is deprecated. For apps targeting SDK 35 or above this prop has no effect because edge-to-edge is enabled by default and the status bar is always translucent.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:359:57 'var navigationBarColor: Int?' is deprecated. For all apps targeting Android SDK 35 or above edge-to-edge is enabled by default.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:360:63 'var isNavigationBarTranslucent: Boolean?' is deprecated. For all apps targeting Android SDK 35 or above edge-to-edge is enabled by default.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:7:8 'object ReactFeatureFlags : Any' is deprecated. Use com.facebook.react.internal.featureflags.ReactNativeFeatureFlags instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:25:13 'object ReactFeatureFlags : Any' is deprecated. Use com.facebook.react.internal.featureflags.ReactNativeFeatureFlags instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:32:9 The corresponding parameter in the supertype 'ReactViewGroup' is named 'left'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:33:9 The corresponding parameter in the supertype 'ReactViewGroup' is named 'top'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:34:9 The corresponding parameter in the supertype 'ReactViewGroup' is named 'right'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:35:9 The corresponding parameter in the supertype 'ReactViewGroup' is named 'bottom'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:71:9 The corresponding parameter in the supertype 'RootView' is named 'childView'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:72:9 The corresponding parameter in the supertype 'RootView' is named 'ev'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:79:46 The corresponding parameter in the supertype 'RootView' is named 'ev'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:83:9 The corresponding parameter in the supertype 'RootView' is named 'childView'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:84:9 The corresponding parameter in the supertype 'RootView' is named 'ev'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:95:34 The corresponding parameter in the supertype 'RootView' is named 't'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/DimmingView.kt:63:9 The corresponding parameter in the supertype 'ReactCompoundView' is named 'touchX'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/DimmingView.kt:64:9 The corresponding parameter in the supertype 'ReactCompoundView' is named 'touchY'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/DimmingView.kt:68:9 The corresponding parameter in the supertype 'ReactCompoundViewGroup' is named 'touchX'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/DimmingView.kt:69:9 The corresponding parameter in the supertype 'ReactCompoundViewGroup' is named 'touchY'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/tabs/TabsHostViewManager.kt:37:9 The corresponding parameter in the supertype 'TabsHostViewManager' is named 'view'. This may cause problems when calling this function with named arguments.
+
+> Task :app:generateDebugResValues
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :expo-dev-launcher:generateDebugBuildConfig
+> Task :expo-dev-launcher:dataBindingGenBaseClassesDebug
+> Task :expo-dev-launcher:checkApolloVersions
+> Task :expo-dev-launcher:generateServiceApolloOptions
+> Task :expo-dev-launcher:javaPreCompileDebug FROM-CACHE
+> Task :expo-dev-launcher:mergeDebugShaders
+> Task :expo-dev-launcher:compileDebugShaders NO-SOURCE
+> Task :expo-dev-launcher:generateDebugAssets UP-TO-DATE
+> Task :expo-dev-launcher:mergeDebugAssets
+> Task :expo-dev-launcher:mergeDebugJniLibFolders
+> Task :expo-dev-launcher:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-dev-launcher:copyDebugJniLibsProjectOnly
+> Task :app:packageDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+
+> Task :expo-dev-launcher:generateServiceApolloSources
+w: D:\Coding\Dating_App\frontend\node_modules\expo-dev-launcher\android\src\main\graphql\GetBranches.graphql: (21, 11): Apollo: Use of deprecated field `runtimeVersion`
+w: D:\Coding\Dating_App\frontend\node_modules\expo-dev-launcher\android\src\main\graphql\GetBranches.graphql: (34, 3): Apollo: Variable `platform` is unused
+w: D:\Coding\Dating_App\frontend\node_modules\expo-dev-launcher\android\src\main\graphql\GetUpdates.graphql: (14, 11): Apollo: Use of deprecated field `runtimeVersion`
+
+> Task :app:parseDebugLocalResources
+> Task :react-native-worklets:configureCMakeDebug[x86_64]
+> Task :react-native-worklets:generateJsonModelDebug
+> Task :react-native-worklets:prefabDebugConfigurePackage
+> Task :react-native-screens:compileDebugJavaWithJavac
+
+> Task :expo-modules-core:compileDebugKotlin
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/apploader/RNHeadlessAppLoader.kt:48:87 'val reactNativeHost: ReactNativeHost' is deprecated. You should not use ReactNativeHost directly in the New Architecture. Use ReactHost instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/apploader/RNHeadlessAppLoader.kt:91:85 'val reactNativeHost: ReactNativeHost' is deprecated. You should not use ReactNativeHost directly in the New Architecture. Use ReactHost instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/apploader/RNHeadlessAppLoader.kt:120:83 'val reactNativeHost: ReactNativeHost' is deprecated. You should not use ReactNativeHost directly in the New Architecture. Use ReactHost instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-modules-core/android/src/main/java/expo/modules/apploader/AppLoaderProvider.kt:34:52 Unchecked cast of 'Class<*>!' to 'Class<out HeadlessAppLoader>'.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/AppContext.kt:30:8 'typealias ErrorManagerModule = JSLoggerModule' is deprecated. Use JSLoggerModule instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/AppContext.kt:253:21 'typealias ErrorManagerModule = JSLoggerModule' is deprecated. Use JSLoggerModule instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/AppContext.kt:343:21 'val DEFAULT: Int' is deprecated. UIManagerType.DEFAULT will be deleted in the next release of React Native. Use [LEGACY] instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/defaultmodules/NativeModulesProxyModule.kt:16:5 'fun Constants(legacyConstantsProvider: () -> Map<String, Any?>): Unit' is deprecated. Use `Constant` or `Property` instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/jni/PromiseImpl.kt:65:51 'val errorManager: JSLoggerModule?' is deprecated. Use AppContext.jsLogger instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/jni/PromiseImpl.kt:69:22 'fun reportExceptionToLogBox(codedException: CodedException): Unit' is deprecated. Use appContext.jsLogger.error(...) instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/ViewDefinitionBuilder.kt:464:16 'val errorManager: JSLoggerModule?' is deprecated. Use AppContext.jsLogger instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/ViewDefinitionBuilder.kt:464:30 'fun reportExceptionToLogBox(codedException: CodedException): Unit' is deprecated. Use appContext.jsLogger.error(...) instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/ViewManagerDefinition.kt:41:16 'val errorManager: JSLoggerModule?' is deprecated. Use AppContext.jsLogger instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/ViewManagerDefinition.kt:41:30 'fun reportExceptionToLogBox(codedException: CodedException): Unit' is deprecated. Use appContext.jsLogger.error(...) instead.
+
+> Task :react-native-screens:processDebugJavaRes
+> Task :react-native-screens:bundleLibCompileToJarDebug
+> Task :react-native-screens:bundleLibRuntimeToJarDebug
+> Task :react-native-reanimated:configureCMakeDebug[arm64-v8a]
+> Task :app:mergeDebugResources
+
+> Task :app:processDebugMainManifest
+D:\Coding\Dating_App\frontend\android\app\src\debug\AndroidManifest.xml:6:5-162 Warning:
+	application@android:usesCleartextTraffic was tagged at AndroidManifest.xml:6 to replace other declarations but no other declaration present
+D:\Coding\Dating_App\frontend\android\app\src\debug\AndroidManifest.xml Warning:
+	activity#expo.modules.imagepicker.ExpoCropImageActivity@android:exported was tagged at AndroidManifest.xml:0 to replace other declarations but no other declaration present
+
+> Task :app:processDebugManifest
+> Task :app:javaPreCompileDebug FROM-CACHE
+> Task :app:mergeDebugShaders
+> Task :app:processDebugManifestForPackage
+> Task :react-native-reanimated:configureCMakeDebug[x86_64]
+> Task :react-native-reanimated:generateJsonModelDebug
+> Task :react-native-reanimated:prefabDebugConfigurePackage
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :react-native-gesture-handler:configureCMakeDebug[arm64-v8a]
+> Task :app:mergeDebugAssets
+> Task :app:desugarDebugFileDependencies
+> Task :app:compressDebugAssets
+> Task :app:checkDebugDuplicateClasses
+> Task :react-native-gesture-handler:configureCMakeDebug[x86_64]
+> Task :app:processDebugResources
+> Task :app:configureCMakeDebug[arm64-v8a]
+> Task :expo-modules-core:buildCMakeDebug[arm64-v8a]
+> Task :react-native-worklets:buildCMakeDebug[arm64-v8a][worklets]
+> Task :react-native-screens:buildCMakeDebug[arm64-v8a]
+> Task :app:mergeExtDexDebug
+
+> Task :react-native-screens:buildCMakeDebug[arm64-v8a]
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-screens\android\build\intermediates\cxx\Debug\442cd655\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-screens\android\build\intermediates\cxx\Debug\442cd655\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-screens:configureCMakeDebug[x86_64]
+
+> Task :react-native-worklets:buildCMakeDebug[arm64-v8a][worklets]
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-worklets\android\build\intermediates\cxx\Debug\b28491r2\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-worklets\android\build\intermediates\cxx\Debug\b28491r2\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :app:configureCMakeDebug[x86_64]
+> Task :app:mergeDebugJniLibFolders
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+
+> Task :expo-modules-core:buildCMakeDebug[arm64-v8a]
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\expo-modules-core\android\build\intermediates\cxx\Debug\5i3z6r5p\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\expo-modules-core\android\build\intermediates\cxx\Debug\5i3z6r5p\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-screens:buildCMakeDebug[x86_64]
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-screens\android\build\intermediates\cxx\Debug\442cd655\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-screens\android\build\intermediates\cxx\Debug\442cd655\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-screens:mergeDebugJniLibFolders
+> Task :react-native-screens:mergeDebugNativeLibs
+> Task :react-native-screens:copyDebugJniLibsProjectOnly
+
+> Task :expo-modules-core:compileDebugJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :expo-modules-core:processDebugJavaRes
+> Task :expo-modules-core:bundleLibCompileToJarDebug
+> Task :expo-modules-core:bundleLibRuntimeToJarDebug
+> Task :expo-modules-core:configureCMakeDebug[x86_64]
+> Task :expo-dev-client:compileDebugKotlin NO-SOURCE
+> Task :expo-updates-interface:compileDebugKotlin
+
+> Task :expo-constants:compileDebugKotlin
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-constants/android/src/main/java/expo/modules/constants/ConstantsModule.kt:12:5 'fun Constants(legacyConstantsProvider: () -> Map<String, Any?>): Unit' is deprecated. Use `Constant` or `Property` instead.
+
+> Task :expo-dev-menu-interface:compileDebugKotlin
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-menu-interface/android/src/main/java/expo/interfaces/devmenu/DevMenuInterfacePackage.kt:14:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-menu-interface/android/src/main/java/expo/interfaces/devmenu/ReactHostWrapper.kt:5:8 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-menu-interface/android/src/main/java/expo/interfaces/devmenu/ReactHostWrapper.kt:19:41 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-menu-interface/android/src/main/java/expo/interfaces/devmenu/ReactHostWrapper.kt:20:33 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+
+> Task :expo-updates-interface:compileDebugJavaWithJavac
+> Task :expo-updates-interface:bundleLibRuntimeToJarDebug
+> Task :expo-updates-interface:processDebugJavaRes
+> Task :expo-updates-interface:bundleLibCompileToJarDebug
+> Task :expo-dev-client:compileDebugJavaWithJavac
+> Task :expo-dev-client:bundleLibCompileToJarDebug
+> Task :expo-dev-client:processDebugJavaRes NO-SOURCE
+> Task :expo-dev-client:bundleLibRuntimeToJarDebug
+> Task :expo-constants:compileDebugJavaWithJavac
+> Task :expo-constants:bundleLibRuntimeToJarDebug
+> Task :expo-constants:bundleLibCompileToJarDebug
+> Task :expo-constants:processDebugJavaRes
+> Task :expo-json-utils:compileDebugKotlin
+> Task :expo-json-utils:compileDebugJavaWithJavac
+> Task :expo-json-utils:bundleLibCompileToJarDebug
+> Task :expo-json-utils:bundleLibRuntimeToJarDebug
+> Task :expo-json-utils:processDebugJavaRes
+> Task :expo-dev-menu-interface:compileDebugJavaWithJavac
+> Task :expo-dev-menu-interface:bundleLibCompileToJarDebug
+> Task :expo-dev-menu-interface:bundleLibRuntimeToJarDebug
+> Task :expo-dev-menu-interface:processDebugJavaRes
+
+> Task :expo-manifests:compileDebugKotlin
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-manifests/android/src/main/java/expo/modules/manifests/core/EmbeddedManifest.kt:19:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-manifests/android/src/main/java/expo/modules/manifests/core/EmbeddedManifest.kt:19:86 'fun getLegacyID(): String' is deprecated. Prefer scopeKey or projectId depending on use case.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-manifests/android/src/main/java/expo/modules/manifests/core/ExpoUpdatesManifest.kt:16:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-manifests/android/src/main/java/expo/modules/manifests/core/Manifest.kt:13:3 Deprecations and opt-ins on a method overridden from 'Any' may not be reported.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-manifests/android/src/main/java/expo/modules/manifests/core/Manifest.kt:15:12 'fun getRawJson(): JSONObject' is deprecated. Prefer to use specific field getters.
+
+> Task :expo-manifests:compileDebugJavaWithJavac
+> Task :expo-manifests:bundleLibCompileToJarDebug
+> Task :expo-manifests:bundleLibRuntimeToJarDebug
+> Task :expo-manifests:processDebugJavaRes
+> Task :react-native-worklets:buildCMakeDebug[x86_64][worklets]
+
+> Task :expo-dev-menu:compileDebugKotlin
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-menu/android/src/debug/java/expo/modules/devmenu/DevMenuManager.kt:406:43 The corresponding parameter in the supertype 'DevMenuManagerInterface' is named 'shouldAutoLaunch'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-menu/android/src/main/java/com/facebook/react/devsupport/DevMenuSettingsBase.kt:6:8 'class PreferenceManager : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-menu/android/src/main/java/com/facebook/react/devsupport/DevMenuSettingsBase.kt:18:51 'class PreferenceManager : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-menu/android/src/main/java/com/facebook/react/devsupport/DevMenuSettingsBase.kt:18:69 'static fun getDefaultSharedPreferences(p0: Context!): SharedPreferences!' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-menu/android/src/main/java/com/facebook/react/devsupport/DevMenuSettingsBase.kt:51:13 This code uses error suppression for 'NOTHING_TO_OVERRIDE'. While it might compile and work, the compiler behavior is UNSPECIFIED and WILL NOT BE PRESERVED. Please report your use case to the Kotlin issue tracker instead: https://kotl.in/issue
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-menu/android/src/main/java/com/facebook/react/devsupport/DevMenuSettingsBase.kt:58:13 This code uses error suppression for 'NOTHING_TO_OVERRIDE'. While it might compile and work, the compiler behavior is UNSPECIFIED and WILL NOT BE PRESERVED. Please report your use case to the Kotlin issue tracker instead: https://kotl.in/issue
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-menu/android/src/main/java/expo/modules/devmenu/DevMenuPackage.kt:28:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-menu/android/src/main/java/expo/modules/devmenu/DevMenuPackage.kt:47:78 'val reactNativeHost: ReactNativeHost' is deprecated. You should not use ReactNativeHost directly in the New Architecture. Use ReactHost instead.
+
+> Task :expo-dev-menu:compileDebugJavaWithJavac
+> Task :expo-dev-menu:bundleLibCompileToJarDebug
+> Task :expo-dev-menu:bundleLibRuntimeToJarDebug
+> Task :expo-dev-menu:processDebugJavaRes
+
+> Task :react-native-worklets:buildCMakeDebug[x86_64][worklets]
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-worklets\android\build\intermediates\cxx\Debug\b28491r2\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-worklets\android\build\intermediates\cxx\Debug\b28491r2\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-worklets:externalNativeBuildDebug
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-worklets\android\build\intermediates\cmake\debug\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-worklets\android\build\intermediates\cmake\debug\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-worklets\android\build\intermediates\cmake\debug\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-worklets\android\build\intermediates\cmake\debug\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :expo-modules-core:buildCMakeDebug[x86_64]
+> Task :react-native-worklets:prefabDebugPackage
+> Task :react-native-worklets:mergeDebugJniLibFolders
+> Task :react-native-worklets:mergeDebugNativeLibs
+> Task :react-native-worklets:copyDebugJniLibsProjectOnly
+
+> Task :expo-dev-launcher:compileDebugKotlin
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/DevLauncherController.kt:474:81 'val reactNativeHost: ReactNativeHost' is deprecated. You should not use ReactNativeHost directly in the New Architecture. Use ReactHost instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/compose/models/BranchViewModel.kt:80:31 'val runtimeVersion: String' is deprecated. Use 'runtime' field .
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/helpers/DevLauncherReactUtils.kt:7:8 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/helpers/DevLauncherReactUtils.kt:78:20 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/helpers/DevLauncherReactUtils.kt:155:20 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/helpers/DevLauncherReactUtils.kt:246:11 'fun newInstance(): CapturedType(*)!' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/launcher/DevLauncherActivity.kt:19:5 'fun overridePendingTransition(p0: Int, p1: Int): Unit' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/launcher/DevLauncherActivity.kt:36:5 'fun overridePendingTransition(p0: Int, p1: Int): Unit' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/modules/DevLauncherModule.kt:16:29 'fun getRawJson(): JSONObject' is deprecated. Prefer to use specific field getters.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/react/DevLauncherBridgeDevSupportManager.kt:49:38 This code uses error suppression for 'NOTHING_TO_OVERRIDE'. While it might compile and work, the compiler behavior is UNSPECIFIED and WILL NOT BE PRESERVED. Please report your use case to the Kotlin issue tracker instead: https://kotl.in/issue
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/react/DevLauncherBridgelessDevSupportManager.kt:48:38 This code uses error suppression for 'NOTHING_TO_OVERRIDE'. While it might compile and work, the compiler behavior is UNSPECIFIED and WILL NOT BE PRESERVED. Please report your use case to the Kotlin issue tracker instead: https://kotl.in/issue
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/react/DevLauncherDevSupportManagerFactory.kt:19:5 The corresponding parameter in the supertype 'DevSupportManagerFactory' is named 'reactInstanceManagerHelper'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/react/DevLauncherDevSupportManagerFactory.kt:48:5 The corresponding parameter in the supertype 'DevSupportManagerFactory' is named 'reactInstanceManagerHelper'. This may cause problems when calling this function with named arguments.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/react/DevLauncherDevSupportManagerSwapper.kt:6:8 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/react/DevLauncherDevSupportManagerSwapper.kt:34:58 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/DevLauncherPackage.kt:15:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/DevLauncherRecentlyOpenedAppsRegistry.kt:33:47 Unchecked cast of 'MutableMap<Any?, Any?>' to 'MutableMap<String, Any>'.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/DevLauncherRecentlyOpenedAppsRegistry.kt:51:27 'fun getRawJson(): JSONObject' is deprecated. Prefer to use specific field getters.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:37:23 'constructor(p0: String!, p1: Bitmap!, p2: Int): ActivityManager.TaskDescription' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:63:61 'static field FLAG_TRANSLUCENT_STATUS: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:92:45 'var systemUiVisibility: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:95:68 'static field SYSTEM_UI_FLAG_LIGHT_STATUS_BAR: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:99:67 'static field SYSTEM_UI_FLAG_LIGHT_STATUS_BAR: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:103:67 'static field SYSTEM_UI_FLAG_LIGHT_STATUS_BAR: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:107:15 'var systemUiVisibility: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:115:59 'static field FLAG_FULLSCREEN: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:116:61 'static field FLAG_FORCE_NOT_FULLSCREEN: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:118:59 'static field FLAG_FORCE_NOT_FULLSCREEN: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:119:61 'static field FLAG_FULLSCREEN: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:131:23 'fun replaceSystemWindowInsets(p0: Int, p1: Int, p2: Int, p3: Int): WindowInsets' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:132:25 'val systemWindowInsetLeft: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:134:25 'val systemWindowInsetRight: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:135:25 'val systemWindowInsetBottom: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:150:15 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:160:63 'static field FLAG_TRANSLUCENT_NAVIGATION: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:161:25 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:171:63 'static field FLAG_TRANSLUCENT_NAVIGATION: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:175:33 'var systemUiVisibility: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:176:33 'static field SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:177:21 'var systemUiVisibility: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:190:29 'var systemUiVisibility: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:191:62 'static field SYSTEM_UI_FLAG_HIDE_NAVIGATION: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:191:101 'static field SYSTEM_UI_FLAG_FULLSCREEN: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:192:63 'static field SYSTEM_UI_FLAG_HIDE_NAVIGATION: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:192:102 'static field SYSTEM_UI_FLAG_FULLSCREEN: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:192:136 'static field SYSTEM_UI_FLAG_IMMERSIVE: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:193:70 'static field SYSTEM_UI_FLAG_HIDE_NAVIGATION: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:193:109 'static field SYSTEM_UI_FLAG_FULLSCREEN: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:193:143 'static field SYSTEM_UI_FLAG_IMMERSIVE_STICKY: Int' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo-dev-launcher/android/src/main/java/expo/modules/devlauncher/launcher/configurators/DevLauncherExpoActivityConfigurator.kt:196:17 'var systemUiVisibility: Int' is deprecated. Deprecated in Java.
+
+> Task :expo-dev-launcher:compileDebugJavaWithJavac
+> Task :expo-dev-launcher:processDebugJavaRes
+> Task :expo-dev-launcher:bundleLibCompileToJarDebug
+> Task :expo-dev-launcher:bundleLibRuntimeToJarDebug
+
+> Task :expo:compileDebugKotlin
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ExpoModulesPackage.kt:34:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ExpoReactHostFactory.kt:8:8 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ExpoReactHostFactory.kt:80:22 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:25:8 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:59:33 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:106:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:106:38 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:114:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:115:21 'val reactInstanceManager: ReactInstanceManager' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:174:36 'constructor(activity: Activity, reactNativeHost: ReactNativeHost?, appKey: String?, launchOptions: Bundle?, fabricEnabled: Boolean): ReactDelegate' is deprecated. Deprecated since 0.81.0, use one of the other constructors instead.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:285:77 'val reactInstanceManager: ReactInstanceManager' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:288:22 'val reactInstanceManager: ReactInstanceManager' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:292:54 'val reactInstanceManager: ReactInstanceManager' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactNativeHostWrapper.kt:6:8 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactNativeHostWrapper.kt:15:9 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactNativeHostWrapper.kt:47:60 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactNativeHostWrapperBase.kt:7:8 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactNativeHostWrapperBase.kt:16:23 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactNativeHostWrapperBase.kt:89:16 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/ReactNativeHostWrapperBase.kt:101:38 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/fetch/ExpoFetchModule.kt:30:39 'constructor(reactContext: ReactContext): ForwardingCookieHandler' is deprecated. Use the default constructor.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/fetch/NativeResponse.kt:42:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/node_modules/expo/android/src/main/java/expo/modules/fetch/NativeResponse.kt:44:11 'fun deallocate(): Unit' is deprecated. Use sharedObjectDidRelease() instead.
+
+> Task :expo:compileDebugJavaWithJavac
+> Task :expo:processDebugJavaRes
+> Task :expo:bundleLibCompileToJarDebug
+> Task :expo:bundleLibRuntimeToJarDebug
+> Task :app:mergeLibDexDebug
+
+> Task :app:compileDebugKotlin
+w: file:///D:/Coding/Dating_App/frontend/android/app/src/main/java/com/aayushsinghrajput/Datingapp/MainApplication.kt:9:8 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///D:/Coding/Dating_App/frontend/android/app/src/main/java/com/aayushsinghrajput/Datingapp/MainApplication.kt:21:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///D:/Coding/Dating_App/frontend/android/app/src/main/java/com/aayushsinghrajput/Datingapp/MainApplication.kt:21:33 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+
+> Task :app:compileDebugJavaWithJavac
+> Task :app:processDebugJavaRes
+> Task :app:transformDebugClassesWithAsm
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics
+> Task :react-native-reanimated:buildCMakeDebug[arm64-v8a][reanimated]
+> Task :app:mergeProjectDexDebug
+
+> Task :expo-modules-core:buildCMakeDebug[x86_64]
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\expo-modules-core\android\build\intermediates\cxx\Debug\5i3z6r5p\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\expo-modules-core\android\build\intermediates\cxx\Debug\5i3z6r5p\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :app:mergeDebugJavaResource
+> Task :expo-modules-core:mergeDebugJniLibFolders
+> Task :expo-modules-core:mergeDebugNativeLibs
+> Task :expo-modules-core:copyDebugJniLibsProjectOnly
+
+> Task :react-native-reanimated:buildCMakeDebug[arm64-v8a][reanimated]
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-reanimated\android\build\intermediates\cxx\Debug\1j462ti1\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-reanimated\android\build\intermediates\cxx\Debug\1j462ti1\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-reanimated:buildCMakeDebug[x86_64][reanimated]
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-reanimated\android\build\intermediates\cxx\Debug\1j462ti1\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-reanimated\android\build\intermediates\cxx\Debug\1j462ti1\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-reanimated:externalNativeBuildDebug
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-reanimated\android\build\intermediates\cmake\debug\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-reanimated\android\build\intermediates\cmake\debug\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-reanimated\android\build\intermediates\cmake\debug\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-reanimated\android\build\intermediates\cmake\debug\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-reanimated:prefabDebugPackage
+> Task :react-native-reanimated:mergeDebugNativeLibs
+> Task :react-native-reanimated:copyDebugJniLibsProjectOnly
+
+> Task :react-native-gesture-handler:buildCMakeDebug[arm64-v8a]
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-gesture-handler\android\build\intermediates\cxx\Debug\632r5b1a\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-gesture-handler\android\build\intermediates\cxx\Debug\632r5b1a\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-gesture-handler:buildCMakeDebug[x86_64]
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-gesture-handler\android\build\intermediates\cxx\Debug\632r5b1a\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\node_modules\react-native-gesture-handler\android\build\intermediates\cxx\Debug\632r5b1a\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-gesture-handler:mergeDebugNativeLibs
+> Task :react-native-gesture-handler:copyDebugJniLibsProjectOnly
+> Task :app:buildCMakeDebug[arm64-v8a]
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\android\app\build\intermediates\cxx\Debug\373aao6b\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Coding\Dating_App\frontend\android\app\build\intermediates\cxx\Debug\373aao6b\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :app:buildCMakeDebug[x86_64]
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\android\app\build\intermediates\cxx\Debug\373aao6b\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\Aayush\.gradle\caches\8.14.3\transforms\08c7641cac4c7bfa2466bbe7952a51d2\transformed\react-android-0.81.4-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'D:\Coding\Dating_App\frontend\android\app\build\intermediates\cxx\Debug\373aao6b\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :app:mergeDebugNativeLibs
+> Task :app:stripDebugDebugSymbols
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+
+[Incubating] Problems report is available at: file:///D:/Coding/Dating_App/frontend/android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 7m 59s
+518 actionable tasks: 413 executed, 81 from cache, 24 up-to-date
+Waiting on http://localhost:8081
+› Installing D:\Coding\Dating_App\frontend\android\app\build\outputs\apk\debug\app-debug.apk
+› Opening exp+datingapp://expo-development-client/?url=http%3A%2F%2F192.168.1.106%3A8081 on Pixel_5

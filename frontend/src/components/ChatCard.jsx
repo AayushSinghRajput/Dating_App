@@ -1,21 +1,67 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
+function formatChatTime(dateInput) {
+  if (!dateInput) return "";
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return "";
+
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  if (isToday) {
+    return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) {
+    return "Yesterday";
+  }
+
+  const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+  if (diffDays < 7) {
+    return date.toLocaleDateString([], { weekday: "short" });
+  }
+
+  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
 export default function ChatCard({ chat, onPress }) {
+  const hasUnread = chat.unread > 0;
+
   return (
-    <Pressable style={styles.card} onPress={onPress}>
-      <Image source={{ uri: chat.avatar }} style={styles.avatar} />
+    <Pressable
+      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+      onPress={onPress}
+    >
+      <View style={styles.avatarWrapper}>
+        <Image source={{ uri: chat.avatar }} style={styles.avatar} />
+        {chat.isOnline && <View style={styles.onlineDot} />}
+      </View>
+
       <View style={styles.info}>
-        <Text style={styles.name}>{chat.userName}</Text>
-        <Text style={styles.message} numberOfLines={1}>
-          {chat.lastMessage}
+        <Text style={styles.name} numberOfLines={1}>
+          {chat.userName}
+        </Text>
+        <Text
+          style={[styles.message, hasUnread && styles.messageUnread]}
+          numberOfLines={1}
+        >
+          {chat.lastMessage || "Say hi 👋"}
         </Text>
       </View>
+
       <View style={styles.right}>
-        <Text style={styles.time}>{chat.time}</Text>
-        {chat.unread > 0 && (
+        <Text style={[styles.time, hasUnread && styles.timeUnread]}>
+          {formatChatTime(chat.time)}
+        </Text>
+        {hasUnread ? (
           <View style={styles.unreadBadge}>
-            <Text style={styles.unreadText}>{chat.unread}</Text>
+            <Text style={styles.unreadText}>
+              {chat.unread > 9 ? "9+" : chat.unread}
+            </Text>
           </View>
+        ) : (
+          <View style={styles.badgeSpacer} />
         )}
       </View>
     </Pressable>
@@ -26,53 +72,83 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
     backgroundColor: "#fff",
-    marginVertical: 6,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f2f2f2",
+  },
+  cardPressed: {
+    backgroundColor: "#fafafa",
+  },
+  avatarWrapper: {
+    position: "relative",
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#eee",
+  },
+  onlineDot: {
+    position: "absolute",
+    bottom: 1,
+    right: 1,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: "#4CAF50",
+    borderWidth: 2,
+    borderColor: "#fff",
   },
   info: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 14,
+    marginRight: 8,
   },
   name: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "700",
-    color: "#e63946",
+    color: "#1a1a1a",
   },
   message: {
     fontSize: 14,
-    color: "#555",
-    marginTop: 2,
+    color: "#8e8e93",
+    marginTop: 3,
+  },
+  messageUnread: {
+    color: "#1a1a1a",
+    fontWeight: "600",
   },
   right: {
     alignItems: "flex-end",
+    minWidth: 40,
   },
   time: {
     fontSize: 12,
     color: "#999",
   },
+  timeUnread: {
+    color: "#e63946",
+    fontWeight: "700",
+  },
   unreadBadge: {
     backgroundColor: "#e63946",
-    borderRadius: 12,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginTop: 4,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 6,
   },
   unreadText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
+  },
+  badgeSpacer: {
+    height: 20,
+    marginTop: 6,
   },
 });

@@ -18,6 +18,7 @@ import Toast from "react-native-toast-message";
 
 interface Chat {
   id: string;
+  otherUserId: string;
   userName: string;
   avatar: string;
   lastMessage: string;
@@ -88,19 +89,18 @@ export default function Chats() {
   const ChatsHeader = ({ chatsCount }: ChatsHeaderProps) => (
     <View style={styles.chatsHeader}>
       <Text style={styles.chatsTitle}>Recent Conversations</Text>
-      <Text style={styles.chatsCount}>{chatsCount} chats</Text>
+      <Text style={styles.chatsCount}>
+        {chatsCount} {chatsCount === 1 ? "chat" : "chats"}
+      </Text>
     </View>
   );
 
-  // Simple online users filter for demo
-  const onlineUsers = chats.filter(
-    (chat) => chat.isOnline || Math.random() > 0.5
-  );
+  const onlineUsers = chats.filter((chat) => chat.isOnline);
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF6B6B" />
+        <ActivityIndicator size="large" color="#e63946" />
         <Text style={{ color: "#555", marginTop: 8 }}>Loading Chats...</Text>
       </View>
     );
@@ -153,12 +153,21 @@ export default function Chats() {
           renderItem={({ item }: { item: Chat }) => (
             <ChatCard
               chat={item}
-              onPress={() => router.push(`/screen/ChatDetail/${item.id}`)}
+              onPress={() =>
+                router.push({
+                  pathname: "/screen/ChatDetail/[chatId]",
+                  params: {
+                    chatId: item.id,
+                    name: item.userName,
+                    avatar: item.avatar,
+                    otherUserId: item.otherUserId,
+                  },
+                })
+              }
             />
           )}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.chatsList}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
         />
       </View>
 
@@ -204,7 +213,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   unreadBadge: {
-    backgroundColor: "#FF6B6B",
+    backgroundColor: "#e63946",
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -283,8 +292,7 @@ const styles = StyleSheet.create({
   },
   chatsTitle: { fontSize: 18, fontWeight: "700", color: "#1a1a1a" },
   chatsCount: { fontSize: 14, fontWeight: "600", color: "#666" },
-  chatsList: { paddingHorizontal: 8, paddingVertical: 8 },
-  separator: { height: 1, backgroundColor: "#f8f9fa", marginHorizontal: 12 },
+  chatsList: { paddingBottom: 8 },
   newMessageButton: {
     position: "absolute",
     bottom: 30,
@@ -292,7 +300,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#FF6B6B",
+    backgroundColor: "#e63946",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",

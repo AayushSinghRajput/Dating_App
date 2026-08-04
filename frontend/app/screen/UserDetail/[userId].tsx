@@ -9,6 +9,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { createOrGetChat } from "@/utils/api";
 
 // Define TypeScript interfaces for better type safety
 interface User {
@@ -29,7 +30,8 @@ interface User {
   compatibility?: number;
   distance?: number;
   profileImage: string;
-  chatId:string;
+  chatId: string;
+  userId?: string;
 }
 
 export default function UserDetail() {
@@ -53,16 +55,21 @@ export default function UserDetail() {
     console.log("Liked user:", user.id);
   };
 
-  const handleMessage = () => {
-    // console.log("Message user:", user.id);
-    router.push({
-      pathname: "/screen/ChatDetail/[chatId]",
-      params: {
-        chatId: user?.chatId || user?.id,
-        name: user.name,
-        avatar: user.profileImage,
-      },
-    });
+  const handleMessage = async () => {
+    try {
+      const chat = await createOrGetChat(user.userId || user.id);
+      router.push({
+        pathname: "/screen/ChatDetail/[chatId]",
+        params: {
+          chatId: chat._id,
+          name: user.name,
+          avatar: user.profileImage,
+          otherUserId: user.userId || user.id,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to open chat:", error);
+    }
   };
 
   return (
