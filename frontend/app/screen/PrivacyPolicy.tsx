@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface PolicySection {
   id: string;
@@ -12,6 +13,7 @@ interface PolicySection {
 
 export default function PrivacyPolicy() {
   const router = useRouter();
+  const { colors } = useTheme();
 
   const handleBack = () => {
     router.back();
@@ -71,23 +73,23 @@ export default function PrivacyPolicy() {
   const PolicySectionItem = ({ section }: { section: PolicySection }) => (
     <View style={styles.sectionItem}>
       <View style={styles.sectionHeader}>
-        <View style={styles.sectionIcon}>
-          <Ionicons name={section.icon as any} size={20} color="#FF6B6B" />
+        <View style={[styles.sectionIcon, { backgroundColor: colors.accentSoft }]}>
+          <Ionicons name={section.icon as any} size={20} color={colors.accent} />
         </View>
-        <Text style={styles.sectionTitle}>{section.title}</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>{section.title}</Text>
       </View>
-      <Text style={styles.sectionContent}>{section.content}</Text>
+      <Text style={[styles.sectionContent, { color: colors.textSecondary }]}>{section.content}</Text>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, shadowColor: colors.shadow }]}>
         <Pressable style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>Privacy Policy</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Privacy Policy</Text>
         <View style={styles.headerPlaceholder} />
       </View>
 
@@ -97,19 +99,19 @@ export default function PrivacyPolicy() {
         showsVerticalScrollIndicator={false}
       >
         {/* Introduction */}
-        <View style={styles.introSection}>
-          <View style={styles.introIcon}>
-            <Ionicons name="shield-checkmark" size={32} color="#FF6B6B" />
+        <View style={[styles.introSection, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+          <View style={[styles.introIcon, { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed }]}>
+            <Ionicons name="shield-checkmark" size={32} color={colors.accent} />
           </View>
-          <Text style={styles.introTitle}>Your Privacy Matters</Text>
-          <Text style={styles.introDescription}>
+          <Text style={[styles.introTitle, { color: colors.text }]}>Your Privacy Matters</Text>
+          <Text style={[styles.introDescription, { color: colors.textSecondary }]}>
             Last updated: December 2023{"\n"}
             We are committed to protecting your personal information and being transparent about what we collect and how we use it.
           </Text>
         </View>
 
         {/* Policy Sections */}
-        <View style={styles.policySections}>
+        <View style={[styles.policySections, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
           {policySections.map((section) => (
             <PolicySectionItem key={section.id} section={section} />
           ))}
@@ -117,25 +119,25 @@ export default function PrivacyPolicy() {
 
         {/* Contact Information */}
         <View style={styles.contactSection}>
-          <Text style={styles.contactTitle}>Contact Us</Text>
-          <Text style={styles.contactDescription}>
+          <Text style={[styles.contactTitle, { color: colors.text }]}>Contact Us</Text>
+          <Text style={[styles.contactDescription, { color: colors.textSecondary }]}>
             If you have any questions about this Privacy Policy or our data practices, please contact us at:
           </Text>
           <View style={styles.contactInfo}>
-            <Ionicons name="mail" size={16} color="#666" />
-            <Text style={styles.contactText}>privacy@datingapp.com</Text>
+            <Ionicons name="mail" size={16} color={colors.textSecondary} />
+            <Text style={[styles.contactText, { color: colors.textSecondary }]}>privacy@datingapp.com</Text>
           </View>
         </View>
 
         {/* Quick Actions */}
         <View style={styles.actionsSection}>
-          <Pressable style={styles.actionButton}>
-            <Ionicons name="download" size={20} color="#FF6B6B" />
-            <Text style={styles.actionText}>Download Policy</Text>
+          <Pressable style={[styles.actionButton, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+            <Ionicons name="download" size={20} color={colors.accent} />
+            <Text style={[styles.actionText, { color: colors.textSecondary }]}>Download Policy</Text>
           </Pressable>
-          <Pressable style={styles.actionButton}>
-            <Ionicons name="print" size={20} color="#666" />
-            <Text style={styles.actionText}>Print Policy</Text>
+          <Pressable style={[styles.actionButton, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+            <Ionicons name="print" size={20} color={colors.textSecondary} />
+            <Text style={[styles.actionText, { color: colors.textSecondary }]}>Print Policy</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -144,9 +146,8 @@ export default function PrivacyPolicy() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#f8f9fa" 
+  container: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
@@ -159,14 +160,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -179,19 +177,16 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
   },
   headerPlaceholder: {
     width: 40,
   },
   introSection: {
     alignItems: "center",
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 16,
     padding: 24,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 12,
@@ -201,33 +196,27 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "#FFF5F5",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
     borderWidth: 2,
-    borderColor: "#FFE5E5",
   },
   introTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 12,
     textAlign: "center",
   },
   introDescription: {
     fontSize: 14,
-    color: "#666",
     textAlign: "center",
     lineHeight: 20,
   },
   policySections: {
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 16,
     padding: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 12,
@@ -246,19 +235,16 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: "#FFF5F5",
     justifyContent: "center",
     alignItems: "center",
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
     flex: 1,
   },
   sectionContent: {
     fontSize: 14,
-    color: "#666",
     lineHeight: 20,
     marginLeft: 48,
   },
@@ -274,12 +260,10 @@ const styles = StyleSheet.create({
   contactTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 8,
   },
   contactDescription: {
     fontSize: 14,
-    color: "#666",
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -290,7 +274,6 @@ const styles = StyleSheet.create({
   },
   contactText: {
     fontSize: 14,
-    color: "#666",
     fontWeight: "500",
   },
   actionsSection: {
@@ -303,11 +286,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -316,6 +297,5 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#666",
   },
 });

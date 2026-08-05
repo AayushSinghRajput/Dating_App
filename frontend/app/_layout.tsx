@@ -1,17 +1,30 @@
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
+import { StatusBar } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { initToken } from "../utils/api";
 import Toast from "react-native-toast-message";
 import { CallProvider } from "../contexts/CallContext";
+import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import IncomingCallModal from "../src/components/calling/IncomingCallModal";
 import InCallScreen from "../src/components/calling/InCallScreen";
 
 function AppShell({ isLoggedIn }: { isLoggedIn: boolean }) {
+  const { colors } = useTheme();
+
   return (
     <>
-      <Stack screenOptions={{ headerShown: false }}>
+      <StatusBar
+        barStyle={colors.statusBarStyle}
+        backgroundColor={colors.surface}
+      />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
         {isLoggedIn ? (
           <Stack.Screen name="(tabs)" />
         ) : (
@@ -46,15 +59,17 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      {isLoggedIn ? (
-        <CallProvider>
+      <ThemeProvider>
+        {isLoggedIn ? (
+          <CallProvider>
+            <AppShell isLoggedIn={isLoggedIn} />
+            <IncomingCallModal />
+            <InCallScreen />
+          </CallProvider>
+        ) : (
           <AppShell isLoggedIn={isLoggedIn} />
-          <IncomingCallModal />
-          <InCallScreen />
-        </CallProvider>
-      ) : (
-        <AppShell isLoggedIn={isLoggedIn} />
-      )}
+        )}
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

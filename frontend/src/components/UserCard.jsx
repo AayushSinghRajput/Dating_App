@@ -19,11 +19,13 @@ import {
   getMatches,
   createOrGetChat,
 } from "@/utils/api";
+import { useTheme } from "@/contexts/ThemeContext";
 import Toast from "react-native-toast-message";
 
 const { width } = Dimensions.get("window");
 
 export default function UserCard({ user, index = 0 }) {
+  const { colors } = useTheme();
   const [favorite, setFavorite] = useState(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [loadingFavorite, setLoadingFavorite] = useState(false);
@@ -290,7 +292,7 @@ export default function UserCard({ user, index = 0 }) {
       ]}
     >
       <Pressable onPress={handlePress} style={styles.pressableArea}>
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
           {/* IMAGE SECTION */}
           <View style={styles.imageWrapper}>
             <Image
@@ -308,8 +310,8 @@ export default function UserCard({ user, index = 0 }) {
               style={styles.imageOverlay}
             />
             {!imageLoaded && (
-              <View style={styles.imagePlaceholder}>
-                <Ionicons name="person" size={50} color="#E8E8E8" />
+              <View style={[styles.imagePlaceholder, { backgroundColor: colors.surfaceAlt }]}>
+                <Ionicons name="person" size={50} color={colors.textTertiary} />
               </View>
             )}
             <Animated.View
@@ -330,16 +332,19 @@ export default function UserCard({ user, index = 0 }) {
 
           {/* INFO SECTION */}
           <View style={styles.infoWrapper}>
-            <Text style={styles.name}>{user?.name || "Unknown"}</Text>
-            {age && <Text style={styles.age}>{age}</Text>}
-            <Text style={styles.location}>
+            <Text style={[styles.name, { color: colors.text }]}>{user?.name || "Unknown"}</Text>
+            {age && <Text style={[styles.age, { color: colors.textSecondary }]}>{age}</Text>}
+            <Text style={[styles.location, { color: colors.textTertiary }]}>
               {user?.location || "Location not specified"}
             </Text>
 
             {/* ACTION BUTTONS */}
             <View style={styles.actionButtons}>
-              <Pressable onPress={handlePass} style={styles.passButton}>
-                <Ionicons name="close" size={24} color="#FF6B6B" />
+              <Pressable
+                onPress={handlePass}
+                style={[styles.passButton, { backgroundColor: colors.surface, borderColor: colors.accentSoft }]}
+              >
+                <Ionicons name="close" size={24} color={colors.accent} />
               </Pressable>
 
               <Pressable onPress={handleLike} style={styles.likeButton}>
@@ -351,7 +356,10 @@ export default function UserCard({ user, index = 0 }) {
                 </LinearGradient>
               </Pressable>
 
-              <Pressable onPress={handleMessage} style={styles.messageButton}>
+              <Pressable
+                onPress={handleMessage}
+                style={[styles.messageButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
                 <Ionicons
                   name="chatbubble-ellipses"
                   size={20}

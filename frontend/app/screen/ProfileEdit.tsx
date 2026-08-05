@@ -1,21 +1,23 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { 
-  Pressable, 
-  ScrollView, 
-  StyleSheet, 
-  Text, 
-  TextInput, 
-  View, 
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
   Alert,
-  Image 
+  Image
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import loggedUser from "../../assets/data/loggedUser";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function ProfileEdit() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [name, setName] = useState(loggedUser.name);
   const [age, setAge] = useState(String(loggedUser.age));
   const [location, setLocation] = useState(loggedUser.location);
@@ -34,7 +36,7 @@ export default function ProfileEdit() {
     }
 
     setIsSaving(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       console.log("Profile updated:", { name, age: Number(age), location, bio });
@@ -50,123 +52,123 @@ export default function ProfileEdit() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, shadowColor: colors.shadow }]}>
         <Pressable style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>Edit Profile</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Edit Profile</Text>
         <View style={styles.headerPlaceholder} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         {/* Profile Image Section */}
-        <View style={styles.imageSection}>
+        <View style={[styles.imageSection, { backgroundColor: colors.surface }]}>
           <View style={styles.avatarContainer}>
-            <Image 
-              source={{ uri: loggedUser.avatar }} 
-              style={styles.avatar}
+            <Image
+              source={{ uri: loggedUser.avatar }}
+              style={[styles.avatar, { borderColor: colors.accent }]}
             />
-            <Pressable style={styles.editImageButton}>
+            <Pressable style={[styles.editImageButton, { backgroundColor: colors.accent, borderColor: colors.surface }]}>
               <Ionicons name="camera" size={20} color="#fff" />
             </Pressable>
           </View>
-          <Text style={styles.imageHint}>Tap to change photo</Text>
+          <Text style={[styles.imageHint, { color: colors.textSecondary }]}>Tap to change photo</Text>
         </View>
 
         {/* Form Section */}
-        <View style={styles.formSection}>
+        <View style={[styles.formSection, { backgroundColor: colors.surface }]}>
           {/* Full Name */}
           <View style={styles.inputWrapper}>
-            <Text style={styles.label}>
-              Full Name <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Full Name <Text style={[styles.required, { color: colors.accent }]}>*</Text>
             </Text>
-            <TextInput 
-              style={styles.input} 
-              value={name} 
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
+              value={name}
               onChangeText={setName}
               placeholder="Enter your full name"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textTertiary}
             />
           </View>
 
           {/* Age */}
           <View style={styles.inputWrapper}>
-            <Text style={styles.label}>
-              Age <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Age <Text style={[styles.required, { color: colors.accent }]}>*</Text>
             </Text>
-            <TextInput 
-              style={styles.input} 
-              value={age} 
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
+              value={age}
               onChangeText={setAge}
               keyboardType="numeric"
               placeholder="Enter your age"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textTertiary}
               maxLength={3}
             />
           </View>
 
           {/* Location */}
           <View style={styles.inputWrapper}>
-            <Text style={styles.label}>
-              Location <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Location <Text style={[styles.required, { color: colors.accent }]}>*</Text>
             </Text>
-            <TextInput 
-              style={styles.input} 
-              value={location} 
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
+              value={location}
               onChangeText={setLocation}
               placeholder="Enter your location"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textTertiary}
             />
           </View>
 
           {/* Bio */}
           <View style={styles.inputWrapper}>
-            <Text style={styles.label}>Bio</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Bio</Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[styles.input, styles.textArea, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
               value={bio}
               onChangeText={setBio}
               multiline
               numberOfLines={4}
               textAlignVertical="top"
               placeholder="Tell us about yourself..."
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textTertiary}
               maxLength={500}
             />
-            <Text style={styles.charCount}>{bio.length}/500</Text>
+            <Text style={[styles.charCount, { color: colors.textTertiary }]}>{bio.length}/500</Text>
           </View>
 
           {/* Additional Fields */}
           <View style={styles.inputWrapper}>
-            <Text style={styles.label}>Profession</Text>
-            <TextInput 
-              style={styles.input} 
+            <Text style={[styles.label, { color: colors.text }]}>Profession</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
               placeholder="What do you do?"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textTertiary}
             />
           </View>
 
           <View style={styles.inputWrapper}>
-            <Text style={styles.label}>Interests</Text>
-            <TextInput 
-              style={styles.input} 
+            <Text style={[styles.label, { color: colors.text }]}>Interests</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
               placeholder="Add your hobbies and interests"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textTertiary}
             />
           </View>
         </View>
 
         {/* Action Buttons */}
         <View style={styles.actionsSection}>
-          <Pressable 
-            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]} 
+          <Pressable
+            style={[styles.saveButton, { backgroundColor: colors.accent, shadowColor: colors.accent }, isSaving && [styles.saveButtonDisabled, { backgroundColor: colors.textTertiary }]]}
             onPress={saveProfile}
             disabled={isSaving}
           >
@@ -180,12 +182,12 @@ export default function ProfileEdit() {
             )}
           </Pressable>
 
-          <Pressable 
-            style={styles.cancelButton}
+          <Pressable
+            style={[styles.cancelButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={handleBack}
             disabled={isSaving}
           >
-            <Text style={styles.cancelText}>Cancel</Text>
+            <Text style={[styles.cancelText, { color: colors.textSecondary }]}>Cancel</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -194,9 +196,8 @@ export default function ProfileEdit() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#f8f9fa" 
+  container: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
@@ -209,14 +210,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
     paddingHorizontal: 16, // Reduced horizontal padding
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
     borderBottomLeftRadius: 20, // Added border radius to bottom left
     borderBottomRightRadius: 20, // Added border radius to bottom right
-    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -229,7 +227,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
   },
   headerPlaceholder: {
     width: 40,
@@ -237,7 +234,6 @@ const styles = StyleSheet.create({
   imageSection: {
     alignItems: "center",
     paddingVertical: 24,
-    backgroundColor: "#fff",
     marginBottom: 8,
   },
   avatarContainer: {
@@ -249,21 +245,17 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 3,
-    borderColor: "#FF6B6B",
   },
   editImageButton: {
     position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: "#FF6B6B",
     width: 36,
     height: 36,
     borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 3,
-    borderColor: "#fff",
-    shadowColor: "#000",
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
@@ -271,11 +263,9 @@ const styles = StyleSheet.create({
   },
   imageHint: {
     fontSize: 14,
-    color: "#666",
     fontWeight: "500",
   },
   formSection: {
-    backgroundColor: "#fff",
     paddingHorizontal: 20,
     paddingVertical: 16,
     marginBottom: 8,
@@ -286,21 +276,15 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1a1a1a",
     marginBottom: 8,
   },
-  required: {
-    color: "#FF6B6B",
-  },
+  required: {},
   input: {
-    backgroundColor: "#f8f9fa",
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: "#1a1a1a",
     borderWidth: 1,
-    borderColor: "#e9ecef",
   },
   textArea: {
     height: 100,
@@ -308,7 +292,6 @@ const styles = StyleSheet.create({
   },
   charCount: {
     fontSize: 12,
-    color: "#999",
     textAlign: "right",
     marginTop: 4,
   },
@@ -317,14 +300,12 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   saveButton: {
-    backgroundColor: "#FF6B6B",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 16,
     borderRadius: 14,
     marginBottom: 12,
-    shadowColor: "#FF6B6B",
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 8,
@@ -332,7 +313,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   saveButtonDisabled: {
-    backgroundColor: "#ccc",
     shadowOpacity: 0,
   },
   saveText: {
@@ -344,12 +324,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#e9ecef",
-    backgroundColor: "#fff",
     alignItems: "center",
   },
   cancelText: {
-    color: "#666",
     fontSize: 16,
     fontWeight: "600",
   },

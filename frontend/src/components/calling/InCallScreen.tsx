@@ -3,6 +3,7 @@ import { Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { RTCView } from "react-native-webrtc";
 import { useCall } from "@/contexts/CallContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 function formatDuration(seconds: number) {
   const m = Math.floor(seconds / 60)
@@ -13,6 +14,7 @@ function formatDuration(seconds: number) {
 }
 
 export default function InCallScreen() {
+  const { colors } = useTheme();
   const {
     callStatus,
     callType,
@@ -111,7 +113,10 @@ export default function InCallScreen() {
             />
           </Pressable>
 
-          <Pressable style={[styles.controlButton, styles.endButton]} onPress={endCall}>
+          <Pressable
+            style={[styles.controlButton, { backgroundColor: colors.accent }]}
+            onPress={endCall}
+          >
             <Ionicons name="call" size={26} color="#fff" style={{ transform: [{ rotate: "135deg" }] }} />
           </Pressable>
         </View>
@@ -200,8 +205,5 @@ const styles = StyleSheet.create({
   },
   controlButtonActive: {
     backgroundColor: "rgba(255,255,255,0.35)",
-  },
-  endButton: {
-    backgroundColor: "#e63946",
   },
 });

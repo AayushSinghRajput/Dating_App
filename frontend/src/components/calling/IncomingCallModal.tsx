@@ -1,8 +1,10 @@
 import { Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useCall } from "@/contexts/CallContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function IncomingCallModal() {
+  const { colors } = useTheme();
   const { callStatus, callType, remoteUser, acceptCall, rejectCall } = useCall();
 
   const visible = callStatus === "incoming-ringing" && !!remoteUser;
@@ -22,14 +24,20 @@ export default function IncomingCallModal() {
 
           <View style={styles.actions}>
             <View style={styles.actionColumn}>
-              <Pressable style={[styles.actionButton, styles.declineButton]} onPress={rejectCall}>
+              <Pressable
+                style={[styles.actionButton, { backgroundColor: colors.accent }]}
+                onPress={rejectCall}
+              >
                 <Ionicons name="close" size={30} color="#fff" />
               </Pressable>
               <Text style={styles.actionLabel}>Decline</Text>
             </View>
 
             <View style={styles.actionColumn}>
-              <Pressable style={[styles.actionButton, styles.acceptButton]} onPress={acceptCall}>
+              <Pressable
+                style={[styles.actionButton, { backgroundColor: colors.success }]}
+                onPress={acceptCall}
+              >
                 <Ionicons
                   name={callType === "video" ? "videocam" : "call"}
                   size={28}
@@ -88,12 +96,6 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     justifyContent: "center",
     alignItems: "center",
-  },
-  declineButton: {
-    backgroundColor: "#e63946",
-  },
-  acceptButton: {
-    backgroundColor: "#4CAF50",
   },
   actionLabel: {
     color: "#fff",

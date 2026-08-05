@@ -17,6 +17,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { createOrUpdateProfile, Profile } from "@/utils/api";
 import Toast from "react-native-toast-message";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { height } = Dimensions.get("window");
 
@@ -24,6 +25,7 @@ export default function DetailSecond() {
   const { name, age, gender, interestedIn, profilePic } =
     useLocalSearchParams();
   const router = useRouter();
+  const { colors } = useTheme();
   const [hobbies, setHobbies] = useState("");
   const [goal, setGoal] = useState("");
   const [location, setLocation] = useState("");
@@ -169,27 +171,27 @@ export default function DetailSecond() {
       visible={visible}
       onRequestClose={() => setVisible(false)}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{title}</Text>
+      <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
+        <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{title}</Text>
             <TouchableOpacity onPress={() => setVisible(false)}>
-              <Ionicons name="close" size={24} color="#666" />
+              <Ionicons name="close" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
           <ScrollView style={styles.modalScroll}>
             {options.map((option, index) => (
               <TouchableOpacity
                 key={index}
-                style={styles.optionItem}
+                style={[styles.optionItem, { borderBottomColor: colors.border }]}
                 onPress={() => {
                   onSelect(option.value);
                   setVisible(false);
                 }}
               >
-                <Ionicons name={option.icon} size={24} color="#ff6b6b" />
-                <Text style={styles.optionText}>{option.label}</Text>
-                <Ionicons name="chevron-forward" size={20} color="#ccc" />
+                <Ionicons name={option.icon} size={24} color={colors.accent} />
+                <Text style={[styles.optionText, { color: colors.text }]}>{option.label}</Text>
+                <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -201,7 +203,7 @@ export default function DetailSecond() {
   return (
     <>
       <StatusBar
-        barStyle="light-content"
+        barStyle={colors.statusBarStyle}
         translucent
         backgroundColor="transparent"
       />
@@ -265,9 +267,9 @@ export default function DetailSecond() {
                   Interests
                 </Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: colors.surface, color: colors.text, shadowColor: colors.shadow }]}
                   placeholder="e.g., Hiking, Cooking, Reading, Music..."
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.textTertiary}
                   value={hobbies}
                   onChangeText={setHobbies}
                   multiline
@@ -283,14 +285,16 @@ export default function DetailSecond() {
                 <Pressable
                   style={[
                     styles.selectInput,
-                    goal && styles.selectInputSelected,
+                    { backgroundColor: colors.surface, shadowColor: colors.shadow },
+                    goal && [styles.selectInputSelected, { borderColor: colors.accent }],
                   ]}
                   onPress={() => setGoalModalVisible(true)}
                 >
                   <Text
                     style={[
                       styles.selectText,
-                      goal && styles.selectTextSelected,
+                      { color: colors.textTertiary },
+                      goal && [styles.selectTextSelected, { color: colors.text }],
                     ]}
                   >
                     {goal || "What are you looking for?"}
@@ -298,7 +302,7 @@ export default function DetailSecond() {
                   <Ionicons
                     name="chevron-down"
                     size={20}
-                    color={goal ? "#333" : "#999"}
+                    color={goal ? colors.text : colors.textTertiary}
                   />
                 </Pressable>
               </View>
@@ -312,14 +316,16 @@ export default function DetailSecond() {
                 <Pressable
                   style={[
                     styles.selectInput,
-                    location && styles.selectInputSelected,
+                    { backgroundColor: colors.surface, shadowColor: colors.shadow },
+                    location && [styles.selectInputSelected, { borderColor: colors.accent }],
                   ]}
                   onPress={() => setLocationModalVisible(true)}
                 >
                   <Text
                     style={[
                       styles.selectText,
-                      location && styles.selectTextSelected,
+                      { color: colors.textTertiary },
+                      location && [styles.selectTextSelected, { color: colors.text }],
                     ]}
                   >
                     {location || "Where are you based?"}
@@ -327,7 +333,7 @@ export default function DetailSecond() {
                   <Ionicons
                     name="chevron-down"
                     size={20}
-                    color={location ? "#333" : "#999"}
+                    color={location ? colors.text : colors.textTertiary}
                   />
                 </Pressable>
               </View>
@@ -338,9 +344,9 @@ export default function DetailSecond() {
                   <Feather name="edit" size={16} color="#fff" /> About Me
                 </Text>
                 <TextInput
-                  style={[styles.input, styles.bioInput]}
+                  style={[styles.input, styles.bioInput, { backgroundColor: colors.surface, color: colors.text, shadowColor: colors.shadow }]}
                   placeholder="Share something interesting about yourself... What makes you smile? What's your story?"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.textTertiary}
                   value={bio}
                   onChangeText={setBio}
                   multiline
@@ -359,9 +365,9 @@ export default function DetailSecond() {
                   Education & Work
                 </Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: colors.surface, color: colors.text, shadowColor: colors.shadow }]}
                   placeholder="e.g., Software Engineer at XYZ, MBA from ABC University"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.textTertiary}
                   value={education}
                   onChangeText={setEducation}
                   multiline
@@ -525,12 +531,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   input: {
-    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 16,
     fontSize: 16,
-    color: "#333",
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -548,13 +551,11 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   selectInput: {
-    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -563,15 +564,12 @@ const styles = StyleSheet.create({
   },
   selectInputSelected: {
     borderWidth: 2,
-    borderColor: "#ff6b6b",
   },
   selectText: {
     fontSize: 16,
-    color: "#999",
     flex: 1,
   },
   selectTextSelected: {
-    color: "#333",
     fontWeight: "500",
   },
   continueBtn: {
@@ -612,11 +610,9 @@ const styles = StyleSheet.create({
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingVertical: 20,
@@ -629,12 +625,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#333",
   },
   modalScroll: {
     maxHeight: height * 0.5,
@@ -645,12 +639,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f8f9fa",
   },
   optionText: {
     flex: 1,
     fontSize: 16,
-    color: "#333",
     marginLeft: 16,
     fontWeight: "500",
   },

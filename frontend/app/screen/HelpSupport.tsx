@@ -3,6 +3,7 @@ import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface FAQItem {
   id: string;
@@ -22,6 +23,7 @@ interface SupportOption {
 
 export default function HelpSupport() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [faqs, setFaqs] = useState<FAQItem[]>([
     {
       id: "1",
@@ -60,8 +62,8 @@ export default function HelpSupport() {
   };
 
   const toggleFAQ = (id: string) => {
-    setFaqs(faqs.map(faq => 
-      faq.id === id 
+    setFaqs(faqs.map(faq =>
+      faq.id === id
         ? { ...faq, isExpanded: !faq.isExpanded }
         : { ...faq, isExpanded: false }
     ));
@@ -87,7 +89,7 @@ export default function HelpSupport() {
       description: "Get help from our support team",
       icon: "chatbubble-ellipses",
       action: contactSupport,
-      color: "#FF6B6B"
+      color: colors.accent
     },
     {
       id: "2",
@@ -95,7 +97,7 @@ export default function HelpSupport() {
       description: "Share your experience with us",
       icon: "megaphone",
       action:()=> router.push('/screen/FeedbackScreen'),
-      color: "#4CAF50"
+      color: colors.success
     },
     {
       id: "3",
@@ -121,7 +123,7 @@ export default function HelpSupport() {
       issues: ["Can't login", "Password reset", "Account deletion"]
     },
     {
-      title: "Matching Problems", 
+      title: "Matching Problems",
       issues: ["No matches", "Profile not showing", "Location issues"]
     },
     {
@@ -131,69 +133,69 @@ export default function HelpSupport() {
   ];
 
   const FAQItem = ({ faq }: { faq: FAQItem }) => (
-    <Pressable 
-      style={styles.faqItem}
+    <Pressable
+      style={[styles.faqItem, { backgroundColor: colors.surfaceAlt }]}
       onPress={() => toggleFAQ(faq.id)}
     >
       <View style={styles.faqHeader}>
-        <Text style={styles.faqQuestion}>{faq.question}</Text>
-        <Ionicons 
-          name={faq.isExpanded ? "chevron-up" : "chevron-down"} 
-          size={20} 
-          color="#666" 
+        <Text style={[styles.faqQuestion, { color: colors.text }]}>{faq.question}</Text>
+        <Ionicons
+          name={faq.isExpanded ? "chevron-up" : "chevron-down"}
+          size={20}
+          color={colors.textSecondary}
         />
       </View>
       {faq.isExpanded && (
-        <View style={styles.faqAnswer}>
-          <Text style={styles.faqAnswerText}>{faq.answer}</Text>
+        <View style={[styles.faqAnswer, { borderTopColor: colors.border }]}>
+          <Text style={[styles.faqAnswerText, { color: colors.textSecondary }]}>{faq.answer}</Text>
         </View>
       )}
     </Pressable>
   );
 
   const SupportOptionCard = ({ option }: { option: SupportOption }) => (
-    <Pressable style={styles.supportOption} onPress={option.action}>
+    <Pressable style={[styles.supportOption, { backgroundColor: colors.surfaceAlt }]} onPress={option.action}>
       <View style={[styles.optionIcon, { backgroundColor: `${option.color}15` }]}>
         <Ionicons name={option.icon as any} size={24} color={option.color} />
       </View>
       <View style={styles.optionText}>
-        <Text style={styles.optionTitle}>{option.title}</Text>
-        <Text style={styles.optionDescription}>{option.description}</Text>
+        <Text style={[styles.optionTitle, { color: colors.text }]}>{option.title}</Text>
+        <Text style={[styles.optionDescription, { color: colors.textSecondary }]}>{option.description}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color="#ccc" />
+      <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
     </Pressable>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, shadowColor: colors.shadow }]}>
         <Pressable style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>Help & Support</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Help & Support</Text>
         <View style={styles.headerPlaceholder} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Welcome Section */}
-        <View style={styles.welcomeSection}>
-          <View style={styles.welcomeIcon}>
-            <Ionicons name="help-buoy" size={32} color="#FF6B6B" />
+        <View style={[styles.welcomeSection, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+          <View style={[styles.welcomeIcon, { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed }]}>
+            <Ionicons name="help-buoy" size={32} color={colors.accent} />
           </View>
-          <Text style={styles.welcomeTitle}>How can we help you?</Text>
-          <Text style={styles.welcomeDescription}>
+          <Text style={[styles.welcomeTitle, { color: colors.text }]}>How can we help you?</Text>
+          <Text style={[styles.welcomeDescription, { color: colors.textSecondary }]}>
             We&apos;re here to help! Choose an option below or browse our FAQs.
           </Text>
         </View>
 
         {/* Support Options */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Get Help</Text>
+        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Get Help</Text>
           <View style={styles.supportOptionsGrid}>
             {supportOptions.map((option) => (
               <SupportOptionCard key={option.id} option={option} />
@@ -202,21 +204,21 @@ export default function HelpSupport() {
         </View>
 
         {/* Quick Solutions */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Solutions</Text>
-          <Text style={styles.sectionDescription}>
+        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Solutions</Text>
+          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
             Common issues and their solutions
           </Text>
-          
+
           <View style={styles.quickSolutionsGrid}>
             {quickSolutions.map((solution, index) => (
-              <View key={index} style={styles.solutionCard}>
-                <Text style={styles.solutionTitle}>{solution.title}</Text>
+              <View key={index} style={[styles.solutionCard, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+                <Text style={[styles.solutionTitle, { color: colors.text }]}>{solution.title}</Text>
                 <View style={styles.issuesList}>
                   {solution.issues.map((issue, issueIndex) => (
                     <View key={issueIndex} style={styles.issueItem}>
-                      <Ionicons name="checkmark-circle" size={14} color="#4CAF50" />
-                      <Text style={styles.issueText}>{issue}</Text>
+                      <Ionicons name="checkmark-circle" size={14} color={colors.success} />
+                      <Text style={[styles.issueText, { color: colors.textSecondary }]}>{issue}</Text>
                     </View>
                   ))}
                 </View>
@@ -226,12 +228,12 @@ export default function HelpSupport() {
         </View>
 
         {/* FAQ Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
-          <Text style={styles.sectionDescription}>
+        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Frequently Asked Questions</Text>
+          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
             Quick answers to common questions
           </Text>
-          
+
           <View style={styles.faqList}>
             {faqs.map((faq) => (
               <FAQItem key={faq.id} faq={faq} />
@@ -240,32 +242,32 @@ export default function HelpSupport() {
         </View>
 
         {/* Contact Information */}
-        <View style={styles.contactSection}>
-          <Ionicons name="headset" size={24} color="#FF6B6B" />
+        <View style={[styles.contactSection, { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed }]}>
+          <Ionicons name="headset" size={24} color={colors.accent} />
           <View style={styles.contactText}>
-            <Text style={styles.contactTitle}>Still need help?</Text>
-            <Text style={styles.contactDescription}>
+            <Text style={[styles.contactTitle, { color: colors.text }]}>Still need help?</Text>
+            <Text style={[styles.contactDescription, { color: colors.textSecondary }]}>
               Our support team is available 24/7 to assist you
             </Text>
           </View>
-          <Pressable style={styles.contactButton} onPress={contactSupport}>
+          <Pressable style={[styles.contactButton, { backgroundColor: colors.accent }]} onPress={contactSupport}>
             <Text style={styles.contactButtonText}>Contact Now</Text>
           </Pressable>
         </View>
 
         {/* App Information */}
-        <View style={styles.infoSection}>
+        <View style={[styles.infoSection, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
           <View style={styles.infoItem}>
-            <Ionicons name="time-outline" size={16} color="#666" />
-            <Text style={styles.infoText}>Average response time: 2 hours</Text>
+            <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>Average response time: 2 hours</Text>
           </View>
           <View style={styles.infoItem}>
-            <Ionicons name="checkmark-circle-outline" size={16} color="#666" />
-            <Text style={styles.infoText}>98% customer satisfaction</Text>
+            <Ionicons name="checkmark-circle-outline" size={16} color={colors.textSecondary} />
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>98% customer satisfaction</Text>
           </View>
           <View style={styles.infoItem}>
-            <Ionicons name="globe-outline" size={16} color="#666" />
-            <Text style={styles.infoText}>Support available in 12 languages</Text>
+            <Ionicons name="globe-outline" size={16} color={colors.textSecondary} />
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>Support available in 12 languages</Text>
           </View>
         </View>
       </ScrollView>
@@ -274,9 +276,8 @@ export default function HelpSupport() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#f8f9fa" 
+  container: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
@@ -289,14 +290,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -309,20 +307,17 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
   },
   headerPlaceholder: {
     width: 40,
   },
   welcomeSection: {
     alignItems: "center",
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginTop:16,
     marginBottom: 16,
     borderRadius: 16,
     padding: 24,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 12,
@@ -332,33 +327,27 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "#FFF5F5",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
     borderWidth: 2,
-    borderColor: "#FFE5E5",
   },
   welcomeTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 8,
     textAlign: "center",
   },
   welcomeDescription: {
     fontSize: 14,
-    color: "#666",
     textAlign: "center",
     lineHeight: 20,
   },
   section: {
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 16,
     padding: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 12,
@@ -367,12 +356,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 4,
   },
   sectionDescription: {
     fontSize: 14,
-    color: "#666",
     fontWeight: "500",
     marginBottom: 16,
     lineHeight: 18,
@@ -385,7 +372,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderRadius: 12,
-    backgroundColor: "#f8f9fa",
     gap: 12,
   },
   optionIcon: {
@@ -401,27 +387,22 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 2,
   },
   optionDescription: {
     fontSize: 13,
-    color: "#666",
   },
   quickSolutionsGrid: {
     gap: 12,
   },
   solutionCard: {
-    backgroundColor: "#f8f9fa",
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#f0f0f0",
   },
   solutionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 12,
   },
   issuesList: {
@@ -434,14 +415,12 @@ const styles = StyleSheet.create({
   },
   issueText: {
     fontSize: 13,
-    color: "#666",
     flex: 1,
   },
   faqList: {
     gap: 8,
   },
   faqItem: {
-    backgroundColor: "#f8f9fa",
     borderRadius: 12,
     overflow: "hidden",
   },
@@ -454,7 +433,6 @@ const styles = StyleSheet.create({
   faqQuestion: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#1a1a1a",
     flex: 1,
     marginRight: 12,
   },
@@ -462,23 +440,19 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 0,
     borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
   },
   faqAnswerText: {
     fontSize: 14,
-    color: "#666",
     lineHeight: 20,
   },
   contactSection: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF5F5",
     marginHorizontal: 16,
     marginBottom: 16,
     padding: 20,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: "#FFE5E5",
     gap: 12,
   },
   contactText: {
@@ -487,18 +461,15 @@ const styles = StyleSheet.create({
   contactTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 4,
   },
   contactDescription: {
     fontSize: 13,
-    color: "#666",
     lineHeight: 16,
   },
   contactButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: "#FF6B6B",
     borderRadius: 8,
   },
   contactButtonText: {
@@ -507,11 +478,9 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   infoSection: {
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     padding: 16,
     borderRadius: 12,
-    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -525,7 +494,6 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 13,
-    color: "#666",
     fontWeight: "500",
   },
 });

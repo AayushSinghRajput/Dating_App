@@ -3,6 +3,7 @@ import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface Language {
   id: string;
@@ -14,6 +15,7 @@ interface Language {
 
 export default function LanguageSettings() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [languages, setLanguages] = useState<Language[]>([
     { id: "1", name: "English", code: "en", nativeName: "English", isSelected: true },
     { id: "2", name: "Spanish", code: "es", nativeName: "Español", isSelected: false },
@@ -42,7 +44,7 @@ export default function LanguageSettings() {
       isSelected: lang.id === languageId
     }));
     setLanguages(updatedLanguages);
-    
+
     const selectedLang = languages.find(lang => lang.id === languageId);
     if (selectedLang) {
       Alert.alert(
@@ -61,40 +63,42 @@ export default function LanguageSettings() {
   const displayedLanguages = showAllLanguages ? filteredLanguages : filteredLanguages.slice(0, 6);
 
   const LanguageItem = ({ language }: { language: Language }) => (
-    <Pressable 
+    <Pressable
       style={[
         styles.languageItem,
-        language.isSelected && styles.selectedLanguageItem
+        { backgroundColor: colors.surfaceAlt },
+        language.isSelected && [styles.selectedLanguageItem, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]
       ]}
       onPress={() => selectLanguage(language.id)}
     >
       <View style={styles.languageInfo}>
-        <Text style={styles.languageName}>{language.name}</Text>
-        <Text style={styles.languageNativeName}>{language.nativeName}</Text>
+        <Text style={[styles.languageName, { color: colors.text }]}>{language.name}</Text>
+        <Text style={[styles.languageNativeName, { color: colors.textSecondary }]}>{language.nativeName}</Text>
       </View>
-      
+
       <View style={styles.selectionIndicator}>
         {language.isSelected ? (
-          <Ionicons name="checkmark-circle" size={24} color="#FF6B6B" />
+          <Ionicons name="checkmark-circle" size={24} color={colors.accent} />
         ) : (
-          <View style={styles.unselectedCircle} />
+          <View style={[styles.unselectedCircle, { borderColor: colors.textTertiary }]} />
         )}
       </View>
     </Pressable>
   );
 
   const PopularLanguageCard = ({ language }: { language: Language }) => (
-    <Pressable 
+    <Pressable
       style={[
         styles.popularLanguageCard,
-        language.isSelected && styles.selectedPopularCard
+        { backgroundColor: colors.surfaceAlt, borderColor: "transparent" },
+        language.isSelected && [styles.selectedPopularCard, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]
       ]}
       onPress={() => selectLanguage(language.id)}
     >
-      <Text style={styles.popularLanguageName}>{language.name}</Text>
-      <Text style={styles.popularLanguageNative}>{language.nativeName}</Text>
+      <Text style={[styles.popularLanguageName, { color: colors.text }]}>{language.name}</Text>
+      <Text style={[styles.popularLanguageNative, { color: colors.textSecondary }]}>{language.nativeName}</Text>
       {language.isSelected && (
-        <View style={styles.popularSelectedBadge}>
+        <View style={[styles.popularSelectedBadge, { backgroundColor: colors.accent }]}>
           <Ionicons name="checkmark" size={12} color="#fff" />
         </View>
       )}
@@ -104,31 +108,31 @@ export default function LanguageSettings() {
   const popularLanguages = languages.slice(0, 6);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, shadowColor: colors.shadow }]}>
         <Pressable style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>Language</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Language</Text>
         <View style={styles.headerPlaceholder} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Current Language Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Current Language</Text>
-          <View style={styles.currentLanguageCard}>
-            <Ionicons name="language" size={24} color="#FF6B6B" />
+        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Current Language</Text>
+          <View style={[styles.currentLanguageCard, { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed }]}>
+            <Ionicons name="language" size={24} color={colors.accent} />
             <View style={styles.currentLanguageInfo}>
-              <Text style={styles.currentLanguageName}>
+              <Text style={[styles.currentLanguageName, { color: colors.text }]}>
                 {languages.find(lang => lang.isSelected)?.name}
               </Text>
-              <Text style={styles.currentLanguageSubtitle}>
+              <Text style={[styles.currentLanguageSubtitle, { color: colors.textSecondary }]}>
                 App is currently in {languages.find(lang => lang.isSelected)?.name}
               </Text>
             </View>
@@ -136,12 +140,12 @@ export default function LanguageSettings() {
         </View>
 
         {/* Popular Languages */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Popular Languages</Text>
-          <Text style={styles.sectionDescription}>
+        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Popular Languages</Text>
+          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
             Quickly switch to commonly used languages
           </Text>
-          
+
           <View style={styles.popularLanguagesGrid}>
             {popularLanguages.map((language) => (
               <PopularLanguageCard key={language.id} language={language} />
@@ -150,12 +154,12 @@ export default function LanguageSettings() {
         </View>
 
         {/* All Languages */}
-        <View style={styles.section}>
+        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>All Languages</Text>
-            <View style={styles.searchContainer}>
-              <Ionicons name="search" size={16} color="#666" />
-              <Text style={styles.searchPlaceholder}>Search languages...</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>All Languages</Text>
+            <View style={[styles.searchContainer, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+              <Ionicons name="search" size={16} color={colors.textSecondary} />
+              <Text style={[styles.searchPlaceholder, { color: colors.textTertiary }]}>Search languages...</Text>
             </View>
           </View>
 
@@ -166,49 +170,49 @@ export default function LanguageSettings() {
           </View>
 
           {filteredLanguages.length > 6 && (
-            <Pressable 
+            <Pressable
               style={styles.showMoreButton}
               onPress={() => setShowAllLanguages(!showAllLanguages)}
             >
-              <Text style={styles.showMoreText}>
+              <Text style={[styles.showMoreText, { color: colors.accent }]}>
                 {showAllLanguages ? 'Show Less' : `Show All ${filteredLanguages.length} Languages`}
               </Text>
-              <Ionicons 
-                name={showAllLanguages ? "chevron-up" : "chevron-down"} 
-                size={16} 
-                color="#FF6B6B" 
+              <Ionicons
+                name={showAllLanguages ? "chevron-up" : "chevron-down"}
+                size={16}
+                color={colors.accent}
               />
             </Pressable>
           )}
         </View>
 
         {/* Language Features */}
-        <View style={styles.featuresSection}>
-          <View style={styles.featureItem}>
-            <Ionicons name="globe-outline" size={20} color="#FF6B6B" />
+        <View style={[styles.featuresSection, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+          <View style={[styles.featureItem, { borderBottomColor: colors.surfaceAlt }]}>
+            <Ionicons name="globe-outline" size={20} color={colors.accent} />
             <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Global Community</Text>
-              <Text style={styles.featureDescription}>
+              <Text style={[styles.featureTitle, { color: colors.text }]}>Global Community</Text>
+              <Text style={[styles.featureDescription, { color: colors.textSecondary }]}>
                 Connect with users from around the world in their preferred language
               </Text>
             </View>
           </View>
-          
-          <View style={styles.featureItem}>
-            <Ionicons name="sync-outline" size={20} color="#FF6B6B" />
+
+          <View style={[styles.featureItem, { borderBottomColor: colors.surfaceAlt }]}>
+            <Ionicons name="sync-outline" size={20} color={colors.accent} />
             <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Real-time Translation</Text>
-              <Text style={styles.featureDescription}>
+              <Text style={[styles.featureTitle, { color: colors.text }]}>Real-time Translation</Text>
+              <Text style={[styles.featureDescription, { color: colors.textSecondary }]}>
                 Messages are automatically translated for seamless communication
               </Text>
             </View>
           </View>
-          
-          <View style={styles.featureItem}>
-            <Ionicons name="people-outline" size={20} color="#FF6B6B" />
+
+          <View style={[styles.featureItem, { borderBottomColor: colors.surfaceAlt }]}>
+            <Ionicons name="people-outline" size={20} color={colors.accent} />
             <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Better Matches</Text>
-              <Text style={styles.featureDescription}>
+              <Text style={[styles.featureTitle, { color: colors.text }]}>Better Matches</Text>
+              <Text style={[styles.featureDescription, { color: colors.textSecondary }]}>
                 Find matches who speak your language or want to learn it
               </Text>
             </View>
@@ -216,16 +220,16 @@ export default function LanguageSettings() {
         </View>
 
         {/* Help Section */}
-        <View style={styles.helpSection}>
-          <Ionicons name="help-circle-outline" size={20} color="#666" />
+        <View style={[styles.helpSection, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+          <Ionicons name="help-circle-outline" size={20} color={colors.textSecondary} />
           <View style={styles.helpText}>
-            <Text style={styles.helpTitle}>Need help with languages?</Text>
-            <Text style={styles.helpDescription}>
+            <Text style={[styles.helpTitle, { color: colors.text }]}>Need help with languages?</Text>
+            <Text style={[styles.helpDescription, { color: colors.textSecondary }]}>
               Changing your language affects the app interface and matching preferences.
             </Text>
           </View>
-          <Pressable style={styles.helpButton}>
-            <Text style={styles.helpButtonText}>Get Help</Text>
+          <Pressable style={[styles.helpButton, { backgroundColor: colors.surface, borderColor: colors.accent }]}>
+            <Text style={[styles.helpButtonText, { color: colors.accent }]}>Get Help</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -234,9 +238,8 @@ export default function LanguageSettings() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#f8f9fa" 
+  container: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
@@ -249,14 +252,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -269,19 +269,16 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
   },
   headerPlaceholder: {
     width: 40,
   },
   section: {
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginBottom: 16,
     marginTop:16,
     borderRadius: 16,
     padding: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 12,
@@ -293,12 +290,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 4,
   },
   sectionDescription: {
     fontSize: 14,
-    color: "#666",
     fontWeight: "500",
     marginBottom: 16,
     lineHeight: 18,
@@ -306,11 +301,9 @@ const styles = StyleSheet.create({
   currentLanguageCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF5F5",
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: "#FFE5E5",
     gap: 12,
   },
   currentLanguageInfo: {
@@ -319,12 +312,10 @@ const styles = StyleSheet.create({
   currentLanguageName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 2,
   },
   currentLanguageSubtitle: {
     fontSize: 13,
-    color: "#666",
   },
   popularLanguagesGrid: {
     flexDirection: "row",
@@ -334,35 +325,27 @@ const styles = StyleSheet.create({
   popularLanguageCard: {
     flex: 1,
     minWidth: "30%",
-    backgroundColor: "#f8f9fa",
     padding: 12,
     borderRadius: 12,
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "transparent",
     position: "relative",
   },
-  selectedPopularCard: {
-    backgroundColor: "#FFF5F5",
-    borderColor: "#FF6B6B",
-  },
+  selectedPopularCard: {},
   popularLanguageName: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 2,
     textAlign: "center",
   },
   popularLanguageNative: {
     fontSize: 11,
-    color: "#666",
     textAlign: "center",
   },
   popularSelectedBadge: {
     position: "absolute",
     top: -6,
     right: -6,
-    backgroundColor: "#FF6B6B",
     width: 20,
     height: 20,
     borderRadius: 10,
@@ -372,17 +355,14 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f8f9fa",
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 10,
     gap: 8,
     borderWidth: 1,
-    borderColor: "#e9ecef",
   },
   searchPlaceholder: {
     fontSize: 14,
-    color: "#999",
     flex: 1,
   },
   languagesList: {
@@ -395,12 +375,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 10,
-    backgroundColor: "#f8f9fa",
   },
   selectedLanguageItem: {
-    backgroundColor: "#FFF5F5",
     borderWidth: 1,
-    borderColor: "#FF6B6B",
   },
   languageInfo: {
     flex: 1,
@@ -408,12 +385,10 @@ const styles = StyleSheet.create({
   languageName: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1a1a1a",
     marginBottom: 2,
   },
   languageNativeName: {
     fontSize: 13,
-    color: "#666",
   },
   selectionIndicator: {
     padding: 4,
@@ -423,7 +398,6 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: "#ccc",
   },
   showMoreButton: {
     flexDirection: "row",
@@ -436,15 +410,12 @@ const styles = StyleSheet.create({
   showMoreText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#FF6B6B",
   },
   featuresSection: {
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 16,
     padding: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 12,
@@ -456,7 +427,6 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f8f9fa",
   },
   featureText: {
     flex: 1,
@@ -464,23 +434,19 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 4,
   },
   featureDescription: {
     fontSize: 13,
-    color: "#666",
     lineHeight: 16,
   },
   helpSection: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0F9FF",
     marginHorizontal: 16,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E8F4FF",
     gap: 12,
   },
   helpText: {
@@ -489,25 +455,20 @@ const styles = StyleSheet.create({
   helpTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 4,
   },
   helpDescription: {
     fontSize: 13,
-    color: "#666",
     lineHeight: 16,
   },
   helpButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: "#fff",
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#FF6B6B",
   },
   helpButtonText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#FF6B6B",
   },
 });

@@ -7,14 +7,27 @@ import {
   StatusBar,
   Image,
   ActivityIndicator,
+  TextInput,
+  LayoutAnimation,
+  Platform,
+  UIManager,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { getAllChats } from "@/utils/api";
 import ChatCard from "../../src/components/ChatCard";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Toast from "react-native-toast-message";
+import { useTheme } from "@/contexts/ThemeContext";
+
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 interface Chat {
   id: string;
@@ -33,12 +46,17 @@ interface OnlineUserProps {
 
 interface ChatsHeaderProps {
   chatsCount: number;
+  isSearching: boolean;
 }
 
 export default function Chats() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -60,9 +78,9 @@ export default function Chats() {
       } catch (error: any) {
         console.error("Error fetching chats:", error.message);
         Toast.show({
-          type:'error',
-          text1:error.message,
-          text2:'Failed to fetch chats',
+          type: 'error',
+          text1: error.message,
+          text2: 'Failed to fetch chats',
         })
       } finally {
         setLoading(false);
@@ -74,22 +92,44 @@ export default function Chats() {
 
   const unreadCount = chats.filter((chat: Chat) => chat.unread > 0).length;
 
+  const filteredChats = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return chats;
+    return chats.filter((chat: Chat) =>
+      chat.userName?.toLowerCase().includes(query)
+    );
+  }, [chats, searchQuery]);
+
+  const openSearch = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setIsSearching(true);
+    setTimeout(() => searchInputRef.current?.focus(), 50);
+  };
+
+  const closeSearch = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setIsSearching(false);
+    setSearchQuery("");
+  };
+
   const OnlineUser = ({ item }: OnlineUserProps) => (
     <Pressable style={styles.onlineUser}>
       <View style={styles.avatarContainer}>
-        <Image source={{ uri: item.avatar }} style={styles.onlineAvatar} />
-        <View style={styles.onlineIndicator} />
+        <Image source={{ uri: item.avatar }} style={[styles.onlineAvatar, { backgroundColor: colors.surfaceAlt }]} />
+        <View style={[styles.onlineIndicator, { borderColor: colors.surface }]} />
       </View>
-      <Text style={styles.onlineName} numberOfLines={1}>
+      <Text style={[styles.onlineName, { color: colors.textSecondary }]} numberOfLines={1}>
         {item.userName.split(" ")[0]}
       </Text>
     </Pressable>
   );
 
-  const ChatsHeader = ({ chatsCount }: ChatsHeaderProps) => (
-    <View style={styles.chatsHeader}>
-      <Text style={styles.chatsTitle}>Recent Conversations</Text>
-      <Text style={styles.chatsCount}>
+  const ChatsHeader = ({ chatsCount, isSearching }: ChatsHeaderProps) => (
+    <View style={[styles.chatsHeader, { borderBottomColor: colors.surfaceAlt }]}>
+      <Text style={[styles.chatsTitle, { color: colors.text }]}>
+        {isSearching ? "Search Results" : "Recent Conversations"}
+      </Text>
+      <Text style={[styles.chatsCount, { color: colors.textSecondary }]}>
         {chatsCount} {chatsCount === 1 ? "chat" : "chats"}
       </Text>
     </View>
@@ -99,37 +139,78 @@ export default function Chats() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#e63946" />
-        <Text style={{ color: "#555", marginTop: 8 }}>Loading Chats...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.surface }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
+        <Text style={{ color: colors.textSecondary, marginTop: 8 }}>Loading Chats...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.surface} />
 
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Messages</Text>
-          {unreadCount > 0 && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadText}>{unreadCount}</Text>
+      <LinearGradient
+        colors={isDark ? [colors.surface, colors.surface] : ["#ffffff", "#fff5f6"]}
+        style={[styles.header, { borderBottomColor: colors.border }]}
+      >
+        {isSearching ? (
+          <View style={styles.searchRow}>
+            <View style={[styles.searchBar, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+              <Ionicons name="search" size={19} color={colors.accent} />
+              <TextInput
+                ref={searchInputRef}
+                style={[styles.searchInput, { color: colors.text }]}
+                placeholder="Search by name..."
+                placeholderTextColor={colors.textTertiary}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                returnKeyType="search"
+              />
+              {searchQuery.length > 0 && (
+                <Pressable
+                  hitSlop={8}
+                  onPress={() => setSearchQuery("")}
+                >
+                  <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
+                </Pressable>
+              )}
             </View>
-          )}
-        </View>
+            <Pressable onPress={closeSearch} hitSlop={8}>
+              <Text style={[styles.cancelText, { color: colors.accent }]}>Cancel</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <>
+            <View style={styles.headerContent}>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Messages</Text>
+              <Text style={[styles.headerSubtitle, { color: colors.textTertiary }]}>
+                {unreadCount > 0
+                  ? `${unreadCount} unread ${unreadCount === 1 ? "message" : "messages"
+                  }`
+                  : "You're all caught up"}
+              </Text>
+            </View>
 
-        <Pressable style={styles.searchButton}>
-          <Ionicons name="search" size={24} color="#1a1a1a" />
-        </Pressable>
-      </View>
+            <Pressable
+              style={({ pressed }) => [
+                styles.searchButton,
+                { backgroundColor: colors.accentSoft },
+                pressed && { backgroundColor: colors.accentSoftPressed, transform: [{ scale: 0.96 }] },
+              ]}
+              onPress={openSearch}
+            >
+              <Ionicons name="search" size={22} color={colors.accent} />
+            </Pressable>
+          </>
+        )}
+      </LinearGradient>
 
       {/* Online Users Strip */}
-      {onlineUsers.length > 0 && (
-        <View style={styles.onlineSection}>
-          <Text style={styles.onlineTitle}>Online Now</Text>
+      {!isSearching && onlineUsers.length > 0 && (
+        <View style={[styles.onlineSection, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <Text style={[styles.onlineTitle, { color: colors.text }]}>Online Now</Text>
           <FlatList
             horizontal
             data={onlineUsers}
@@ -144,11 +225,11 @@ export default function Chats() {
       )}
 
       {/* Chats List */}
-      <View style={styles.chatsContainer}>
-        <ChatsHeader chatsCount={chats.length} />
+      <View style={[styles.chatsContainer, { backgroundColor: colors.surface }]}>
+        <ChatsHeader chatsCount={filteredChats.length} isSearching={isSearching} />
 
         <FlatList
-          data={chats}
+          data={filteredChats}
           keyExtractor={(item: Chat) => item.id}
           renderItem={({ item }: { item: Chat }) => (
             <ChatCard
@@ -168,12 +249,25 @@ export default function Chats() {
           )}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.chatsList}
+          ListEmptyComponent={
+            isSearching && searchQuery.trim() ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="search-outline" size={48} color={colors.border} />
+                <Text style={[styles.emptyStateText, { color: colors.textTertiary }]}>
+                  No conversations found
+                </Text>
+                <Text style={[styles.emptyStateSubtext, { color: colors.textTertiary }]}>
+                  Try searching a different name
+                </Text>
+              </View>
+            ) : null
+          }
         />
       </View>
 
       {/* New Message Floating Button */}
       <Pressable
-        style={styles.newMessageButton}
+        style={[styles.newMessageButton, { backgroundColor: colors.accent }]}
         onPress={() => console.log("New message")}
       >
         <Ionicons name="create" size={24} color="#fff" />
@@ -183,65 +277,90 @@ export default function Chats() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  container: { flex: 1 },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 4,
+    minHeight: 76,
   },
-  headerContent: { flexDirection: "row", alignItems: "center", gap: 12 },
+  headerContent: { gap: 2 },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "800",
-    color: "#1a1a1a",
     letterSpacing: -0.5,
   },
-  unreadBadge: {
-    backgroundColor: "#e63946",
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    minWidth: 24,
-    alignItems: "center",
-    justifyContent: "center",
+  headerSubtitle: {
+    fontSize: 13,
+    fontWeight: "500",
   },
-  unreadText: { color: "#fff", fontSize: 12, fontWeight: "700" },
   searchButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#f8f9fa",
     justifyContent: "center",
     alignItems: "center",
+  },
+  searchRow: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  searchBar: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    height: 44,
     borderWidth: 1,
-    borderColor: "#f0f0f0",
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    padding: 0,
+  },
+  cancelText: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 64,
+    paddingHorizontal: 32,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginTop: 12,
+  },
+  emptyStateSubtext: {
+    fontSize: 13,
+    marginTop: 4,
   },
   onlineSection: {
-    backgroundColor: "#fff",
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
   },
   onlineTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 12,
     marginLeft: 20,
   },
@@ -261,7 +380,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "#4CAF50",
     borderWidth: 2,
-    borderColor: "#fff",
     position: "absolute",
     bottom: -2,
     right: -2,
@@ -270,12 +388,10 @@ const styles = StyleSheet.create({
   onlineName: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#666",
     textAlign: "center",
   },
   chatsContainer: {
     flex: 1,
-    backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     marginTop: 8,
@@ -288,10 +404,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#f8f9fa",
   },
-  chatsTitle: { fontSize: 18, fontWeight: "700", color: "#1a1a1a" },
-  chatsCount: { fontSize: 14, fontWeight: "600", color: "#666" },
+  chatsTitle: { fontSize: 18, fontWeight: "700" },
+  chatsCount: { fontSize: 14, fontWeight: "600" },
   chatsList: { paddingBottom: 8 },
   newMessageButton: {
     position: "absolute",
@@ -300,7 +415,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#e63946",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",

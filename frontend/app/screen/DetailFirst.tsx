@@ -18,11 +18,13 @@ import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, Feather } from "@expo/vector-icons";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { width, height } = Dimensions.get('window');
 
 export default function DetailFirst() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
@@ -165,26 +167,26 @@ export default function DetailFirst() {
       visible={visible}
       onRequestClose={() => setVisible(false)}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{title}</Text>
+      <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
+        <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{title}</Text>
             <TouchableOpacity onPress={() => setVisible(false)}>
-              <Ionicons name="close" size={24} color="#666" />
+              <Ionicons name="close" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
           {options.map((option, index) => (
             <TouchableOpacity
               key={index}
-              style={styles.optionItem}
+              style={[styles.optionItem, { borderBottomColor: colors.border }]}
               onPress={() => {
                 onSelect(option.value);
                 setVisible(false);
               }}
             >
-              <Ionicons name={option.icon} size={24} color="#ff6b6b" />
-              <Text style={styles.optionText}>{option.label}</Text>
-              <Ionicons name="chevron-forward" size={20} color="#ccc" />
+              <Ionicons name={option.icon} size={24} color={colors.accent} />
+              <Text style={[styles.optionText, { color: colors.text }]}>{option.label}</Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
             </TouchableOpacity>
           ))}
         </View>
@@ -194,7 +196,7 @@ export default function DetailFirst() {
 
   return (
     <>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <StatusBar barStyle={colors.statusBarStyle} translucent backgroundColor="transparent" />
       <LinearGradient 
         colors={["#ff6b6b", "#ff8e8e", "#ffa8a8", "#ffb3ba"]} 
         style={styles.container}
@@ -252,14 +254,14 @@ export default function DetailFirst() {
                 {profilePic ? (
                   <>
                     <Image source={{ uri: profilePic }} style={styles.imagePreview} />
-                    <View style={styles.editOverlay}>
+                    <View style={[styles.editOverlay, { backgroundColor: colors.accent }]}>
                       <Feather name="edit-2" size={16} color="#fff" />
                     </View>
                   </>
                 ) : (
                   <View style={styles.placeholderContent}>
-                    <Ionicons name="camera" size={32} color="#ff6b6b" />
-                    <Text style={styles.imagePlaceholder}>Add Photo</Text>
+                    <Ionicons name="camera" size={32} color={colors.accent} />
+                    <Text style={[styles.imagePlaceholder, { color: colors.accent }]}>Add Photo</Text>
                   </View>
                 )}
               </Pressable>
@@ -274,9 +276,9 @@ export default function DetailFirst() {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Your Name</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: colors.surface, color: colors.text, shadowColor: colors.shadow }]}
                   placeholder="Enter your full name"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.textTertiary}
                   value={name}
                   onChangeText={setName}
                 />
@@ -286,9 +288,9 @@ export default function DetailFirst() {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Age</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: colors.surface, color: colors.text, shadowColor: colors.shadow }]}
                   placeholder="Enter your age"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.textTertiary}
                   keyboardType="number-pad"
                   value={age}
                   onChangeText={setAge}
@@ -300,13 +302,17 @@ export default function DetailFirst() {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Gender</Text>
                 <Pressable
-                  style={[styles.selectInput, gender && styles.selectInputSelected]}
+                  style={[
+                    styles.selectInput,
+                    { backgroundColor: colors.surface, shadowColor: colors.shadow },
+                    gender && [styles.selectInputSelected, { borderColor: colors.accent }],
+                  ]}
                   onPress={() => setGenderModalVisible(true)}
                 >
-                  <Text style={[styles.selectText, gender && styles.selectTextSelected]}>
+                  <Text style={[styles.selectText, { color: colors.textTertiary }, gender && [styles.selectTextSelected, { color: colors.text }]]}>
                     {gender || "Select your gender"}
                   </Text>
-                  <Ionicons name="chevron-down" size={20} color={gender ? "#333" : "#999"} />
+                  <Ionicons name="chevron-down" size={20} color={gender ? colors.text : colors.textTertiary} />
                 </Pressable>
               </View>
 
@@ -314,13 +320,17 @@ export default function DetailFirst() {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Interested In</Text>
                 <Pressable
-                  style={[styles.selectInput, interestedIn && styles.selectInputSelected]}
+                  style={[
+                    styles.selectInput,
+                    { backgroundColor: colors.surface, shadowColor: colors.shadow },
+                    interestedIn && [styles.selectInputSelected, { borderColor: colors.accent }],
+                  ]}
                   onPress={() => setInterestedModalVisible(true)}
                 >
-                  <Text style={[styles.selectText, interestedIn && styles.selectTextSelected]}>
+                  <Text style={[styles.selectText, { color: colors.textTertiary }, interestedIn && [styles.selectTextSelected, { color: colors.text }]]}>
                     {interestedIn || "Who are you interested in?"}
                   </Text>
-                  <Ionicons name="chevron-down" size={20} color={interestedIn ? "#333" : "#999"} />
+                  <Ionicons name="chevron-down" size={20} color={interestedIn ? colors.text : colors.textTertiary} />
                 </Pressable>
               </View>
             </View>
@@ -491,7 +501,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#ff6b6b',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -502,7 +511,6 @@ const styles = StyleSheet.create({
   },
   imagePlaceholder: {
     fontSize: 14,
-    color: '#ff6b6b',
     fontWeight: '600',
     marginTop: 8,
   },
@@ -527,25 +535,20 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   input: {
-    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,
     fontSize: 16,
-    color: '#333',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 4,
   },
   selectInput: {
-    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -553,15 +556,12 @@ const styles = StyleSheet.create({
   },
   selectInputSelected: {
     borderWidth: 2,
-    borderColor: '#ff6b6b',
   },
   selectText: {
     fontSize: 16,
-    color: '#999',
     flex: 1,
   },
   selectTextSelected: {
-    color: '#333',
     fontWeight: '500',
   },
   continueBtn: {
@@ -602,11 +602,9 @@ const styles = StyleSheet.create({
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingVertical: 20,
@@ -619,12 +617,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#333',
   },
   optionItem: {
     flexDirection: 'row',
@@ -632,12 +628,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f8f9fa',
   },
   optionText: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
     marginLeft: 16,
     fontWeight: '500',
   },

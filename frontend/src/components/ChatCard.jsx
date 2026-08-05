@@ -1,4 +1,5 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "@/contexts/ThemeContext";
 
 function formatChatTime(dateInput) {
   if (!dateInput) return "";
@@ -26,24 +27,35 @@ function formatChatTime(dateInput) {
 }
 
 export default function ChatCard({ chat, onPress }) {
+  const { colors } = useTheme();
   const hasUnread = chat.unread > 0;
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: colors.surface, borderBottomColor: colors.border },
+        pressed && { backgroundColor: colors.surfaceAlt },
+      ]}
       onPress={onPress}
     >
       <View style={styles.avatarWrapper}>
-        <Image source={{ uri: chat.avatar }} style={styles.avatar} />
-        {chat.isOnline && <View style={styles.onlineDot} />}
+        <Image source={{ uri: chat.avatar }} style={[styles.avatar, { backgroundColor: colors.surfaceAlt }]} />
+        {chat.isOnline && (
+          <View style={[styles.onlineDot, { borderColor: colors.surface }]} />
+        )}
       </View>
 
       <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={1}>
+        <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
           {chat.userName}
         </Text>
         <Text
-          style={[styles.message, hasUnread && styles.messageUnread]}
+          style={[
+            styles.message,
+            { color: colors.textSecondary },
+            hasUnread && { color: colors.text, fontWeight: "600" },
+          ]}
           numberOfLines={1}
         >
           {chat.lastMessage || "Say hi 👋"}
@@ -51,11 +63,17 @@ export default function ChatCard({ chat, onPress }) {
       </View>
 
       <View style={styles.right}>
-        <Text style={[styles.time, hasUnread && styles.timeUnread]}>
+        <Text
+          style={[
+            styles.time,
+            { color: colors.textTertiary },
+            hasUnread && { color: colors.accent, fontWeight: "700" },
+          ]}
+        >
           {formatChatTime(chat.time)}
         </Text>
         {hasUnread ? (
-          <View style={styles.unreadBadge}>
+          <View style={[styles.unreadBadge, { backgroundColor: colors.accent }]}>
             <Text style={styles.unreadText}>
               {chat.unread > 9 ? "9+" : chat.unread}
             </Text>
@@ -74,12 +92,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 14,
     paddingHorizontal: 20,
-    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#f2f2f2",
-  },
-  cardPressed: {
-    backgroundColor: "#fafafa",
   },
   avatarWrapper: {
     position: "relative",
@@ -88,7 +101,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#eee",
   },
   onlineDot: {
     position: "absolute",
@@ -99,7 +111,6 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     backgroundColor: "#4CAF50",
     borderWidth: 2,
-    borderColor: "#fff",
   },
   info: {
     flex: 1,
@@ -109,16 +120,10 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
   },
   message: {
     fontSize: 14,
-    color: "#8e8e93",
     marginTop: 3,
-  },
-  messageUnread: {
-    color: "#1a1a1a",
-    fontWeight: "600",
   },
   right: {
     alignItems: "flex-end",
@@ -126,14 +131,8 @@ const styles = StyleSheet.create({
   },
   time: {
     fontSize: 12,
-    color: "#999",
-  },
-  timeUnread: {
-    color: "#e63946",
-    fontWeight: "700",
   },
   unreadBadge: {
-    backgroundColor: "#e63946",
     borderRadius: 10,
     minWidth: 20,
     height: 20,

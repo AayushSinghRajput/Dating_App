@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, FlatList, Image, Pressable, Animated } from "re
 import { useState, useRef, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // Mock data structure - replace with your actual data
 const notifications = [
@@ -79,9 +80,10 @@ type NotificationItem = {
 };
 
 export default function Notification() {
+  const { colors } = useTheme();
   const [notificationData, setNotificationData] = useState<NotificationItem[]>(notifications);
   const [activeFilter, setActiveFilter] = useState<"all" | "unread">("all");
-  
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -92,20 +94,20 @@ export default function Notification() {
     }).start();
   }, []);
 
-  const filteredNotifications = activeFilter === "unread" 
+  const filteredNotifications = activeFilter === "unread"
     ? notificationData.filter(item => !item.read)
     : notificationData;
 
   const markAsRead = (id: string) => {
-    setNotificationData(prev => 
-      prev.map(item => 
+    setNotificationData(prev =>
+      prev.map(item =>
         item.id === id ? { ...item, read: true } : item
       )
     );
   };
 
   const markAllAsRead = () => {
-    setNotificationData(prev => 
+    setNotificationData(prev =>
       prev.map(item => ({ ...item, read: true }))
     );
   };
@@ -143,29 +145,30 @@ export default function Notification() {
           onPress={handlePress}
           style={({ pressed }) => [
             styles.card,
-            !item.read && styles.unreadCard,
+            { backgroundColor: colors.surface, shadowColor: colors.shadow, borderColor: "transparent" },
+            !item.read && { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed },
             pressed && styles.cardPressed
           ]}
         >
           <View style={styles.avatarContainer}>
-            <Image source={{ uri: item.avatar }} style={styles.avatar} />
-            <View style={[styles.iconBadge, { backgroundColor: item.typeColor }]}>
+            <Image source={{ uri: item.avatar }} style={[styles.avatar, { borderColor: colors.surface }]} />
+            <View style={[styles.iconBadge, { backgroundColor: item.typeColor, borderColor: colors.surface }]}>
               <Ionicons name={item.typeIcon as any} size={12} color="#fff" />
             </View>
           </View>
-          
+
           <View style={styles.textWrapper}>
-            <Text style={styles.notificationText}>
-              <Text style={styles.user}>{item.user}</Text> {item.type}
+            <Text style={[styles.notificationText, { color: colors.text }]}>
+              <Text style={[styles.user, { color: colors.text }]}>{item.user}</Text> {item.type}
             </Text>
             <View style={styles.timeContainer}>
-              <Ionicons name="time-outline" size={12} color="#888" />
-              <Text style={styles.time}>{item.time}</Text>
+              <Ionicons name="time-outline" size={12} color={colors.textSecondary} />
+              <Text style={[styles.time, { color: colors.textSecondary }]}>{item.time}</Text>
             </View>
           </View>
 
           {!item.read && (
-            <View style={styles.unreadIndicator} />
+            <View style={[styles.unreadIndicator, { backgroundColor: colors.accent }]} />
           )}
         </Pressable>
       </Animated.View>
@@ -173,39 +176,39 @@ export default function Notification() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <Animated.View style={[styles.header, { backgroundColor: colors.surface, shadowColor: colors.shadow, opacity: fadeAnim }]}>
         <View style={styles.headerTop}>
-          <Text style={styles.headerTitle}>Notifications</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Notifications</Text>
           <View style={styles.headerIcons}>
             {unreadCount > 0 && (
               <Pressable style={styles.markAllButton} onPress={markAllAsRead}>
-                <Ionicons name="checkmark-done" size={20} color="#666" />
-                <Text style={styles.markAllText}>Mark all read</Text>
+                <Ionicons name="checkmark-done" size={20} color={colors.textSecondary} />
+                <Text style={[styles.markAllText, { color: colors.textSecondary }]}>Mark all read</Text>
               </Pressable>
             )}
           </View>
         </View>
-        
-        <View style={styles.filterContainer}>
-          <Pressable 
-            style={[styles.filterButton, activeFilter === "all" && styles.filterButtonActive]}
+
+        <View style={[styles.filterContainer, { backgroundColor: colors.surfaceAlt }]}>
+          <Pressable
+            style={[styles.filterButton, activeFilter === "all" && [styles.filterButtonActive, { backgroundColor: colors.surface, shadowColor: colors.shadow }]]}
             onPress={() => setActiveFilter("all")}
           >
-            <Text style={[styles.filterText, activeFilter === "all" && styles.filterTextActive]}>
+            <Text style={[styles.filterText, { color: colors.textSecondary }, activeFilter === "all" && { color: colors.accent }]}>
               All
             </Text>
           </Pressable>
-          <Pressable 
-            style={[styles.filterButton, activeFilter === "unread" && styles.filterButtonActive]}
+          <Pressable
+            style={[styles.filterButton, activeFilter === "unread" && [styles.filterButtonActive, { backgroundColor: colors.surface, shadowColor: colors.shadow }]]}
             onPress={() => setActiveFilter("unread")}
           >
             <View style={styles.unreadFilter}>
-              <Text style={[styles.filterText, activeFilter === "unread" && styles.filterTextActive]}>
+              <Text style={[styles.filterText, { color: colors.textSecondary }, activeFilter === "unread" && { color: colors.accent }]}>
                 Unread
               </Text>
               {unreadCount > 0 && (
-                <View style={styles.unreadBadge}>
+                <View style={[styles.unreadBadge, { backgroundColor: colors.accent }]}>
                   <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
                 </View>
               )}
@@ -216,10 +219,10 @@ export default function Notification() {
 
       {filteredNotifications.length === 0 ? (
         <View style={styles.emptyState}>
-          <Ionicons name="notifications-off-outline" size={64} color="#ccc" />
-          <Text style={styles.emptyStateTitle}>No notifications</Text>
-          <Text style={styles.emptyStateText}>
-            {activeFilter === "unread" 
+          <Ionicons name="notifications-off-outline" size={64} color={colors.textTertiary} />
+          <Text style={[styles.emptyStateTitle, { color: colors.textSecondary }]}>No notifications</Text>
+          <Text style={[styles.emptyStateText, { color: colors.textTertiary }]}>
+            {activeFilter === "unread"
               ? "You're all caught up! No unread notifications."
               : "You don't have any notifications yet."
             }
@@ -240,18 +243,15 @@ export default function Notification() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#f8f9fa" 
+  container: {
+    flex: 1,
   },
   header: {
-    backgroundColor: "#fff",
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 16,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -266,7 +266,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#1a1a1a",
     letterSpacing: -0.5,
   },
   headerIcons: {
@@ -282,12 +281,10 @@ const styles = StyleSheet.create({
   },
   markAllText: {
     fontSize: 12,
-    color: "#666",
     fontWeight: "600",
   },
   filterContainer: {
     flexDirection: "row",
-    backgroundColor: "#f1f3f5",
     borderRadius: 12,
     padding: 4,
   },
@@ -299,8 +296,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   filterButtonActive: {
-    backgroundColor: "#fff",
-    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
@@ -309,10 +304,6 @@ const styles = StyleSheet.create({
   filterText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#666",
-  },
-  filterTextActive: {
-    color: "#e63946",
   },
   unreadFilter: {
     flexDirection: "row",
@@ -320,7 +311,6 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   unreadBadge: {
-    backgroundColor: "#e63946",
     borderRadius: 10,
     minWidth: 18,
     height: 18,
@@ -340,20 +330,13 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
     padding: 16,
     borderRadius: 16,
-    shadowColor: "#000",
     shadowOpacity: 0.06,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 3,
     borderWidth: 1,
-    borderColor: "transparent",
-  },
-  unreadCard: {
-    backgroundColor: "#FFF5F5",
-    borderColor: "#FFE5E5",
   },
   cardPressed: {
     transform: [{ scale: 0.98 }],
@@ -367,7 +350,6 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     borderWidth: 2,
-    borderColor: "#fff",
   },
   iconBadge: {
     position: "absolute",
@@ -379,20 +361,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#fff",
   },
   textWrapper: {
     flex: 1,
   },
   notificationText: {
     fontSize: 15,
-    color: "#1a1a1a",
     lineHeight: 20,
     marginBottom: 4,
   },
   user: {
     fontWeight: "700",
-    color: "#1a1a1a",
   },
   timeContainer: {
     flexDirection: "row",
@@ -401,14 +380,12 @@ const styles = StyleSheet.create({
   },
   time: {
     fontSize: 12,
-    color: "#888",
     fontWeight: "500",
   },
   unreadIndicator: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#e63946",
     marginLeft: 8,
   },
   separator: {
@@ -423,13 +400,11 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#666",
     marginTop: 16,
     marginBottom: 8,
   },
   emptyStateText: {
     fontSize: 14,
-    color: "#999",
     textAlign: "center",
     lineHeight: 20,
   },

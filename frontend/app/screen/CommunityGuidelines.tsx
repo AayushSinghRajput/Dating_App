@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface Guideline {
   id: string;
@@ -13,6 +14,7 @@ interface Guideline {
 
 export default function CommunityGuidelines() {
   const router = useRouter();
+  const { colors } = useTheme();
 
   const handleBack = () => {
     router.back();
@@ -80,59 +82,60 @@ export default function CommunityGuidelines() {
   const GuidelineItem = ({ guideline }: { guideline: Guideline }) => (
     <View style={[
       styles.guidelineItem,
-      guideline.type === 'negative' && styles.negativeGuideline
+      { backgroundColor: colors.surfaceAlt, borderLeftColor: colors.success },
+      guideline.type === 'negative' && { borderLeftColor: colors.accent }
     ]}>
       <View style={styles.guidelineHeader}>
         <View style={[
           styles.guidelineIcon,
-          guideline.type === 'negative' ? styles.negativeIcon : styles.positiveIcon
+          { backgroundColor: guideline.type === 'negative' ? colors.accent : colors.success }
         ]}>
-          <Ionicons 
-            name={guideline.icon as any} 
-            size={20} 
-            color={guideline.type === 'negative' ? "#fff" : "#fff"} 
+          <Ionicons
+            name={guideline.icon as any}
+            size={20}
+            color="#fff"
           />
         </View>
-        <Text style={styles.guidelineTitle}>{guideline.title}</Text>
+        <Text style={[styles.guidelineTitle, { color: colors.text }]}>{guideline.title}</Text>
       </View>
-      <Text style={styles.guidelineDescription}>{guideline.description}</Text>
+      <Text style={[styles.guidelineDescription, { color: colors.textSecondary }]}>{guideline.description}</Text>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, shadowColor: colors.shadow }]}>
         <Pressable style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>Community Guidelines</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Community Guidelines</Text>
         <View style={styles.headerPlaceholder} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Introduction */}
-        <View style={styles.introSection}>
-          <View style={styles.introIcon}>
-            <Ionicons name="people" size={32} color="#FF6B6B" />
+        <View style={[styles.introSection, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+          <View style={[styles.introIcon, { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed }]}>
+            <Ionicons name="people" size={32} color={colors.accent} />
           </View>
-          <Text style={styles.introTitle}>Welcome to Our Community</Text>
-          <Text style={styles.introDescription}>
+          <Text style={[styles.introTitle, { color: colors.text }]}>Welcome to Our Community</Text>
+          <Text style={[styles.introDescription, { color: colors.textSecondary }]}>
             Our guidelines help create a safe, respectful, and enjoyable environment for everyone. By using our platform, you agree to follow these rules.
           </Text>
         </View>
 
         {/* Guidelines List */}
-        <View style={styles.guidelinesSection}>
-          <Text style={styles.sectionTitle}>Community Rules</Text>
-          <Text style={styles.sectionDescription}>
+        <View style={[styles.guidelinesSection, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Community Rules</Text>
+          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
             These guidelines ensure everyone has a positive experience
           </Text>
-          
+
           <View style={styles.guidelinesList}>
             {guidelines.map((guideline) => (
               <GuidelineItem key={guideline.id} guideline={guideline} />
@@ -141,45 +144,45 @@ export default function CommunityGuidelines() {
         </View>
 
         {/* Consequences Section */}
-        <View style={styles.consequencesSection}>
+        <View style={[styles.consequencesSection, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
           <Ionicons name="warning" size={24} color="#FF9800" />
           <View style={styles.consequencesText}>
-            <Text style={styles.consequencesTitle}>Violation Consequences</Text>
-            <Text style={styles.consequencesDescription}>
+            <Text style={[styles.consequencesTitle, { color: colors.text }]}>Violation Consequences</Text>
+            <Text style={[styles.consequencesDescription, { color: colors.textSecondary }]}>
               Violating these guidelines may result in content removal, temporary suspension, or permanent account termination depending on severity.
             </Text>
           </View>
         </View>
 
         {/* Safety Tips */}
-        <View style={styles.safetySection}>
-          <Text style={styles.safetyTitle}>Safety Tips</Text>
+        <View style={[styles.safetySection, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+          <Text style={[styles.safetyTitle, { color: colors.text }]}>Safety Tips</Text>
           <View style={styles.safetyTips}>
             <View style={styles.safetyTip}>
-              <Ionicons name="videocam" size={16} color="#4CAF50" />
-              <Text style={styles.safetyTipText}>Video chat before meeting</Text>
+              <Ionicons name="videocam" size={16} color={colors.success} />
+              <Text style={[styles.safetyTipText, { color: colors.textSecondary }]}>Video chat before meeting</Text>
             </View>
             <View style={styles.safetyTip}>
-              <Ionicons name="location" size={16} color="#4CAF50" />
-              <Text style={styles.safetyTipText}>Meet in public places</Text>
+              <Ionicons name="location" size={16} color={colors.success} />
+              <Text style={[styles.safetyTipText, { color: colors.textSecondary }]}>Meet in public places</Text>
             </View>
             <View style={styles.safetyTip}>
-              <Ionicons name="car" size={16} color="#4CAF50" />
-              <Text style={styles.safetyTipText}>Arrange your own transportation</Text>
+              <Ionicons name="car" size={16} color={colors.success} />
+              <Text style={[styles.safetyTipText, { color: colors.textSecondary }]}>Arrange your own transportation</Text>
             </View>
             <View style={styles.safetyTip}>
-              <Ionicons name="alert" size={16} color="#4CAF50" />
-              <Text style={styles.safetyTipText}>Trust your instincts</Text>
+              <Ionicons name="alert" size={16} color={colors.success} />
+              <Text style={[styles.safetyTipText, { color: colors.textSecondary }]}>Trust your instincts</Text>
             </View>
           </View>
         </View>
 
         {/* Emergency Contact */}
-        <View style={styles.emergencySection}>
-          <Ionicons name="medkit" size={20} color="#FF6B6B" />
+        <View style={[styles.emergencySection, { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed }]}>
+          <Ionicons name="medkit" size={20} color={colors.accent} />
           <View style={styles.emergencyText}>
-            <Text style={styles.emergencyTitle}>Emergency Situations</Text>
-            <Text style={styles.emergencyDescription}>
+            <Text style={[styles.emergencyTitle, { color: colors.text }]}>Emergency Situations</Text>
+            <Text style={[styles.emergencyDescription, { color: colors.textSecondary }]}>
               If you feel unsafe or are in immediate danger, contact local emergency services first.
             </Text>
           </View>
@@ -190,9 +193,8 @@ export default function CommunityGuidelines() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#f8f9fa" 
+  container: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
@@ -205,14 +207,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -225,19 +224,16 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
   },
   headerPlaceholder: {
     width: 40,
   },
   introSection: {
     alignItems: "center",
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 16,
     padding: 24,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 12,
@@ -247,33 +243,27 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "#FFF5F5",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
     borderWidth: 2,
-    borderColor: "#FFE5E5",
   },
   introTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 12,
     textAlign: "center",
   },
   introDescription: {
     fontSize: 14,
-    color: "#666",
     textAlign: "center",
     lineHeight: 20,
   },
   guidelinesSection: {
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 16,
     padding: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 12,
@@ -282,12 +272,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 4,
   },
   sectionDescription: {
     fontSize: 14,
-    color: "#666",
     fontWeight: "500",
     marginBottom: 16,
     lineHeight: 18,
@@ -296,14 +284,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   guidelineItem: {
-    backgroundColor: "#f8f9fa",
     padding: 16,
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: "#4CAF50",
-  },
-  negativeGuideline: {
-    borderLeftColor: "#FF6B6B",
   },
   guidelineHeader: {
     flexDirection: "row",
@@ -318,34 +301,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  positiveIcon: {
-    backgroundColor: "#4CAF50",
-  },
-  negativeIcon: {
-    backgroundColor: "#FF6B6B",
-  },
   guidelineTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
     flex: 1,
   },
   guidelineDescription: {
     fontSize: 14,
-    color: "#666",
     lineHeight: 20,
     marginLeft: 48,
   },
   consequencesSection: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "#FFF3E0",
     marginHorizontal: 16,
     marginBottom: 16,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#FFE0B2",
     gap: 12,
   },
   consequencesText: {
@@ -354,21 +327,17 @@ const styles = StyleSheet.create({
   consequencesTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 4,
   },
   consequencesDescription: {
     fontSize: 13,
-    color: "#666",
     lineHeight: 16,
   },
   safetySection: {
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 16,
     padding: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 12,
@@ -377,7 +346,6 @@ const styles = StyleSheet.create({
   safetyTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 12,
   },
   safetyTips: {
@@ -391,18 +359,15 @@ const styles = StyleSheet.create({
   },
   safetyTipText: {
     fontSize: 14,
-    color: "#666",
     flex: 1,
   },
   emergencySection: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "#FFEBEE",
     marginHorizontal: 16,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#FFCDD2",
     gap: 12,
   },
   emergencyText: {
@@ -411,12 +376,10 @@ const styles = StyleSheet.create({
   emergencyTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 4,
   },
   emergencyDescription: {
     fontSize: 13,
-    color: "#666",
     lineHeight: 16,
   },
 });

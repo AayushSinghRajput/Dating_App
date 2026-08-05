@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from "@/contexts/ThemeContext";
 
 type FeedbackCategory = 'bug' | 'suggestion' | 'compliment' | 'general';
 
@@ -17,6 +18,7 @@ interface FeedbackCategoryOption {
 
 export default function FeedbackScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState<FeedbackCategory>('general');
   const [feedback, setFeedback] = useState('');
   const [rating, setRating] = useState<number>(0);
@@ -33,7 +35,7 @@ export default function FeedbackScreen() {
       title: 'Bug Report',
       description: 'Something is not working',
       icon: 'bug',
-      color: '#FF6B6B'
+      color: colors.accent
     },
     {
       id: 'suggestion',
@@ -99,28 +101,30 @@ export default function FeedbackScreen() {
   };
 
   const CategoryCard = ({ category }: { category: FeedbackCategoryOption }) => (
-    <Pressable 
+    <Pressable
       style={[
         styles.categoryCard,
-        selectedCategory === category.id && styles.categoryCardSelected
+        { backgroundColor: colors.surfaceAlt, borderColor: "transparent" },
+        selectedCategory === category.id && [styles.categoryCardSelected, { backgroundColor: colors.surface, borderColor: colors.border, shadowColor: colors.shadow }]
       ]}
       onPress={() => setSelectedCategory(category.id)}
     >
       <View style={[styles.categoryIcon, { backgroundColor: `${category.color}15` }]}>
-        <Ionicons 
-          name={category.icon as any} 
-          size={24} 
-          color={selectedCategory === category.id ? category.color : '#999'} 
+        <Ionicons
+          name={category.icon as any}
+          size={24}
+          color={selectedCategory === category.id ? category.color : colors.textTertiary}
         />
       </View>
       <View style={styles.categoryText}>
         <Text style={[
           styles.categoryTitle,
+          { color: colors.text },
           selectedCategory === category.id && { color: category.color }
         ]}>
           {category.title}
         </Text>
-        <Text style={styles.categoryDescription}>{category.description}</Text>
+        <Text style={[styles.categoryDescription, { color: colors.textSecondary }]}>{category.description}</Text>
       </View>
       {selectedCategory === category.id && (
         <Ionicons name="checkmark-circle" size={20} color={category.color} />
@@ -129,8 +133,8 @@ export default function FeedbackScreen() {
   );
 
   const StarRating = () => (
-    <View style={styles.ratingSection}>
-      <Text style={styles.ratingTitle}>How would you rate your experience?</Text>
+    <View style={[styles.ratingSection, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+      <Text style={[styles.ratingTitle, { color: colors.text }]}>How would you rate your experience?</Text>
       <View style={styles.starsContainer}>
         {[1, 2, 3, 4, 5].map((star) => (
           <Pressable
@@ -141,12 +145,12 @@ export default function FeedbackScreen() {
             <Ionicons
               name={star <= rating ? "star" : "star-outline"}
               size={32}
-              color={star <= rating ? "#FFD700" : "#ccc"}
+              color={star <= rating ? "#FFD700" : colors.textTertiary}
             />
           </Pressable>
         ))}
       </View>
-      <Text style={styles.ratingText}>
+      <Text style={[styles.ratingText, { color: colors.textSecondary }]}>
         {rating === 0 ? 'Select a rating' : `${rating} star${rating > 1 ? 's' : ''}`}
       </Text>
     </View>
@@ -156,13 +160,13 @@ export default function FeedbackScreen() {
   const maxCharacters = 1000;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, shadowColor: colors.shadow }]}>
         <Pressable style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>Send Feedback</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Send Feedback</Text>
         <View style={styles.headerPlaceholder} />
       </View>
 
@@ -176,23 +180,23 @@ export default function FeedbackScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Welcome Section */}
-          <View style={styles.welcomeSection}>
+          <View style={[styles.welcomeSection, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
             <LinearGradient
               colors={['#667eea', '#764ba2']}
               style={styles.welcomeIcon}
             >
               <Ionicons name="megaphone" size={32} color="#fff" />
             </LinearGradient>
-            <Text style={styles.welcomeTitle}>Share Your Thoughts</Text>
-            <Text style={styles.welcomeDescription}>
+            <Text style={[styles.welcomeTitle, { color: colors.text }]}>Share Your Thoughts</Text>
+            <Text style={[styles.welcomeDescription, { color: colors.textSecondary }]}>
               We&apos;re constantly working to improve your experience. Your feedback helps us make the app better for everyone.
             </Text>
           </View>
 
           {/* Category Selection */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Category</Text>
-            <Text style={styles.sectionDescription}>
+          <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Category</Text>
+            <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
               What type of feedback would you like to share?
             </Text>
             
@@ -207,28 +211,28 @@ export default function FeedbackScreen() {
           {selectedCategory !== 'bug' && <StarRating />}
 
           {/* Feedback Input */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
+          <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Your {selectedCategory === 'bug' ? 'Bug Report' : 'Feedback'}
             </Text>
-            <Text style={styles.sectionDescription}>
-              {selectedCategory === 'bug' 
+            <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
+              {selectedCategory === 'bug'
                 ? 'Please describe the issue in detail, including steps to reproduce it.'
                 : 'Be specific about what you like, dislike, or would like to see improved.'
               }
             </Text>
-            
+
             <View style={styles.inputContainer}>
               <TextInput
-                style={styles.textInput}
+                style={[styles.textInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.surfaceAlt }]}
                 value={feedback}
                 onChangeText={setFeedback}
                 placeholder={
-                  selectedCategory === 'bug' 
+                  selectedCategory === 'bug'
                     ? "Describe the bug you encountered..."
                     : "Tell us what's on your mind..."
                 }
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textTertiary}
                 multiline
                 textAlignVertical="top"
                 maxLength={maxCharacters}
@@ -236,7 +240,8 @@ export default function FeedbackScreen() {
               <View style={styles.characterCount}>
                 <Text style={[
                   styles.characterCountText,
-                  characterCount > maxCharacters * 0.9 && { color: '#FF6B6B' }
+                  { color: colors.textTertiary },
+                  characterCount > maxCharacters * 0.9 && { color: colors.accent }
                 ]}>
                   {characterCount}/{maxCharacters}
                 </Text>
@@ -254,7 +259,7 @@ export default function FeedbackScreen() {
                     <Ionicons name="checkmark" size={16} color="#fff" />
                   )}
                 </View>
-                <Text style={styles.screenshotText}>
+                <Text style={[styles.screenshotText, { color: colors.text }]}>
                   Include screenshot (recommended for bugs)
                 </Text>
               </Pressable>
@@ -266,7 +271,7 @@ export default function FeedbackScreen() {
             <Ionicons name="information-circle" size={20} color="#667eea" />
             <View style={styles.tipsContent}>
               <Text style={styles.tipsTitle}>Feedback Tips</Text>
-              <Text style={styles.tipsDescription}>
+              <Text style={[styles.tipsDescription, { color: colors.textSecondary }]}>
                 • Be specific and descriptive{'\n'}
                 • Include steps to reproduce for bugs{'\n'}
                 • Suggest solutions if you have any{'\n'}
@@ -301,7 +306,7 @@ export default function FeedbackScreen() {
 
           {/* Privacy Notice */}
           <View style={styles.privacySection}>
-            <Text style={styles.privacyText}>
+            <Text style={[styles.privacyText, { color: colors.textTertiary }]}>
               Your feedback is anonymous unless you choose to include contact information. 
               We may reach out for more details if needed.
             </Text>
@@ -313,9 +318,8 @@ export default function FeedbackScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#f8f9fa" 
+  container: {
+    flex: 1,
   },
   keyboardAvoid: {
     flex: 1,
@@ -331,14 +335,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -351,20 +352,17 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
   },
   headerPlaceholder: {
     width: 40,
   },
   welcomeSection: {
     alignItems: "center",
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginTop: 16,
     marginBottom: 16,
     borderRadius: 16,
     padding: 24,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 12,
@@ -381,23 +379,19 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 8,
     textAlign: "center",
   },
   welcomeDescription: {
     fontSize: 14,
-    color: "#666",
     textAlign: "center",
     lineHeight: 20,
   },
   section: {
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 16,
     padding: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 12,
@@ -406,12 +400,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 4,
   },
   sectionDescription: {
     fontSize: 14,
-    color: "#666",
     fontWeight: "500",
     marginBottom: 16,
     lineHeight: 18,
@@ -424,15 +416,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderRadius: 12,
-    backgroundColor: "#f8f9fa",
     borderWidth: 2,
-    borderColor: "transparent",
     gap: 12,
   },
   categoryCardSelected: {
-    backgroundColor: "#fff",
-    borderColor: "#f0f0f0",
-    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -451,21 +438,17 @@ const styles = StyleSheet.create({
   categoryTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 2,
   },
   categoryDescription: {
     fontSize: 13,
-    color: "#666",
   },
   ratingSection: {
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 16,
     padding: 20,
     alignItems: "center",
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 12,
@@ -474,7 +457,6 @@ const styles = StyleSheet.create({
   ratingTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1a1a1a",
     marginBottom: 16,
     textAlign: "center",
   },
@@ -488,7 +470,6 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: 14,
-    color: "#666",
     fontWeight: "500",
   },
   inputContainer: {
@@ -498,13 +479,10 @@ const styles = StyleSheet.create({
     minHeight: 120,
     maxHeight: 200,
     borderWidth: 2,
-    borderColor: "#f0f0f0",
     borderRadius: 12,
     padding: 16,
     paddingBottom: 40,
     fontSize: 16,
-    color: "#1a1a1a",
-    backgroundColor: "#f8f9fa",
     textAlignVertical: 'top',
   },
   characterCount: {
@@ -514,7 +492,6 @@ const styles = StyleSheet.create({
   },
   characterCountText: {
     fontSize: 12,
-    color: "#999",
     fontWeight: "500",
   },
   screenshotOption: {
@@ -535,7 +512,6 @@ const styles = StyleSheet.create({
   },
   screenshotText: {
     fontSize: 14,
-    color: "#1a1a1a",
     fontWeight: "500",
   },
   tipsSection: {
@@ -560,7 +536,6 @@ const styles = StyleSheet.create({
   },
   tipsDescription: {
     fontSize: 12,
-    color: "#666",
     lineHeight: 16,
   },
   submitButton: {
@@ -596,7 +571,6 @@ const styles = StyleSheet.create({
   },
   privacyText: {
     fontSize: 12,
-    color: "#999",
     textAlign: "center",
     lineHeight: 16,
   },

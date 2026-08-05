@@ -23,6 +23,7 @@ import {
   sendMessage as socketSendMessage,
 } from "@/utils/socket";
 import { useCall } from "@/contexts/CallContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function ChatDetail() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function ChatDetail() {
     otherUserId: string;
   };
   const { startCall } = useCall();
+  const { colors } = useTheme();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -228,20 +230,25 @@ export default function ChatDetail() {
         onPress={() => item.failed && retrySendMessage(item)}
         style={[
           styles.messageBubble,
-          item.fromMe ? styles.myMessage : styles.theirMessage,
-          item.failed && { borderColor: "#e63946", borderWidth: 1 },
+          item.fromMe
+            ? [styles.myMessage, { backgroundColor: colors.accent }]
+            : [styles.theirMessage, { backgroundColor: colors.surfaceAlt }],
+          item.failed && { borderColor: colors.accent, borderWidth: 1 },
         ]}
       >
         <Text
-          style={item.fromMe ? styles.myMessageText : styles.theirMessageText}
+          style={[
+            item.fromMe ? styles.myMessageText : styles.theirMessageText,
+            !item.fromMe && { color: colors.text },
+          ]}
         >
           {item.text}
         </Text>
         <Text
           style={[
             styles.timestamp,
-            item.fromMe ? styles.myTimestamp : styles.theirTimestamp,
-            item.failed && { color: "#e63946" },
+            item.fromMe ? styles.myTimestamp : [styles.theirTimestamp, { color: colors.textSecondary }],
+            item.failed && { color: colors.accent },
           ]}
         >
           {item.timestamp} {item.failed ? "(Failed)" : ""}
@@ -252,13 +259,13 @@ export default function ChatDetail() {
 
   if (loading)
     return (
-      <View style={styles.center}>
-        <Text>Loading...</Text>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Text style={{ color: colors.text }}>Loading...</Text>
       </View>
     );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -267,27 +274,27 @@ export default function ChatDetail() {
         {/* Header */}
         <View style={styles.header}>
           <Pressable style={styles.backButton} onPress={handleBack}>
-            <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
+            <Ionicons name="chevron-back" size={24} color={colors.text} />
           </Pressable>
           <View style={styles.profileSection}>
             <Image source={{ uri: avatar }} style={styles.profileImage} />
-            <Text style={styles.profileName}>{name}</Text>
+            <Text style={[styles.profileName, { color: colors.text }]}>{name}</Text>
           </View>
           <View style={styles.headerIcons}>
             <Pressable
               style={styles.iconButton}
               onPress={() => startCall(otherUserId, chatId, "audio", name, avatar)}
             >
-              <Ionicons name="call-outline" size={22} color="#e63946" />
+              <Ionicons name="call-outline" size={22} color={colors.accent} />
             </Pressable>
             <Pressable
               style={styles.iconButton}
               onPress={() => startCall(otherUserId, chatId, "video", name, avatar)}
             >
-              <Ionicons name="videocam-outline" size={22} color="#e63946" />
+              <Ionicons name="videocam-outline" size={22} color={colors.accent} />
             </Pressable>
             <Pressable style={styles.iconButton}>
-              <Ionicons name="ellipsis-vertical" size={20} color="#1a1a1a" />
+              <Ionicons name="ellipsis-vertical" size={20} color={colors.text} />
             </Pressable>
           </View>
         </View>
@@ -305,13 +312,14 @@ export default function ChatDetail() {
         />
 
         {/* Input + Emoji */}
-        <View style={styles.inputRow}>
+        <View style={[styles.inputRow, { borderColor: colors.border }]}>
           <Pressable onPress={toggleEmojiPicker} style={styles.emojiButton}>
-            <Ionicons name="happy-outline" size={28} color="#555" />
+            <Ionicons name="happy-outline" size={28} color={colors.textSecondary} />
           </Pressable>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text }]}
             placeholder="Type a message..."
+            placeholderTextColor={colors.textTertiary}
             value={input}
             onChangeText={setInput}
             multiline
@@ -319,7 +327,8 @@ export default function ChatDetail() {
           <Pressable
             style={[
               styles.sendButton,
-              !input.trim() && styles.sendButtonDisabled,
+              { backgroundColor: colors.accent },
+              !input.trim() && { backgroundColor: colors.textTertiary },
             ]}
             onPress={sendMessage}
             disabled={!input.trim()}
@@ -327,7 +336,7 @@ export default function ChatDetail() {
             <Ionicons
               name="send"
               size={20}
-              color={input.trim() ? "#fff" : "#999"}
+              color={input.trim() ? "#fff" : colors.textTertiary}
             />
           </Pressable>
         </View>
@@ -347,7 +356,7 @@ export default function ChatDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1 },
   keyboardAvoid: { flex: 1 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: { flexDirection: "row", alignItems: "center", padding: 10 },
@@ -359,7 +368,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   profileImage: { width: 40, height: 40, borderRadius: 20 },
-  profileName: { fontSize: 18, fontWeight: "600", color: "#1a1a1a" },
+  profileName: { fontSize: 18, fontWeight: "600" },
   headerIcons: { flexDirection: "row", gap: 12 },
   iconButton: { padding: 4 },
   messagesContainer: { paddingHorizontal: 12, paddingBottom: 10 },
@@ -372,24 +381,22 @@ const styles = StyleSheet.create({
   theirMessageContainer: { justifyContent: "flex-start" },
   avatar: { width: 32, height: 32, borderRadius: 16, marginRight: 6 },
   messageBubble: { maxWidth: "75%", borderRadius: 16, padding: 10 },
-  myMessage: { backgroundColor: "#e63946", alignSelf: "flex-end" },
-  theirMessage: { backgroundColor: "#E5E5EA", alignSelf: "flex-start" },
+  myMessage: { alignSelf: "flex-end" },
+  theirMessage: { alignSelf: "flex-start" },
   myMessageText: { color: "#fff" },
-  theirMessageText: { color: "#000" },
+  theirMessageText: {},
   timestamp: { fontSize: 10, marginTop: 4 },
   myTimestamp: { color: "#ffd9dc", textAlign: "right" },
-  theirTimestamp: { color: "#555", textAlign: "left" },
+  theirTimestamp: { textAlign: "left" },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     padding: 8,
     borderTopWidth: 1,
-    borderColor: "#ddd",
   },
   emojiButton: { padding: 4, marginRight: 4 },
   input: {
     flex: 1,
-    backgroundColor: "#f1f1f1",
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -397,9 +404,7 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     marginLeft: 6,
-    backgroundColor: "#e63946",
     borderRadius: 20,
     padding: 10,
   },
-  sendButtonDisabled: { backgroundColor: "#aaa" },
 });

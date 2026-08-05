@@ -10,6 +10,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { createOrGetChat } from "@/utils/api";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // Define TypeScript interfaces for better type safety
 interface User {
@@ -38,6 +39,7 @@ export default function UserDetail() {
   const params = useLocalSearchParams();
   const user = params.user ? (JSON.parse(params.user as string) as User) : null;
   const router = useRouter();
+  const { colors } = useTheme();
 
   if (!user) {
     return (
@@ -73,7 +75,7 @@ export default function UserDetail() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header Image Section */}
       <View style={styles.header}>
         <Image
@@ -129,11 +131,11 @@ export default function UserDetail() {
         showsVerticalScrollIndicator={false}
       >
         {/* Basic Info Card */}
-        <View style={styles.mainInfoCard}>
+        <View style={[styles.mainInfoCard, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
           <View style={styles.nameSection}>
-            <Text style={styles.name}>
+            <Text style={[styles.name, { color: colors.text }]}>
               {user.name}
-              {user.age && <Text style={styles.age}>, {user.age}</Text>}
+              {user.age && <Text style={[styles.age, { color: colors.textSecondary }]}>, {user.age}</Text>}
             </Text>
 
             {/* Verification Badge */}
@@ -147,22 +149,22 @@ export default function UserDetail() {
 
           {/* Location */}
           <View style={styles.locationSection}>
-            <Ionicons name="location-outline" size={16} color="#FF6B6B" />
-            <Text style={styles.location}>{user.location}</Text>
+            <Ionicons name="location-outline" size={16} color={colors.accent} />
+            <Text style={[styles.location, { color: colors.accent }]}>{user.location}</Text>
           </View>
 
           {/* Profession */}
           {user.profession && (
             <View style={styles.professionSection}>
-              <Ionicons name="briefcase-outline" size={16} color="#666" />
-              <Text style={styles.profession}>{user.profession}</Text>
+              <Ionicons name="briefcase-outline" size={16} color={colors.textSecondary} />
+              <Text style={[styles.profession, { color: colors.textSecondary }]}>{user.profession}</Text>
             </View>
           )}
 
           {/* Online Status */}
           {user.isOnline && (
             <View style={styles.onlineStatus}>
-              <View style={styles.onlineDot} />
+              <View style={[styles.onlineDot, { backgroundColor: colors.success }]} />
               <Text style={styles.onlineText}>Online now</Text>
             </View>
           )}
@@ -170,44 +172,44 @@ export default function UserDetail() {
 
         {/* Bio Section */}
         {user.bio && (
-          <View style={styles.section}>
+          <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
             <View style={styles.sectionHeader}>
               <Ionicons
                 name="document-text-outline"
                 size={20}
-                color="#FF6B6B"
+                color={colors.accent}
               />
-              <Text style={styles.sectionTitle}>About Me</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>About Me</Text>
             </View>
-            <Text style={styles.sectionContent}>{user.bio}</Text>
+            <Text style={[styles.sectionContent, { color: colors.textSecondary }]}>{user.bio}</Text>
           </View>
         )}
 
         {/* Personal Info */}
-        <View style={styles.section}>
+        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="person-circle-outline" size={20} color="#FF6B6B" />
-            <Text style={styles.sectionTitle}>Personal Info</Text>
+            <Ionicons name="person-circle-outline" size={20} color={colors.accent} />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Personal Info</Text>
           </View>
 
           <View style={styles.infoGrid}>
             {user.gender && (
-              <View style={styles.infoItem}>
+              <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
                 <View style={styles.infoLabel}>
-                  <Ionicons name="male-female-outline" size={16} color="#666" />
-                  <Text style={styles.infoTitle}>Gender</Text>
+                  <Ionicons name="male-female-outline" size={16} color={colors.textSecondary} />
+                  <Text style={[styles.infoTitle, { color: colors.textSecondary }]}>Gender</Text>
                 </View>
-                <Text style={styles.infoValue}>{user.gender}</Text>
+                <Text style={[styles.infoValue, { color: colors.text }]}>{user.gender}</Text>
               </View>
             )}
 
             {user.interestedIn && (
-              <View style={styles.infoItem}>
+              <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
                 <View style={styles.infoLabel}>
-                  <Ionicons name="heart-outline" size={16} color="#666" />
-                  <Text style={styles.infoTitle}>Interested In</Text>
+                  <Ionicons name="heart-outline" size={16} color={colors.textSecondary} />
+                  <Text style={[styles.infoTitle, { color: colors.textSecondary }]}>Interested In</Text>
                 </View>
-                <Text style={styles.infoValue}>{user.interestedIn}</Text>
+                <Text style={[styles.infoValue, { color: colors.text }]}>{user.interestedIn}</Text>
               </View>
             )}
           </View>
@@ -215,20 +217,20 @@ export default function UserDetail() {
 
         {/* Hobbies */}
         {user.hobbies && user.hobbies.length > 0 && (
-          <View style={styles.section}>
+          <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
             <View style={styles.sectionHeader}>
               <Ionicons
                 name="game-controller-outline"
                 size={20}
-                color="#FF6B6B"
+                color={colors.accent}
               />
-              <Text style={styles.sectionTitle}>Hobbies & Interests</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Hobbies & Interests</Text>
             </View>
             <View style={styles.hobbiesContainer}>
               {user.hobbies.map((hobby: string, index: number) => (
-                <View key={index} style={styles.hobbyTag}>
-                  <Ionicons name="star" size={14} color="#FF6B6B" />
-                  <Text style={styles.hobbyText}>{hobby}</Text>
+                <View key={index} style={[styles.hobbyTag, { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed }]}>
+                  <Ionicons name="star" size={14} color={colors.accent} />
+                  <Text style={[styles.hobbyText, { color: colors.accent }]}>{hobby}</Text>
                 </View>
               ))}
             </View>
@@ -236,30 +238,30 @@ export default function UserDetail() {
         )}
 
         {/* Education & Goals */}
-        <View style={styles.section}>
+        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="school-outline" size={20} color="#FF6B6B" />
-            <Text style={styles.sectionTitle}>Education & Goals</Text>
+            <Ionicons name="school-outline" size={20} color={colors.accent} />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Education & Goals</Text>
           </View>
 
           <View style={styles.infoGrid}>
             {user.education && (
-              <View style={styles.infoItem}>
+              <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
                 <View style={styles.infoLabel}>
-                  <Ionicons name="school" size={16} color="#666" />
-                  <Text style={styles.infoTitle}>Education</Text>
+                  <Ionicons name="school" size={16} color={colors.textSecondary} />
+                  <Text style={[styles.infoTitle, { color: colors.textSecondary }]}>Education</Text>
                 </View>
-                <Text style={styles.infoValue}>{user.education}</Text>
+                <Text style={[styles.infoValue, { color: colors.text }]}>{user.education}</Text>
               </View>
             )}
 
             {user.relationshipGoals && (
-              <View style={styles.infoItem}>
+              <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
                 <View style={styles.infoLabel}>
-                  <Ionicons name="flag-outline" size={16} color="#666" />
-                  <Text style={styles.infoTitle}>Relationship Goals</Text>
+                  <Ionicons name="flag-outline" size={16} color={colors.textSecondary} />
+                  <Text style={[styles.infoTitle, { color: colors.textSecondary }]}>Relationship Goals</Text>
                 </View>
-                <Text style={styles.infoValue}>{user.relationshipGoals}</Text>
+                <Text style={[styles.infoValue, { color: colors.text }]}>{user.relationshipGoals}</Text>
               </View>
             )}
           </View>
@@ -276,16 +278,16 @@ export default function UserDetail() {
                 >
                   <Text style={styles.statValue}>{user.compatibility}%</Text>
                 </LinearGradient>
-                <Text style={styles.statLabel}>Match</Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Match</Text>
               </View>
             )}
 
             {user.distance && (
               <View style={styles.statItem}>
-                <View style={[styles.statCircle, styles.distanceCircle]}>
+                <View style={[styles.statCircle, styles.distanceCircle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <Ionicons name="location" size={20} color="#4A90E2" />
                 </View>
-                <Text style={styles.statLabel}>{user.distance}km away</Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{user.distance}km away</Text>
               </View>
             )}
           </View>
@@ -298,7 +300,6 @@ export default function UserDetail() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
   },
   center: {
     flex: 1,
@@ -371,12 +372,10 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   mainInfoCard: {
-    backgroundColor: "#fff",
     marginHorizontal: 20,
     padding: 24,
     borderRadius: 24,
     marginBottom: 16,
-    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 8 },
     shadowRadius: 16,
@@ -392,14 +391,12 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#1a1a1a",
     letterSpacing: -0.5,
     flex: 1,
   },
   age: {
     fontSize: 24,
     fontWeight: "600",
-    color: "#666",
   },
   verificationBadge: {
     flexDirection: "row",
@@ -426,7 +423,6 @@ const styles = StyleSheet.create({
   location: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#FF6B6B",
   },
   professionSection: {
     flexDirection: "row",
@@ -437,7 +433,6 @@ const styles = StyleSheet.create({
   profession: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#666",
   },
   onlineStatus: {
     flexDirection: "row",
@@ -455,7 +450,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#4CAF50",
   },
   onlineText: {
     fontSize: 12,
@@ -463,12 +457,10 @@ const styles = StyleSheet.create({
     color: "#2E7D32",
   },
   section: {
-    backgroundColor: "#fff",
     marginHorizontal: 20,
     padding: 20,
     borderRadius: 20,
     marginBottom: 16,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 12,
@@ -483,11 +475,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
   },
   sectionContent: {
     fontSize: 15,
-    color: "#555",
     lineHeight: 22,
   },
   infoGrid: {
@@ -499,7 +489,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#f5f5f5",
   },
   infoLabel: {
     flexDirection: "row",
@@ -510,12 +499,10 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#666",
   },
   infoValue: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#1a1a1a",
     textAlign: "right",
     flex: 1,
   },
@@ -527,18 +514,15 @@ const styles = StyleSheet.create({
   hobbyTag: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF5F5",
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 6,
     borderWidth: 1,
-    borderColor: "#FFE5E5",
   },
   hobbyText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#FF6B6B",
   },
   statsSection: {
     flexDirection: "row",
@@ -564,9 +548,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   distanceCircle: {
-    backgroundColor: "#fff",
     borderWidth: 2,
-    borderColor: "#E8F4FF",
   },
   statValue: {
     fontSize: 16,
@@ -576,6 +558,5 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#666",
   },
 });

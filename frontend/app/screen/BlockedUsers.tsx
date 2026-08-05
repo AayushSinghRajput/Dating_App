@@ -3,6 +3,7 @@ import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface BlockedUser {
   id: string;
@@ -16,6 +17,7 @@ interface BlockedUser {
 
 export default function BlockedUsers() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([
     {
       id: "1",
@@ -56,8 +58,8 @@ export default function BlockedUsers() {
       `Are you sure you want to unblock ${userName}? They will be able to see your profile and send you messages again.`,
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Unblock", 
+        {
+          text: "Unblock",
           style: "destructive",
           onPress: () => {
             setBlockedUsers(prev => prev.filter(user => user.id !== userId));
@@ -70,14 +72,14 @@ export default function BlockedUsers() {
 
   const clearAllBlocked = () => {
     if (blockedUsers.length === 0) return;
-    
+
     Alert.alert(
       "Clear All Blocked Users",
       "Are you sure you want to unblock all users? This action cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Clear All", 
+        {
+          text: "Clear All",
           style: "destructive",
           onPress: () => {
             setBlockedUsers([]);
@@ -89,19 +91,19 @@ export default function BlockedUsers() {
   };
 
   const BlockedUserCard = ({ user }: { user: BlockedUser }) => (
-    <View style={styles.userCard}>
+    <View style={[styles.userCard, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
       <View style={styles.userMainInfo}>
-        <Image source={{ uri: user.avatar }} style={styles.avatar} />
+        <Image source={{ uri: user.avatar }} style={[styles.avatar, { borderColor: colors.accentSoft }]} />
         <View style={styles.userBasicInfo}>
           <View style={styles.nameRow}>
-            <Text style={styles.userName}>{user.name}</Text>
-            <Text style={styles.userAge}>, {user.age}</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>{user.name}</Text>
+            <Text style={[styles.userAge, { color: colors.textSecondary }]}>, {user.age}</Text>
           </View>
           <View style={styles.locationRow}>
-            <Ionicons name="location-outline" size={12} color="#666" />
-            <Text style={styles.userLocation}>{user.location}</Text>
+            <Ionicons name="location-outline" size={12} color={colors.textSecondary} />
+            <Text style={[styles.userLocation, { color: colors.textSecondary }]}>{user.location}</Text>
           </View>
-          <Text style={styles.blockedDate}>Blocked {user.blockedDate}</Text>
+          <Text style={[styles.blockedDate, { color: colors.textTertiary }]}>Blocked {user.blockedDate}</Text>
         </View>
       </View>
 
@@ -111,78 +113,78 @@ export default function BlockedUsers() {
           <View style={styles.interestsContainer}>
             <View style={styles.interestsRow}>
               {user.mutualInterests.slice(0, 3).map((interest, index) => (
-                <View key={index} style={styles.interestTag}>
-                  <Text style={styles.interestText}>{interest}</Text>
+                <View key={index} style={[styles.interestTag, { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed }]}>
+                  <Text style={[styles.interestText, { color: colors.accent }]}>{interest}</Text>
                 </View>
               ))}
               {user.mutualInterests.length > 3 && (
-                <Text style={styles.moreInterests}>+{user.mutualInterests.length - 3}</Text>
+                <Text style={[styles.moreInterests, { color: colors.textTertiary }]}>+{user.mutualInterests.length - 3}</Text>
               )}
             </View>
           </View>
         )}
-        
-        <Pressable 
-          style={styles.unblockButton}
+
+        <Pressable
+          style={[styles.unblockButton, { backgroundColor: colors.surface, borderColor: colors.accent }]}
           onPress={() => unblockUser(user.id, user.name)}
         >
-          <Ionicons name="lock-open-outline" size={16} color="#FF6B6B" />
-          <Text style={styles.unblockText}>Unblock</Text>
+          <Ionicons name="lock-open-outline" size={16} color={colors.accent} />
+          <Text style={[styles.unblockText, { color: colors.accent }]}>Unblock</Text>
         </Pressable>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, shadowColor: colors.shadow }]}>
         <Pressable style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>Blocked Users</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Blocked Users</Text>
         <Pressable style={styles.clearButton} onPress={clearAllBlocked}>
-          <Text style={styles.clearButtonText}>Clear All</Text>
+          <Text style={[styles.clearButtonText, { color: colors.accent }]}>Clear All</Text>
         </Pressable>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Stats Section */}
         <View style={styles.statsSection}>
-          <View style={styles.statCard}>
-            <Ionicons name="people-outline" size={24} color="#FF6B6B" />
+          <View style={[styles.statCard, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+            <Ionicons name="people-outline" size={24} color={colors.accent} />
             <View style={styles.statText}>
-              <Text style={styles.statNumber}>{blockedUsers.length}</Text>
-              <Text style={styles.statLabel}>Users Blocked</Text>
+              <Text style={[styles.statNumber, { color: colors.text }]}>{blockedUsers.length}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Users Blocked</Text>
             </View>
           </View>
-          <View style={styles.statCard}>
-            <Ionicons name="shield-checkmark-outline" size={24} color="#4CAF50" />
+          <View style={[styles.statCard, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+            <Ionicons name="shield-checkmark-outline" size={24} color={colors.success} />
             <View style={styles.statText}>
-              <Text style={styles.statNumber}>100%</Text>
-              <Text style={styles.statLabel}>Privacy Protected</Text>
+              <Text style={[styles.statNumber, { color: colors.text }]}>100%</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Privacy Protected</Text>
             </View>
           </View>
         </View>
 
         {/* Blocked Users List */}
-        <View style={styles.section}>
+        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Blocked Accounts</Text>
-            <Text style={styles.sectionDescription}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Blocked Accounts</Text>
+            <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
               These users cannot see your profile or contact you
             </Text>
           </View>
 
           {blockedUsers.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="checkmark-circle" size={64} color="#E8F5E8" />
-              <Text style={styles.emptyTitle}>No Blocked Users</Text>
-              <Text style={styles.emptyDescription}>
+              <Ionicons name="checkmark-circle" size={64} color={colors.success} />
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>No Blocked Users</Text>
+              <Text style={[styles.emptyDescription, { color: colors.textSecondary }]}>
                 You haven&apos;t blocked any users yet. Your block list will appear here.
               </Text>
             </View>
@@ -196,11 +198,11 @@ export default function BlockedUsers() {
         </View>
 
         {/* Information Section */}
-        <View style={styles.infoSection}>
-          <Ionicons name="information-circle-outline" size={20} color="#666" />
+        <View style={[styles.infoSection, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+          <Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} />
           <View style={styles.infoText}>
-            <Text style={styles.infoTitle}>About Blocking</Text>
-            <Text style={styles.infoDescription}>
+            <Text style={[styles.infoTitle, { color: colors.text }]}>About Blocking</Text>
+            <Text style={[styles.infoDescription, { color: colors.textSecondary }]}>
               • Blocked users cannot see your profile or send you messages{"\n"}
               • You can unblock users at any time{"\n"}
               • Blocking is private - users are not notified
@@ -210,13 +212,13 @@ export default function BlockedUsers() {
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <Pressable style={styles.quickAction}>
-            <Ionicons name="help-circle-outline" size={20} color="#666" />
-            <Text style={styles.quickActionText}>Blocking Help</Text>
+          <Pressable style={[styles.quickAction, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+            <Ionicons name="help-circle-outline" size={20} color={colors.textSecondary} />
+            <Text style={[styles.quickActionText, { color: colors.textSecondary }]}>Blocking Help</Text>
           </Pressable>
-          <Pressable style={styles.quickAction}>
-            <Ionicons name="document-text-outline" size={20} color="#666" />
-            <Text style={styles.quickActionText}>Privacy Policy</Text>
+          <Pressable style={[styles.quickAction, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+            <Ionicons name="document-text-outline" size={20} color={colors.textSecondary} />
+            <Text style={[styles.quickActionText, { color: colors.textSecondary }]}>Privacy Policy</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -225,9 +227,8 @@ export default function BlockedUsers() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#f8f9fa" 
+  container: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
@@ -240,14 +241,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -260,7 +258,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
   },
   clearButton: {
     padding: 8,
@@ -268,7 +265,6 @@ const styles = StyleSheet.create({
   clearButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#FF6B6B",
   },
   statsSection: {
     flexDirection: "row",
@@ -281,11 +277,9 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
     padding: 16,
     borderRadius: 16,
     gap: 12,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -297,21 +291,17 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#1a1a1a",
     marginBottom: 2,
   },
   statLabel: {
     fontSize: 12,
-    color: "#666",
     fontWeight: "500",
   },
   section: {
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 16,
     padding: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 12,
@@ -323,12 +313,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 4,
   },
   sectionDescription: {
     fontSize: 14,
-    color: "#666",
     fontWeight: "500",
     lineHeight: 18,
   },
@@ -340,13 +328,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginTop: 16,
     marginBottom: 8,
   },
   emptyDescription: {
     fontSize: 14,
-    color: "#666",
     textAlign: "center",
     lineHeight: 20,
   },
@@ -354,11 +340,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   userCard: {
-    backgroundColor: "#f8f9fa",
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#f0f0f0",
   },
   userMainInfo: {
     flexDirection: "row",
@@ -370,7 +354,6 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     borderWidth: 2,
-    borderColor: "#FFE5E5",
     marginRight: 12,
   },
   userBasicInfo: {
@@ -384,11 +367,9 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
   },
   userAge: {
     fontSize: 14,
-    color: "#666",
     fontWeight: "500",
   },
   locationRow: {
@@ -399,11 +380,9 @@ const styles = StyleSheet.create({
   },
   userLocation: {
     fontSize: 12,
-    color: "#666",
   },
   blockedDate: {
     fontSize: 11,
-    color: "#999",
     fontWeight: "500",
   },
   actionSection: {
@@ -422,22 +401,18 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   interestTag: {
-    backgroundColor: "#FFF5F5",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#FFE5E5",
     marginBottom: 4,
   },
   interestText: {
     fontSize: 10,
     fontWeight: "600",
-    color: "#FF6B6B",
   },
   moreInterests: {
     fontSize: 10,
-    color: "#999",
     fontWeight: "500",
     marginBottom: 4,
   },
@@ -447,28 +422,23 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: "#fff",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#FF6B6B",
     minWidth: 90,
     height: 40,
   },
   unblockText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#FF6B6B",
   },
   infoSection: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "#F0F9FF",
     marginHorizontal: 16,
     marginBottom: 16,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E8F4FF",
     gap: 12,
   },
   infoText: {
@@ -477,12 +447,10 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 6,
   },
   infoDescription: {
     fontSize: 13,
-    color: "#666",
     lineHeight: 18,
   },
   quickActions: {
@@ -495,11 +463,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -508,6 +474,5 @@ const styles = StyleSheet.create({
   quickActionText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#666",
   },
 });

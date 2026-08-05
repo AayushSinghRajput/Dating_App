@@ -17,10 +17,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { register } from "../../utils/api";
 import Toast from "react-native-toast-message";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { width, height } = Dimensions.get("window");
 
 export default function RegisterScreen() {
+  const { colors } = useTheme();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -115,7 +117,7 @@ export default function RegisterScreen() {
   return (
     <>
       <StatusBar
-        barStyle="light-content"
+        barStyle={colors.statusBarStyle}
         translucent
         backgroundColor="transparent"
       />
@@ -163,11 +165,14 @@ export default function RegisterScreen() {
                   <Text style={styles.inputLabel}>Username</Text>
                   <TextInput
                     placeholder="Choose a username"
-                    placeholderTextColor="#999"
+                    placeholderTextColor={colors.textTertiary}
                     autoCapitalize="none"
                     value={username}
                     onChangeText={setUsername}
-                    style={styles.textInput}
+                    style={[
+                      styles.textInput,
+                      { backgroundColor: colors.surface, color: colors.text, shadowColor: colors.shadow },
+                    ]}
                   />
                 </View>
 
@@ -175,28 +180,36 @@ export default function RegisterScreen() {
                   <Text style={styles.inputLabel}>Email</Text>
                   <TextInput
                     placeholder="Enter your email"
-                    placeholderTextColor="#999"
+                    placeholderTextColor={colors.textTertiary}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     value={email}
                     onChangeText={setEmail}
-                    style={styles.textInput}
+                    style={[
+                      styles.textInput,
+                      { backgroundColor: colors.surface, color: colors.text, shadowColor: colors.shadow },
+                    ]}
                   />
                 </View>
 
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>Password</Text>
-                  <View style={styles.passwordWrapper}>
+                  <View
+                    style={[
+                      styles.passwordWrapper,
+                      { backgroundColor: colors.surface, shadowColor: colors.shadow },
+                    ]}
+                  >
                     <TextInput
                       placeholder="Create a password"
-                      placeholderTextColor="#999"
+                      placeholderTextColor={colors.textTertiary}
                       secureTextEntry={!showPassword}
                       value={password}
                       onChangeText={setPassword}
                       style={{
                         flex: 1,
                         fontSize: 16,
-                        color: "#333",
+                        color: colors.text,
                         paddingVertical: 14, // aligns text perfectly in center
                       }}
                     />
@@ -208,7 +221,7 @@ export default function RegisterScreen() {
                       <Ionicons
                         name={showPassword ? "eye" : "eye-off"}
                         size={24}
-                        color="#999"
+                        color={colors.textTertiary}
                       />
                     </TouchableOpacity>
                   </View>
@@ -216,17 +229,22 @@ export default function RegisterScreen() {
 
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>Confirm Password</Text>
-                  <View style={styles.passwordWrapper}>
+                  <View
+                    style={[
+                      styles.passwordWrapper,
+                      { backgroundColor: colors.surface, shadowColor: colors.shadow },
+                    ]}
+                  >
                     <TextInput
                       placeholder="Confirm your password"
-                      placeholderTextColor="#999"
+                      placeholderTextColor={colors.textTertiary}
                       secureTextEntry={!showConfirmPassword}
                       value={confirmPassword}
                       onChangeText={setConfirmPassword}
                       style={{
                         flex: 1,
                         fontSize: 16,
-                        color: "#333",
+                        color: colors.text,
                         paddingVertical: 14, // aligns text perfectly in center
                       }}
                     />
@@ -240,7 +258,7 @@ export default function RegisterScreen() {
                       <Ionicons
                         name={showConfirmPassword ? "eye" : "eye-off"}
                         size={24}
-                        color="#999"
+                        color={colors.textTertiary}
                       />
                     </TouchableOpacity>
                   </View>
@@ -369,13 +387,10 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   textInput: {
-    backgroundColor: "#fff",
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 16, // reduced a bit for consistent alignment
     fontSize: 16,
-    color: "#333",
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -421,11 +436,9 @@ const styles = StyleSheet.create({
   passwordWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
     borderRadius: 16,
     paddingHorizontal: 12, // slightly less so inner input aligns nicely
     height: 56, // same visual height as normal input
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,

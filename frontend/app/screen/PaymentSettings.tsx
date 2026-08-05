@@ -3,11 +3,13 @@ import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { width } = Dimensions.get("window");
 
 export default function PaymentSettings() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [selectedPlan, setSelectedPlan] = useState<string | null>("premium");
   const [autoRenew, setAutoRenew] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState("card-1");
@@ -23,8 +25,8 @@ export default function PaymentSettings() {
       `Are you sure you want to subscribe to the ${plan} plan?`,
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Subscribe", 
+        {
+          text: "Subscribe",
           style: "default",
           onPress: () => {
             Alert.alert("Success", `You have successfully subscribed to ${plan} plan!`);
@@ -34,12 +36,12 @@ export default function PaymentSettings() {
     );
   };
 
-  const PaymentMethod = ({ 
-    id, 
-    type, 
-    last4, 
-    expiry, 
-    isDefault = false 
+  const PaymentMethod = ({
+    id,
+    type,
+    last4,
+    expiry,
+    isDefault = false
   }: {
     id: string;
     type: string;
@@ -47,28 +49,29 @@ export default function PaymentSettings() {
     expiry: string;
     isDefault?: boolean;
   }) => (
-    <Pressable 
+    <Pressable
       style={[
         styles.paymentMethod,
-        selectedPayment === id && styles.selectedPaymentMethod
+        { backgroundColor: colors.surfaceAlt, borderColor: "transparent" },
+        selectedPayment === id && [styles.selectedPaymentMethod, { borderColor: colors.accent, backgroundColor: colors.accentSoft }]
       ]}
       onPress={() => setSelectedPayment(id)}
     >
       <View style={styles.paymentMethodLeft}>
-        <View style={styles.paymentIcon}>
+        <View style={[styles.paymentIcon, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           {type === "visa" ? (
-            <Ionicons name="card" size={24} color="#1a1a1a" />
+            <Ionicons name="card" size={24} color={colors.text} />
           ) : (
-            <Ionicons name="phone-portrait" size={20} color="#1a1a1a" />
+            <Ionicons name="phone-portrait" size={20} color={colors.text} />
           )}
         </View>
         <View style={styles.paymentInfo}>
-          <Text style={styles.paymentType}>
+          <Text style={[styles.paymentType, { color: colors.text }]}>
             {type === "visa" ? "Visa" : "Mobile Payment"} •••• {last4}
           </Text>
-          <Text style={styles.paymentExpiry}>Expires {expiry}</Text>
+          <Text style={[styles.paymentExpiry, { color: colors.textSecondary }]}>Expires {expiry}</Text>
           {isDefault && (
-            <View style={styles.defaultBadge}>
+            <View style={[styles.defaultBadge, { backgroundColor: colors.success }]}>
               <Text style={styles.defaultText}>Default</Text>
             </View>
           )}
@@ -77,18 +80,19 @@ export default function PaymentSettings() {
       <View style={styles.radioContainer}>
         <View style={[
           styles.radio,
-          selectedPayment === id && styles.radioSelected
+          { borderColor: colors.textTertiary },
+          selectedPayment === id && { borderColor: colors.accent, backgroundColor: colors.accent }
         ]} />
       </View>
     </Pressable>
   );
 
-  const SubscriptionPlan = ({ 
-    name, 
-    price, 
-    period, 
+  const SubscriptionPlan = ({
+    name,
+    price,
+    period,
     features,
-    popular = false 
+    popular = false
   }: {
     name: string;
     price: string;
@@ -96,41 +100,44 @@ export default function PaymentSettings() {
     features: string[];
     popular?: boolean;
   }) => (
-    <Pressable 
+    <Pressable
       style={[
         styles.planCard,
-        selectedPlan === name.toLowerCase() && styles.selectedPlan
+        { backgroundColor: colors.surfaceAlt, borderColor: "transparent" },
+        selectedPlan === name.toLowerCase() && [styles.selectedPlan, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]
       ]}
       onPress={() => setSelectedPlan(name.toLowerCase())}
     >
-      {popular && <View style={styles.popularBadge}><Text style={styles.popularText}>MOST POPULAR</Text></View>}
-      
+      {popular && <View style={[styles.popularBadge, { backgroundColor: colors.accent }]}><Text style={styles.popularText}>MOST POPULAR</Text></View>}
+
       <View style={styles.planHeader}>
-        <Text style={styles.planName}>{name}</Text>
+        <Text style={[styles.planName, { color: colors.text }]}>{name}</Text>
         <View style={styles.priceContainer}>
-          <Text style={styles.planPrice}>{price}</Text>
-          <Text style={styles.planPeriod}>/{period}</Text>
+          <Text style={[styles.planPrice, { color: colors.accent }]}>{price}</Text>
+          <Text style={[styles.planPeriod, { color: colors.textSecondary }]}>/{period}</Text>
         </View>
       </View>
 
       <View style={styles.featuresList}>
         {features.map((feature, index) => (
           <View key={index} style={styles.featureItem}>
-            <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-            <Text style={styles.featureText}>{feature}</Text>
+            <Ionicons name="checkmark-circle" size={16} color={colors.success} />
+            <Text style={[styles.featureText, { color: colors.textSecondary }]}>{feature}</Text>
           </View>
         ))}
       </View>
 
-      <Pressable 
+      <Pressable
         style={[
           styles.subscribeButton,
-          selectedPlan === name.toLowerCase() && styles.subscribeButtonActive
+          { backgroundColor: colors.border },
+          selectedPlan === name.toLowerCase() && [styles.subscribeButtonActive, { backgroundColor: colors.accent }]
         ]}
         onPress={() => handleSubscribe(name)}
       >
         <Text style={[
           styles.subscribeText,
+          { color: colors.textSecondary },
           selectedPlan === name.toLowerCase() && styles.subscribeTextActive
         ]}>
           {selectedPlan === name.toLowerCase() ? "Selected" : "Select Plan"}
@@ -140,42 +147,42 @@ export default function PaymentSettings() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, shadowColor: colors.shadow }]}>
         <Pressable style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>Payment & Subscriptions</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Payment & Subscriptions</Text>
         <View style={styles.headerPlaceholder} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Current Plan Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Current Plan</Text>
-          <View style={styles.currentPlanCard}>
+        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Current Plan</Text>
+          <View style={[styles.currentPlanCard, { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed }]}>
             <View style={styles.planStatus}>
-              <Ionicons name="diamond" size={24} color="#FF6B6B" />
+              <Ionicons name="diamond" size={24} color={colors.accent} />
               <View style={styles.planStatusText}>
-                <Text style={styles.planStatusTitle}>Premium Plan</Text>
-                <Text style={styles.planStatusSubtitle}>Active • Renews on Jan 15, 2024</Text>
+                <Text style={[styles.planStatusTitle, { color: colors.text }]}>Premium Plan</Text>
+                <Text style={[styles.planStatusSubtitle, { color: colors.textSecondary }]}>Active • Renews on Jan 15, 2024</Text>
               </View>
             </View>
-            <Pressable style={styles.manageButton}>
-              <Text style={styles.manageButtonText}>Manage</Text>
+            <Pressable style={[styles.manageButton, { backgroundColor: colors.surface, borderColor: colors.accent }]}>
+              <Text style={[styles.manageButtonText, { color: colors.accent }]}>Manage</Text>
             </Pressable>
           </View>
         </View>
 
         {/* Subscription Plans */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Upgrade Your Plan</Text>
-          <Text style={styles.sectionDescription}>
+        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Upgrade Your Plan</Text>
+          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
             Choose the plan that works best for you
           </Text>
 
@@ -221,12 +228,12 @@ export default function PaymentSettings() {
         </View>
 
         {/* Payment Methods */}
-        <View style={styles.section}>
+        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Payment Methods</Text>
-            <Pressable style={styles.addButton}>
-              <Ionicons name="add" size={20} color="#FF6B6B" />
-              <Text style={styles.addButtonText}>Add New</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Payment Methods</Text>
+            <Pressable style={[styles.addButton, { backgroundColor: colors.accentSoft }]}>
+              <Ionicons name="add" size={20} color={colors.accent} />
+              <Text style={[styles.addButtonText, { color: colors.accent }]}>Add New</Text>
             </Pressable>
           </View>
 
@@ -254,64 +261,66 @@ export default function PaymentSettings() {
         </View>
 
         {/* Auto Renew */}
-        <View style={styles.section}>
+        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
           <View style={styles.autoRenewOption}>
             <View style={styles.autoRenewLeft}>
-              <Ionicons name="refresh-circle" size={24} color="#FF6B6B" />
+              <Ionicons name="refresh-circle" size={24} color={colors.accent} />
               <View style={styles.autoRenewText}>
-                <Text style={styles.autoRenewTitle}>Auto Renew</Text>
-                <Text style={styles.autoRenewDescription}>
+                <Text style={[styles.autoRenewTitle, { color: colors.text }]}>Auto Renew</Text>
+                <Text style={[styles.autoRenewDescription, { color: colors.textSecondary }]}>
                   Automatically renew your subscription
                 </Text>
               </View>
             </View>
-            <Pressable 
+            <Pressable
               style={[
                 styles.toggle,
-                autoRenew && styles.toggleActive
+                { backgroundColor: colors.border },
+                autoRenew && [styles.toggleActive, { backgroundColor: colors.accentSoftPressed }]
               ]}
               onPress={() => setAutoRenew(!autoRenew)}
             >
               <View style={[
                 styles.toggleThumb,
-                autoRenew && styles.toggleThumbActive
+                { backgroundColor: colors.surface, shadowColor: colors.shadow },
+                autoRenew && [styles.toggleThumbActive, { backgroundColor: colors.accent }]
               ]} />
             </Pressable>
           </View>
         </View>
 
         {/* Billing History */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Billing History</Text>
-          <Pressable style={styles.billingItem}>
+        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Billing History</Text>
+          <Pressable style={[styles.billingItem, { borderBottomColor: colors.surfaceAlt }]}>
             <View style={styles.billingLeft}>
-              <Ionicons name="receipt" size={20} color="#666" />
+              <Ionicons name="receipt" size={20} color={colors.textSecondary} />
               <View style={styles.billingInfo}>
-                <Text style={styles.billingTitle}>Premium Subscription</Text>
-                <Text style={styles.billingDate}>Dec 15, 2023 • $19.99</Text>
+                <Text style={[styles.billingTitle, { color: colors.text }]}>Premium Subscription</Text>
+                <Text style={[styles.billingDate, { color: colors.textSecondary }]}>Dec 15, 2023 • $19.99</Text>
               </View>
             </View>
-            <Ionicons name="download" size={20} color="#666" />
+            <Ionicons name="download" size={20} color={colors.textSecondary} />
           </Pressable>
 
-          <Pressable style={styles.billingItem}>
+          <Pressable style={[styles.billingItem, { borderBottomColor: colors.surfaceAlt }]}>
             <View style={styles.billingLeft}>
-              <Ionicons name="receipt" size={20} color="#666" />
+              <Ionicons name="receipt" size={20} color={colors.textSecondary} />
               <View style={styles.billingInfo}>
-                <Text style={styles.billingTitle}>Boost Pack</Text>
-                <Text style={styles.billingDate}>Nov 28, 2023 • $9.99</Text>
+                <Text style={[styles.billingTitle, { color: colors.text }]}>Boost Pack</Text>
+                <Text style={[styles.billingDate, { color: colors.textSecondary }]}>Nov 28, 2023 • $9.99</Text>
               </View>
             </View>
-            <Ionicons name="download" size={20} color="#666" />
+            <Ionicons name="download" size={20} color={colors.textSecondary} />
           </Pressable>
         </View>
 
         {/* Support Section */}
-        <View style={styles.supportSection}>
-          <Ionicons name="shield-checkmark" size={24} color="#4CAF50" />
+        <View style={[styles.supportSection, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+          <Ionicons name="shield-checkmark" size={24} color={colors.success} />
           <View style={styles.supportText}>
-            <Text style={styles.supportTitle}>Secure & Encrypted</Text>
-            <Text style={styles.supportDescription}>
+            <Text style={[styles.supportTitle, { color: colors.success }]}>Secure & Encrypted</Text>
+            <Text style={[styles.supportDescription, { color: colors.textSecondary }]}>
               All payments are processed securely with 256-bit encryption
             </Text>
           </View>
@@ -322,9 +331,8 @@ export default function PaymentSettings() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#f8f9fa" 
+  container: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
@@ -337,14 +345,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -357,19 +362,16 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
   },
   headerPlaceholder: {
     width: 40,
   },
   section: {
-    backgroundColor: "#fff",
     marginHorizontal: 16,
     marginBottom: 16,
     marginTop:16,
     borderRadius: 16,
     padding: 20,
-    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 12,
@@ -384,12 +386,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 4,
   },
   sectionDescription: {
     fontSize: 14,
-    color: "#666",
     fontWeight: "500",
     marginBottom: 16,
     lineHeight: 18,
@@ -399,11 +399,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FFF5F5",
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: "#FFE5E5",
   },
   planStatus: {
     flexDirection: "row",
@@ -418,46 +416,35 @@ const styles = StyleSheet.create({
   planStatusTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 2,
   },
   planStatusSubtitle: {
     fontSize: 13,
-    color: "#666",
   },
   manageButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: "#fff",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#FF6B6B",
     minWidth: 80, // Fixed minimum width
     alignItems: "center",
   },
   manageButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#FF6B6B",
   },
   planCard: {
-    backgroundColor: "#f8f9fa",
     padding: 20,
     borderRadius: 16,
     marginBottom: 12,
     borderWidth: 2,
-    borderColor: "transparent",
     position: "relative",
   },
-  selectedPlan: {
-    backgroundColor: "#FFF5F5",
-    borderColor: "#FF6B6B",
-  },
+  selectedPlan: {},
   popularBadge: {
     position: "absolute",
     top: -10,
     right: 20,
-    backgroundColor: "#FF6B6B",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
@@ -476,7 +463,6 @@ const styles = StyleSheet.create({
   planName: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1a1a1a",
     flex: 1,
     marginRight: 8,
   },
@@ -487,11 +473,9 @@ const styles = StyleSheet.create({
   planPrice: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#FF6B6B",
   },
   planPeriod: {
     fontSize: 14,
-    color: "#666",
     fontWeight: "500",
   },
   featuresList: {
@@ -505,22 +489,17 @@ const styles = StyleSheet.create({
   },
   featureText: {
     fontSize: 14,
-    color: "#666",
     flex: 1,
   },
   subscribeButton: {
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: "#f0f0f0",
     alignItems: "center",
   },
-  subscribeButtonActive: {
-    backgroundColor: "#FF6B6B",
-  },
+  subscribeButtonActive: {},
   subscribeText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#666",
   },
   subscribeTextActive: {
     color: "#fff",
@@ -531,15 +510,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderRadius: 12,
-    backgroundColor: "#f8f9fa",
     marginBottom: 8,
     borderWidth: 2,
-    borderColor: "transparent",
   },
-  selectedPaymentMethod: {
-    borderColor: "#FF6B6B",
-    backgroundColor: "#FFF5F5",
-  },
+  selectedPaymentMethod: {},
   paymentMethodLeft: {
     flexDirection: "row",
     alignItems: "center",
@@ -551,11 +525,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 8,
-    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#e9ecef",
   },
   paymentInfo: {
     flex: 1,
@@ -563,16 +535,13 @@ const styles = StyleSheet.create({
   paymentType: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1a1a1a",
     marginBottom: 2,
   },
   paymentExpiry: {
     fontSize: 13,
-    color: "#666",
   },
   defaultBadge: {
     alignSelf: "flex-start",
-    backgroundColor: "#4CAF50",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -591,25 +560,19 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: "#ccc",
   },
-  radioSelected: {
-    borderColor: "#FF6B6B",
-    backgroundColor: "#FF6B6B",
-  },
+  radioSelected: {},
   addButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: "#FFF5F5",
     borderRadius: 8,
   },
   addButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#FF6B6B",
   },
   autoRenewOption: {
     flexDirection: "row",
@@ -629,38 +592,30 @@ const styles = StyleSheet.create({
   autoRenewTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1a1a1a",
     marginBottom: 2,
   },
   autoRenewDescription: {
     fontSize: 13,
-    color: "#666",
   },
   toggle: {
     width: 50,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#f0f0f0",
     padding: 2,
     justifyContent: "center",
     flexShrink: 0,
   },
-  toggleActive: {
-    backgroundColor: "#FFE5E5",
-  },
+  toggleActive: {},
   toggleThumb: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,
     elevation: 2,
   },
   toggleThumbActive: {
-    backgroundColor: "#FF6B6B",
     transform: [{ translateX: 22 }],
   },
   billingItem: {
@@ -669,7 +624,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f8f9fa",
   },
   billingLeft: {
     flexDirection: "row",
@@ -684,22 +638,18 @@ const styles = StyleSheet.create({
   billingTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#1a1a1a",
     marginBottom: 2,
   },
   billingDate: {
     fontSize: 13,
-    color: "#666",
   },
   supportSection: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0F9F0",
     marginHorizontal: 16,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E8F5E8",
     gap: 12,
   },
   supportText: {
@@ -708,12 +658,10 @@ const styles = StyleSheet.create({
   supportTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#2E7D32",
     marginBottom: 2,
   },
   supportDescription: {
     fontSize: 13,
-    color: "#666",
     lineHeight: 16,
   },
 });
