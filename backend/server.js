@@ -49,5 +49,17 @@ app.get("/", (req, res) => {
   res.send("Backend is running...");
 });
 
+// Catch-all error handler: without this, Express's default handler renders
+// an HTML page for uncaught errors (e.g. from multer/Cloudinary middleware
+// that runs before a route's own try/catch), which breaks clients expecting
+// JSON. This also logs the real error instead of an opaque "[object Object]".
+app.use((err, req, res, next) => {
+  console.error(`Unhandled error on ${req.method} ${req.originalUrl}:`, err);
+  if (res.headersSent) return next(err);
+  res.status(err.status || err.statusCode || 500).json({
+    message: err.message || "Something went wrong",
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

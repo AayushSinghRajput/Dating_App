@@ -218,6 +218,21 @@ export default function ChatDetail() {
     }
   };
 
+  // Confirms an optimistically-sent message with its real server id, and
+  // also removes any entry already present under that real id — the socket
+  // broadcast for this same message can arrive before this REST/upload
+  // response does (routine for voice messages, since the upload itself
+  // takes longer than the socket round-trip), so without this both copies
+  // would survive and collide on the same React key.
+  const confirmMessage = (tempId: string, confirmed: Message) => {
+    setMessages((prev) => {
+      const withoutStaleEntries = prev.filter(
+        (msg) => msg.id !== tempId && msg.id !== confirmed.id,
+      );
+      return [confirmed, ...withoutStaleEntries];
+    });
+  };
+
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -246,28 +261,19 @@ export default function ChatDetail() {
 
       // Replace temp message with saved message (the server also broadcasts this
       // over the socket to the other participant; our own copy is deduped by id)
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === tempId
-            ? {
-                id: savedMessage._id,
-                text: savedMessage.text,
-                fromMe: true,
-                createdAt: savedMessage.createdAt,
-                timestamp: new Date(savedMessage.createdAt).toLocaleTimeString(
-                  [],
-                  {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  },
-                ),
-                senderName: savedMessage.sender.username,
-                senderAvatar: savedMessage.sender.profileImage || "",
-                failed: false,
-              }
-            : msg,
-        ),
-      );
+      confirmMessage(tempId, {
+        id: savedMessage._id,
+        text: savedMessage.text,
+        fromMe: true,
+        createdAt: savedMessage.createdAt,
+        timestamp: new Date(savedMessage.createdAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        senderName: savedMessage.sender.username,
+        senderAvatar: savedMessage.sender.profileImage || "",
+        failed: false,
+      });
     } catch (error) {
       console.error("Failed to send message:", error);
       setMessages((prev) =>
@@ -296,30 +302,21 @@ export default function ChatDetail() {
         : await sendMessageApi(chatId, failedMessage.text);
       if (!savedMessage) throw new Error("No response from server");
 
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === failedMessage.id
-            ? {
-                id: savedMessage._id,
-                text: savedMessage.text || "",
-                fromMe: true,
-                type: isVoice ? "audio" : "text",
-                audio: isVoice ? savedMessage.audio : undefined,
-                createdAt: savedMessage.createdAt,
-                timestamp: new Date(savedMessage.createdAt).toLocaleTimeString(
-                  [],
-                  {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  },
-                ),
-                senderName: savedMessage.sender.username,
-                senderAvatar: savedMessage.sender.profileImage || "",
-                failed: false,
-              }
-            : msg,
-        ),
-      );
+      confirmMessage(failedMessage.id, {
+        id: savedMessage._id,
+        text: savedMessage.text || "",
+        fromMe: true,
+        type: isVoice ? "audio" : "text",
+        audio: isVoice ? savedMessage.audio : undefined,
+        createdAt: savedMessage.createdAt,
+        timestamp: new Date(savedMessage.createdAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        senderName: savedMessage.sender.username,
+        senderAvatar: savedMessage.sender.profileImage || "",
+        failed: false,
+      });
     } catch (error) {
       console.error("Retry failed:", error);
       setMessages((prev) =>
@@ -352,27 +349,21 @@ export default function ChatDetail() {
 
     try {
       const saved = await sendVoiceMessageApi(chatId, uri, durationSec);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === tempId
-            ? {
-                id: saved._id,
-                text: "",
-                fromMe: true,
-                type: "audio",
-                audio: saved.audio,
-                createdAt: saved.createdAt,
-                timestamp: new Date(saved.createdAt).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }),
-                senderName: saved.sender?.username,
-                senderAvatar: saved.sender?.profileImage || "",
-                failed: false,
-              }
-            : msg,
-        ),
-      );
+      confirmMessage(tempId, {
+        id: saved._id,
+        text: "",
+        fromMe: true,
+        type: "audio",
+        audio: saved.audio,
+        createdAt: saved.createdAt,
+        timestamp: new Date(saved.createdAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        senderName: saved.sender?.username,
+        senderAvatar: saved.sender?.profileImage || "",
+        failed: false,
+      });
     } catch (err) {
       console.error("Failed to send voice message:", err);
       setMessages((prev) =>
