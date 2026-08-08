@@ -17,10 +17,12 @@ import {
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons, Feather } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const { width, height } = Dimensions.get('window');
+
+const MAX_PHOTOS = 6;
 
 export default function DetailFirst() {
   const router = useRouter();
@@ -29,7 +31,7 @@ export default function DetailFirst() {
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [interestedIn, setInterestedIn] = useState("");
-  const [profilePic, setProfilePic] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [genderModalVisible, setGenderModalVisible] = useState(false);
   const [interestedModalVisible, setInterestedModalVisible] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -64,8 +66,12 @@ export default function DetailFirst() {
   }, []);
 
   const handlePickImage = async () => {
+    if (photos.length >= MAX_PHOTOS) {
+      Alert.alert("Limit reached", `You can add up to ${MAX_PHOTOS} photos.`);
+      return;
+    }
     Alert.alert(
-      "Select Photo",
+      "Add Photo",
       "Choose how you'd like to add your photo",
       [
         {
@@ -98,7 +104,7 @@ export default function DetailFirst() {
     });
 
     if (!result.canceled) {
-      setProfilePic(result.assets[0].uri);
+      setPhotos((prev) => [...prev, result.assets[0].uri]);
     }
   };
 
@@ -116,8 +122,12 @@ export default function DetailFirst() {
     });
 
     if (!result.canceled) {
-      setProfilePic(result.assets[0].uri);
+      setPhotos((prev) => [...prev, result.assets[0].uri]);
     }
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleNext = () => {
@@ -137,8 +147,8 @@ export default function DetailFirst() {
       Alert.alert("Missing Information", "Please select who you're interested in.");
       return;
     }
-    if (!profilePic) {
-      Alert.alert("Missing Photo", "Please add a profile picture.");
+    if (photos.length === 0) {
+      Alert.alert("Missing Photo", "Please add at least one photo.");
       return;
     }
     router.push({pathname: "/screen/DetailSecond",
@@ -147,12 +157,12 @@ export default function DetailFirst() {
         age,
         gender,
         interestedIn,
-        profilePic,
+        photos: JSON.stringify(photos),
       },
     });
   };
 
-  const isFormValid = name.trim() && age && gender && interestedIn && profilePic;
+  const isFormValid = name.trim() && age && gender && interestedIn && photos.length > 0;
 
   const renderOptionModal = (
     visible: boolean,
@@ -248,26 +258,36 @@ export default function DetailFirst() {
               </Text>
             </View>
 
-            {/* Profile Picture Section */}
+            {/* Photos Section */}
             <View style={styles.photoSection}>
-              <Pressable style={styles.imageWrapper} onPress={handlePickImage}>
-                {profilePic ? (
-                  <>
-                    <Image source={{ uri: profilePic }} style={styles.imagePreview} />
-                    <View style={[styles.editOverlay, { backgroundColor: colors.accent }]}>
-                      <Feather name="edit-2" size={16} color="#fff" />
-                    </View>
-                  </>
-                ) : (
-                  <View style={styles.placeholderContent}>
-                    <Ionicons name="camera" size={32} color={colors.accent} />
-                    <Text style={[styles.imagePlaceholder, { color: colors.accent }]}>Add Photo</Text>
-                  </View>
-                )}
-              </Pressable>
               <Text style={styles.uploadText}>
-                {profilePic ? "Tap to change photo" : "Add your best photo"}
+                Add up to {MAX_PHOTOS} photos. Your first photo is your main photo.
               </Text>
+              <View style={styles.photoGrid}>
+                {photos.map((uri, index) => (
+                  <View key={uri + index} style={styles.photoTile}>
+                    <Image source={{ uri }} style={styles.photoTileImage} />
+                    {index === 0 && (
+                      <View style={[styles.mainBadge, { backgroundColor: colors.accent }]}>
+                        <Text style={styles.mainBadgeText}>Main</Text>
+                      </View>
+                    )}
+                    <Pressable
+                      style={styles.removePhotoButton}
+                      onPress={() => removePhoto(index)}
+                      hitSlop={8}
+                    >
+                      <Ionicons name="close" size={14} color="#fff" />
+                    </Pressable>
+                  </View>
+                ))}
+                {photos.length < MAX_PHOTOS && (
+                  <Pressable style={styles.addPhotoTile} onPress={handlePickImage}>
+                    <Ionicons name="camera" size={26} color={colors.accent} />
+                    <Text style={[styles.imagePlaceholder, { color: colors.accent }]}>Add</Text>
+                  </Pressable>
+                )}
+              </View>
             </View>
 
             {/* Form Section */}
@@ -473,46 +493,69 @@ const styles = StyleSheet.create({
   photoSection: {
     alignItems: 'center',
     marginBottom: 40,
+    width: '100%',
   },
-  imageWrapper: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
+    gap: 12,
+    marginTop: 16,
+  },
+  photoTile: {
+    width: 92,
+    height: 92,
+    borderRadius: 16,
+    position: 'relative',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    position: 'relative',
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 6,
   },
-  imagePreview: {
-    width: 136,
-    height: 136,
-    borderRadius: 68,
-  },
-  editOverlay: {
-    position: 'absolute',
-    bottom: 8,
-    right: 8,
-    width: 32,
-    height: 32,
+  photoTileImage: {
+    width: '100%',
+    height: '100%',
     borderRadius: 16,
+  },
+  mainBadge: {
+    position: 'absolute',
+    bottom: 6,
+    left: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  mainBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  removePhotoButton: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#fff',
   },
-  placeholderContent: {
+  addPhotoTile: {
+    width: 92,
+    height: 92,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   imagePlaceholder: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
-    marginTop: 8,
+    marginTop: 4,
   },
   uploadText: {
     color: '#fff',

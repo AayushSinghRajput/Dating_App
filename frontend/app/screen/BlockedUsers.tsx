@@ -1,52 +1,32 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, Image, Alert } from "react-native";
-import { useState } from "react";
+import { View, Text, StyleSheet, ScrollView, Pressable, Image, Alert, ActivityIndicator } from "react-native";
+import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
-
-interface BlockedUser {
-  id: string;
-  name: string;
-  avatar: string;
-  age: number;
-  location: string;
-  blockedDate: string;
-  mutualInterests?: string[];
-}
+import { BlockedUser, getBlockedUsersApi, unblockUserApi } from "@/utils/api";
 
 export default function BlockedUsers() {
   const router = useRouter();
   const { colors } = useTheme();
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([
-    {
-      id: "1",
-      name: "Alex Johnson",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      age: 28,
-      location: "New York, NY",
-      blockedDate: "2 days ago",
-      mutualInterests: ["Travel", "Photography", "Hiking", "Coffee"]
-    },
-    {
-      id: "2",
-      name: "Sarah Miller",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      age: 25,
-      location: "Los Angeles, CA",
-      blockedDate: "1 week ago",
-      mutualInterests: ["Music", "Dancing", "Art"]
-    },
-    {
-      id: "3",
-      name: "Mike Chen",
-      avatar: "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?w=150&h=150&fit=crop&crop=face",
-      age: 32,
-      location: "Chicago, IL",
-      blockedDate: "3 weeks ago",
-      mutualInterests: ["Technology", "Gaming", "Fitness", "Reading", "Cooking"]
-    }
-  ]);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [unblockingId, setUnblockingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await getBlockedUsersApi();
+        setBlockedUsers(data);
+      } catch (error: any) {
+        Toast.show({ type: "error", text1: "Failed to load blocked users", text2: error.message });
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   const handleBack = () => {
     router.back();
@@ -61,9 +41,16 @@ export default function BlockedUsers() {
         {
           text: "Unblock",
           style: "destructive",
-          onPress: () => {
-            setBlockedUsers(prev => prev.filter(user => user.id !== userId));
-            Alert.alert("Success", `${userName} has been unblocked.`);
+          onPress: async () => {
+            setUnblockingId(userId);
+            try {
+              await unblockUserApi(userId);
+              setBlockedUsers((prev) => prev.filter((user) => user._id !== userId));
+            } catch (error: any) {
+              Toast.show({ type: "error", text1: "Failed to unblock", text2: error.message });
+            } finally {
+              setUnblockingId(null);
+            }
           }
         },
       ]
@@ -81,9 +68,13 @@ export default function BlockedUsers() {
         {
           text: "Clear All",
           style: "destructive",
-          onPress: () => {
-            setBlockedUsers([]);
-            Alert.alert("Cleared", "All users have been unblocked.");
+          onPress: async () => {
+            try {
+              await Promise.all(blockedUsers.map((u) => unblockUserApi(u._id)));
+              setBlockedUsers([]);
+            } catch (error: any) {
+              Toast.show({ type: "error", text1: "Failed to unblock everyone", text2: error.message });
+            }
           }
         },
       ]
@@ -93,43 +84,38 @@ export default function BlockedUsers() {
   const BlockedUserCard = ({ user }: { user: BlockedUser }) => (
     <View style={[styles.userCard, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
       <View style={styles.userMainInfo}>
-        <Image source={{ uri: user.avatar }} style={[styles.avatar, { borderColor: colors.accentSoft }]} />
+        <Image
+          source={{ uri: user.profileImage || "https://placehold.co/100x100" }}
+          style={[styles.avatar, { borderColor: colors.accentSoft }]}
+        />
         <View style={styles.userBasicInfo}>
           <View style={styles.nameRow}>
-            <Text style={[styles.userName, { color: colors.text }]}>{user.name}</Text>
-            <Text style={[styles.userAge, { color: colors.textSecondary }]}>, {user.age}</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>{user.username}</Text>
+            {user.age && <Text style={[styles.userAge, { color: colors.textSecondary }]}>, {user.age}</Text>}
           </View>
-          <View style={styles.locationRow}>
-            <Ionicons name="location-outline" size={12} color={colors.textSecondary} />
-            <Text style={[styles.userLocation, { color: colors.textSecondary }]}>{user.location}</Text>
-          </View>
-          <Text style={[styles.blockedDate, { color: colors.textTertiary }]}>Blocked {user.blockedDate}</Text>
+          {user.location && (
+            <View style={styles.locationRow}>
+              <Ionicons name="location-outline" size={12} color={colors.textSecondary} />
+              <Text style={[styles.userLocation, { color: colors.textSecondary }]}>{user.location}</Text>
+            </View>
+          )}
         </View>
       </View>
 
-      {/* Interests attached to Unblock button */}
       <View style={styles.actionSection}>
-        {user.mutualInterests && user.mutualInterests.length > 0 && (
-          <View style={styles.interestsContainer}>
-            <View style={styles.interestsRow}>
-              {user.mutualInterests.slice(0, 3).map((interest, index) => (
-                <View key={index} style={[styles.interestTag, { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed }]}>
-                  <Text style={[styles.interestText, { color: colors.accent }]}>{interest}</Text>
-                </View>
-              ))}
-              {user.mutualInterests.length > 3 && (
-                <Text style={[styles.moreInterests, { color: colors.textTertiary }]}>+{user.mutualInterests.length - 3}</Text>
-              )}
-            </View>
-          </View>
-        )}
-
         <Pressable
           style={[styles.unblockButton, { backgroundColor: colors.surface, borderColor: colors.accent }]}
-          onPress={() => unblockUser(user.id, user.name)}
+          onPress={() => unblockUser(user._id, user.username)}
+          disabled={unblockingId === user._id}
         >
-          <Ionicons name="lock-open-outline" size={16} color={colors.accent} />
-          <Text style={[styles.unblockText, { color: colors.accent }]}>Unblock</Text>
+          {unblockingId === user._id ? (
+            <ActivityIndicator size="small" color={colors.accent} />
+          ) : (
+            <>
+              <Ionicons name="lock-open-outline" size={16} color={colors.accent} />
+              <Text style={[styles.unblockText, { color: colors.accent }]}>Unblock</Text>
+            </>
+          )}
         </Pressable>
       </View>
     </View>
@@ -180,7 +166,11 @@ export default function BlockedUsers() {
             </Text>
           </View>
 
-          {blockedUsers.length === 0 ? (
+          {loading ? (
+            <View style={styles.emptyState}>
+              <ActivityIndicator size="large" color={colors.accent} />
+            </View>
+          ) : blockedUsers.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="checkmark-circle" size={64} color={colors.success} />
               <Text style={[styles.emptyTitle, { color: colors.text }]}>No Blocked Users</Text>
@@ -191,7 +181,7 @@ export default function BlockedUsers() {
           ) : (
             <View style={styles.usersList}>
               {blockedUsers.map((user) => (
-                <BlockedUserCard key={user.id} user={user} />
+                <BlockedUserCard key={user._id} user={user} />
               ))}
             </View>
           )}
@@ -381,40 +371,10 @@ const styles = StyleSheet.create({
   userLocation: {
     fontSize: 12,
   },
-  blockedDate: {
-    fontSize: 11,
-    fontWeight: "500",
-  },
   actionSection: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "flex-end",
-  },
-  interestsContainer: {
-    flex: 1,
-    marginRight: 12,
-  },
-  interestsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    gap: 6,
-  },
-  interestTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    marginBottom: 4,
-  },
-  interestText: {
-    fontSize: 10,
-    fontWeight: "600",
-  },
-  moreInterests: {
-    fontSize: 10,
-    fontWeight: "500",
-    marginBottom: 4,
   },
   unblockButton: {
     flexDirection: "row",

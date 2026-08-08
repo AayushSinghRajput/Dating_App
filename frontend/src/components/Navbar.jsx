@@ -3,15 +3,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import notifications from "@/assets/data/notificationdata";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 const logo = require("../../assets/images/logo.png");
 
 export default function Navbar() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
-  const notificationCount = notifications.length;
+  const { unreadCount } = useNotifications();
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.surface }]} edges={["top"]}>
@@ -34,10 +34,10 @@ export default function Navbar() {
           onPress={() => router.push("/screen/Notification")}
         >
           <Ionicons name="notifications-outline" size={22} color={colors.accent} />
-          {notificationCount > 0 && (
+          {unreadCount > 0 && (
             <View style={[styles.badge, { backgroundColor: colors.accent, borderColor: colors.surface }]}>
               <Text style={styles.badgeText}>
-                {notificationCount > 9 ? "9+" : notificationCount}
+                {unreadCount > 9 ? "9+" : unreadCount}
               </Text>
             </View>
           )}

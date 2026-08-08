@@ -9,6 +9,8 @@ import authRoutes from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import matchRoutes from "./routes/matchRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
 dotenv.config();
 connectDB();
 
@@ -31,6 +33,7 @@ app.use((req, res, next) => {
 //HTTP server + socket.io
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
+app.set("io", io);
 //setup socket logic
 setupSocket(io);
 
@@ -39,10 +42,12 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/match", matchRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/reports", reportRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend is running...");
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

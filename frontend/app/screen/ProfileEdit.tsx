@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -8,21 +8,119 @@ import {
   TextInput,
   View,
   Alert,
-  Image
+  Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import loggedUser from "../../assets/data/loggedUser";
+import * as ImagePicker from "expo-image-picker";
+import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
+import {
+  getProfile,
+  createOrUpdateProfile,
+  removePhotoApi,
+  setPrimaryPhotoApi,
+} from "@/utils/api";
+
+const MAX_PHOTOS = 6;
 
 export default function ProfileEdit() {
   const router = useRouter();
   const { colors } = useTheme();
-  const [name, setName] = useState(loggedUser.name);
-  const [age, setAge] = useState(String(loggedUser.age));
-  const [location, setLocation] = useState(loggedUser.location);
-  const [bio, setBio] = useState(loggedUser.bio);
+
+  const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [busyPhotoUrl, setBusyPhotoUrl] = useState<string | null>(null);
+
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
+  const [location, setLocation] = useState("");
+  const [bio, setBio] = useState("");
+  const [profession, setProfession] = useState("");
+  const [hobbies, setHobbies] = useState("");
+
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [newPhotos, setNewPhotos] = useState<string[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const profile = await getProfile();
+        setName(profile.name || "");
+        setAge(profile.age ? String(profile.age) : "");
+        setLocation(profile.location || "");
+        setBio(profile.aboutMe || "");
+        setProfession(profile.profession || "");
+        setHobbies((profile.hobbies || []).join(", "));
+        setPhotos((profile as any).photos || []);
+      } catch (error: any) {
+        Toast.show({ type: "error", text1: "Failed to load profile", text2: error.message });
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const totalPhotoCount = photos.length + newPhotos.length;
+
+  const handleAddPhoto = async () => {
+    if (totalPhotoCount >= MAX_PHOTOS) {
+      Alert.alert("Limit reached", `You can have up to ${MAX_PHOTOS} photos.`);
+      return;
+    }
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert("Permission Denied", "You need to allow photo access.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      setNewPhotos((prev) => [...prev, result.assets[0].uri]);
+    }
+  };
+
+  const handleRemoveExistingPhoto = (url: string) => {
+    Alert.alert("Remove Photo", "Remove this photo from your profile?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: async () => {
+          setBusyPhotoUrl(url);
+          try {
+            const result = await removePhotoApi(url);
+            setPhotos(result.photos);
+          } catch (error: any) {
+            Toast.show({ type: "error", text1: "Failed to remove photo", text2: error.message });
+          } finally {
+            setBusyPhotoUrl(null);
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleSetPrimary = async (url: string) => {
+    setBusyPhotoUrl(url);
+    try {
+      const result = await setPrimaryPhotoApi(url);
+      setPhotos(result.photos);
+    } catch (error: any) {
+      Toast.show({ type: "error", text1: "Failed to set main photo", text2: error.message });
+    } finally {
+      setBusyPhotoUrl(null);
+    }
+  };
+
+  const handleRemoveNewPhoto = (uri: string) => {
+    setNewPhotos((prev) => prev.filter((p) => p !== uri));
+  };
 
   const saveProfile = async () => {
     if (!name.trim() || !age.trim() || !location.trim()) {
@@ -36,20 +134,42 @@ export default function ProfileEdit() {
     }
 
     setIsSaving(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Profile updated:", { name, age: Number(age), location, bio });
+    try {
+      await createOrUpdateProfile({
+        name: name.trim(),
+        age: Number(age),
+        location: location.trim(),
+        aboutMe: bio.trim(),
+        profession: profession.trim(),
+        hobbies: hobbies
+          .split(",")
+          .map((h) => h.trim())
+          .filter(Boolean),
+        photos:
+          newPhotos.length > 0
+            ? newPhotos.map((uri, i) => ({ uri, name: `photo-${i}.jpg`, type: "image/jpeg" }))
+            : undefined,
+      });
+      Toast.show({ type: "success", text1: "Profile updated successfully!" });
+      router.back();
+    } catch (error: any) {
+      Toast.show({ type: "error", text1: "Failed to save profile", text2: error.message });
+    } finally {
       setIsSaving(false);
-      Alert.alert("Success", "Profile updated successfully!", [
-        { text: "OK", onPress: () => router.back() }
-      ]);
-    }, 1000);
+    }
   };
 
   const handleBack = () => {
     router.back();
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -68,18 +188,60 @@ export default function ProfileEdit() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Profile Image Section */}
-        <View style={[styles.imageSection, { backgroundColor: colors.surface }]}>
-          <View style={styles.avatarContainer}>
-            <Image
-              source={{ uri: loggedUser.avatar }}
-              style={[styles.avatar, { borderColor: colors.accent }]}
-            />
-            <Pressable style={[styles.editImageButton, { backgroundColor: colors.accent, borderColor: colors.surface }]}>
-              <Ionicons name="camera" size={20} color="#fff" />
-            </Pressable>
+        {/* Photos Section */}
+        <View style={[styles.photosSection, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.sectionLabel, { color: colors.text }]}>Photos</Text>
+          <Text style={[styles.imageHint, { color: colors.textSecondary, marginBottom: 12 }]}>
+            Tap a photo to make it your main photo. Up to {MAX_PHOTOS} photos.
+          </Text>
+          <View style={styles.photoGrid}>
+            {photos.map((url) => (
+              <Pressable key={url} style={styles.photoTile} onPress={() => handleSetPrimary(url)}>
+                <Image source={{ uri: url }} style={styles.photoTileImage} />
+                {photos[0] === url && (
+                  <View style={[styles.mainBadge, { backgroundColor: colors.accent }]}>
+                    <Text style={styles.mainBadgeText}>Main</Text>
+                  </View>
+                )}
+                {busyPhotoUrl === url ? (
+                  <View style={styles.photoBusyOverlay}>
+                    <ActivityIndicator size="small" color="#fff" />
+                  </View>
+                ) : (
+                  <Pressable
+                    style={styles.removePhotoButton}
+                    onPress={() => handleRemoveExistingPhoto(url)}
+                    hitSlop={8}
+                  >
+                    <Ionicons name="close" size={14} color="#fff" />
+                  </Pressable>
+                )}
+              </Pressable>
+            ))}
+            {newPhotos.map((uri) => (
+              <View key={uri} style={styles.photoTile}>
+                <Image source={{ uri }} style={styles.photoTileImage} />
+                <View style={[styles.newBadge, { backgroundColor: colors.textSecondary }]}>
+                  <Text style={styles.mainBadgeText}>New</Text>
+                </View>
+                <Pressable
+                  style={styles.removePhotoButton}
+                  onPress={() => handleRemoveNewPhoto(uri)}
+                  hitSlop={8}
+                >
+                  <Ionicons name="close" size={14} color="#fff" />
+                </Pressable>
+              </View>
+            ))}
+            {totalPhotoCount < MAX_PHOTOS && (
+              <Pressable
+                style={[styles.addPhotoTile, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}
+                onPress={handleAddPhoto}
+              >
+                <Ionicons name="camera" size={24} color={colors.accent} />
+              </Pressable>
+            )}
           </View>
-          <Text style={[styles.imageHint, { color: colors.textSecondary }]}>Tap to change photo</Text>
         </View>
 
         {/* Form Section */}
@@ -150,6 +312,8 @@ export default function ProfileEdit() {
             <Text style={[styles.label, { color: colors.text }]}>Profession</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
+              value={profession}
+              onChangeText={setProfession}
               placeholder="What do you do?"
               placeholderTextColor={colors.textTertiary}
             />
@@ -159,7 +323,9 @@ export default function ProfileEdit() {
             <Text style={[styles.label, { color: colors.text }]}>Interests</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
-              placeholder="Add your hobbies and interests"
+              value={hobbies}
+              onChangeText={setHobbies}
+              placeholder="Add your hobbies and interests, comma separated"
               placeholderTextColor={colors.textTertiary}
             />
           </View>
@@ -199,6 +365,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  center: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
   scrollView: {
     flex: 1,
   },
@@ -210,11 +380,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16, // Reduced horizontal padding
+    paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomLeftRadius: 20, // Added border radius to bottom left
-    borderBottomRightRadius: 20, // Added border radius to bottom right
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -222,7 +392,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    marginLeft: -4, // Shifted further to the left
+    marginLeft: -4,
   },
   headerTitle: {
     fontSize: 18,
@@ -231,39 +401,88 @@ const styles = StyleSheet.create({
   headerPlaceholder: {
     width: 40,
   },
-  imageSection: {
-    alignItems: "center",
-    paddingVertical: 24,
+  photosSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
     marginBottom: 8,
   },
-  avatarContainer: {
-    position: "relative",
-    marginBottom: 8,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-  },
-  editImageButton: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 3,
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 4,
+  sectionLabel: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 4,
   },
   imageHint: {
-    fontSize: 14,
-    fontWeight: "500",
+    fontSize: 13,
+  },
+  photoGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  photoTile: {
+    width: 88,
+    height: 88,
+    borderRadius: 14,
+    position: "relative",
+  },
+  photoTileImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 14,
+  },
+  photoBusyOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 14,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  mainBadge: {
+    position: "absolute",
+    bottom: 6,
+    left: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  newBadge: {
+    position: "absolute",
+    bottom: 6,
+    left: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  mainBadgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  removePhotoButton: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+  addPhotoTile: {
+    width: 88,
+    height: 88,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderStyle: "dashed",
   },
   formSection: {
     paddingHorizontal: 20,

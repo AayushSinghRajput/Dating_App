@@ -21,6 +21,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
+import { socket, connectSocket } from "@/utils/socket";
 
 if (
   Platform.OS === "android" &&
@@ -88,6 +89,18 @@ export default function Chats() {
     };
 
     fetchChats();
+  }, []);
+
+  // Live-remove a chat if the other person unmatches while we're not in that screen
+  useEffect(() => {
+    connectSocket();
+    const handleUnmatched = ({ byUserId }: { byUserId: string }) => {
+      setChats((prev) => prev.filter((chat) => chat.otherUserId !== byUserId));
+    };
+    socket.on("unmatched", handleUnmatched);
+    return () => {
+      socket.off("unmatched", handleUnmatched);
+    };
   }, []);
 
   const unreadCount = chats.filter((chat: Chat) => chat.unread > 0).length;

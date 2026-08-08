@@ -22,7 +22,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 const { height } = Dimensions.get("window");
 
 export default function DetailSecond() {
-  const { name, age, gender, interestedIn, profilePic } =
+  const { name, age, gender, interestedIn, photos: photosParam } =
     useLocalSearchParams();
   const router = useRouter();
   const { colors } = useTheme();
@@ -116,13 +116,20 @@ export default function DetailSecond() {
         hobbies: hobbies.split(",").map((h) => h.trim()),
         education,
         relationshipGoals: goal,
-        profileImage: profilePic
-          ? {
-              uri: Array.isArray(profilePic) ? profilePic[0] : profilePic,
-              name: "profile.jpg",
+        photos: (() => {
+          const raw = Array.isArray(photosParam) ? photosParam[0] : photosParam;
+          if (!raw) return undefined;
+          try {
+            const uris: string[] = JSON.parse(raw);
+            return uris.map((uri, i) => ({
+              uri,
+              name: `photo-${i}.jpg`,
               type: "image/jpeg",
-            }
-          : undefined,
+            }));
+          } catch {
+            return undefined;
+          }
+        })(),
       };
 
       // Call backend API

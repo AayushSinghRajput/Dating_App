@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
+import * as FileSystem from "expo-file-system/legacy";
 
 // 🌍 Base URL 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -25,10 +26,18 @@ export interface UserProfile {
   updatedAt?: string;
 }
 
+export interface PhotoAsset {
+  uri: string;
+  name?: string;
+  type?: string;
+}
+
 export interface Profile {
   _id?: string;
   user?: { username: string; email: string };
-  profileImage?: any; 
+  profileImage?: string;
+  // Local photo assets to upload; appended to the profile's existing photos.
+  photos?: PhotoAsset[];
   location?: string;
   aboutMe?: string;
   gender?: string;
@@ -50,16 +59,32 @@ export interface ProfileResponse {
   success?: boolean;
 }
 
+export interface CallLogInfo {
+  callType: "audio" | "video";
+  status: "answered" | "missed" | "rejected";
+  duration: number;
+  caller?: string;
+}
+
+export interface AudioMessageInfo {
+  url: string;
+  duration: number;
+}
+
 export interface Message {
   id: string;
   text: string;
   fromMe: boolean;
   timestamp?: string;
+  createdAt?: string;
   senderName?: string;
   senderAvatar?: string;
   failed?:boolean;
   retrying?:boolean;
   chat?:string;
+  type?: "text" | "call" | "audio";
+  call?: CallLogInfo;
+  audio?: AudioMessageInfo;
   sender?:{
     _id:string;
     username?:string;
@@ -94,6 +119,32 @@ const saveToken = async (newToken: string): Promise<void> => {
 export const clearToken = async (): Promise<void> => {
   token = null;
   await AsyncStorage.removeItem("token");
+};
+
+export const deleteAccount = async (password: string): Promise<void> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/auth/account`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ password }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to delete account");
+  await clearToken();
+};
+
+export const getCurrentUserId = async (): Promise<string | null> => {
+  const t = token || (await AsyncStorage.getItem("token"));
+  if (!t) return null;
+  try {
+    return JSON.parse(atob(t.split(".")[1])).id;
+  } catch {
+    return null;
+  }
 };
 
 // ================================
@@ -135,17 +186,44 @@ export const login = async (
   }
 };
 
+// 🔹 Forgot password: request a reset code by email
+export const forgotPassword = async (email: string): Promise<void> => {
+  const res = await fetch(`${BASE_URL}/api/auth/forgot-password`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ email }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to request reset code.");
+};
+
+// 🔹 Reset password using the emailed code
+export const resetPassword = async (
+  email: string,
+  code: string,
+  newPassword: string
+): Promise<void> => {
+  const res = await fetch(`${BASE_URL}/api/auth/reset-password`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ email, code, newPassword }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to reset password.");
+};
+
 // 🔹 Register
 export const register = async (
   username: string,
   email: string,
-  password: string
+  password: string,
+  acceptedTerms: boolean
 ): Promise<AuthResponse> => {
   try {
     const res = await fetch(`${BASE_URL}/api/auth/register`, {
       method: "POST",
       headers: getHeaders(),
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({ username, email, password, acceptedTerms }),
     });
 
     const data: AuthResponse = await res.json();
@@ -174,17 +252,22 @@ export const createOrUpdateProfile = async (
 
     const formData = new FormData();
 
-    // ✅ Append all fields correctly (including arrays & image)
+    // ✅ Append all fields correctly (including arrays & newly-picked photos)
     Object.entries(profileData).forEach(([key, value]) => {
       if (value === undefined || value === null) return;
 
-      if (key === "profileImage" && value?.uri) {
-        // Image handling
-        formData.append("profileImage", {
-          uri: value.uri,
-          name: value.name || "profile.jpg",
-          type: value.type || "image/jpeg",
-        } as any);
+      if (key === "photos" && Array.isArray(value)) {
+        // Local photo assets to upload; already-stored photo URLs are managed
+        // separately via removePhotoApi/setPrimaryPhotoApi, not resent here.
+        value.forEach((photo: any) => {
+          if (photo?.uri) {
+            formData.append("photos", {
+              uri: photo.uri,
+              name: photo.name || `photo-${Date.now()}.jpg`,
+              type: photo.type || "image/jpeg",
+            } as any);
+          }
+        });
       } else if (Array.isArray(value)) {
         value.forEach((v) => formData.append(`${key}[]`, v));
       } else {
@@ -211,6 +294,44 @@ export const createOrUpdateProfile = async (
       throw new Error("Network error. Check your connection.");
     throw new Error(error.message || "Something went wrong.");
   }
+};
+
+export interface PhotosResponse {
+  message: string;
+  photos: string[];
+  profileImage: string;
+}
+
+export const removePhotoApi = async (url: string): Promise<PhotosResponse> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/profile/photos`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ url }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to remove photo");
+  return data;
+};
+
+export const setPrimaryPhotoApi = async (url: string): Promise<PhotosResponse> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/profile/photos/primary`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ url }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to set primary photo");
+  return data;
 };
 
 // 🔹 Get Current User Profile
@@ -334,9 +455,7 @@ export const getMessagesByChatId = async (
   const token = await AsyncStorage.getItem("token");
   if (!token) throw new Error("User not authenticated");
 
-  //decode token to get current user ID
-  const payload = JSON.parse(atob(token.split(".")[1]));
-  const currentUserId = payload.id;
+  const currentUserId = await getCurrentUserId();
 
   const res = await fetch(`${BASE_URL}/api/chats/${chatId}/messages`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -349,12 +468,16 @@ export const getMessagesByChatId = async (
     id: m._id,
     text: m.text,
     fromMe: m.sender._id === currentUserId,
+    createdAt: m.createdAt,
     timestamp: new Date(m.createdAt).toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     }),
     senderName: m.sender.username,
     senderAvatar: m.sender.profileImage || "",
+    type: m.type || "text",
+    call: m.call,
+    audio: m.audio,
   }));
 };
 
@@ -379,6 +502,49 @@ export const sendMessageApi = async (chatId: string, message: string) =>{
   } catch (error:any) {
     console.error("Failed to send message:",error.message || error);
   }
+};
+
+export const sendVoiceMessageApi = async (
+  chatId: string,
+  fileUri: string,
+  duration: number
+): Promise<any> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+
+  // Uses expo-file-system's native upload instead of fetch()+FormData: on
+  // Android's New Architecture, fetch can't reliably read a local file://
+  // URI into a multipart body and fails immediately with a generic
+  // "Network request failed" before any request is even sent.
+  let result: FileSystem.FileSystemUploadResult;
+  try {
+    result = await FileSystem.uploadAsync(
+      `${BASE_URL}/api/chats/message/audio`,
+      fileUri,
+      {
+        httpMethod: "POST",
+        uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+        fieldName: "audio",
+        mimeType: "audio/m4a",
+        parameters: { chatId, duration: String(duration) },
+        headers: { Authorization: `Bearer ${authToken}` },
+      }
+    );
+  } catch (err: any) {
+    throw new Error(`Upload failed: ${err?.message || "Unknown error"}`);
+  }
+
+  let data: any;
+  try {
+    data = JSON.parse(result.body);
+  } catch {
+    throw new Error("Failed to send voice message: invalid server response");
+  }
+
+  if (result.status < 200 || result.status >= 300) {
+    throw new Error(data?.message || "Failed to send voice message");
+  }
+  return data;
 };
 
 export const toggleFavorite = async (targetUserId: string) => {
@@ -437,6 +603,72 @@ export const getFavorites = async () => {
     Alert.alert("Error", "Unable to fetch favorites");
     return [];
   }
+};
+
+export interface BlockedUser {
+  _id: string;
+  username: string;
+  profileImage?: string;
+  age?: number;
+  location?: string;
+}
+
+export const blockUserApi = async (targetUserId: string): Promise<void> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/profile/${targetUserId}/block`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to block user");
+};
+
+export const unblockUserApi = async (targetUserId: string): Promise<void> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/profile/${targetUserId}/unblock`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to unblock user");
+};
+
+export const getBlockedUsersApi = async (): Promise<BlockedUser[]> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/profile/blocked`, {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch blocked users");
+  return data.blockedUsers;
+};
+
+export type ReportReason =
+  | "inappropriate_content"
+  | "fake_profile"
+  | "harassment"
+  | "spam"
+  | "other";
+
+export const reportUserApi = async (
+  targetUserId: string,
+  reason: ReportReason
+): Promise<void> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/reports/${targetUserId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ reason }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to submit report");
 };
 
 // Like a profile
@@ -511,4 +743,77 @@ export const getMatches = async () => {
     );
     throw new Error(error.response?.data?.message || "Failed to get matches");
   }
+};
+
+export const unmatchUser = async (targetUserId: string): Promise<void> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/match/unmatch`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ targetUserId }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to unmatch");
+};
+
+// ================================
+// 🔔 NOTIFICATIONS
+// ================================
+
+export interface AppNotification {
+  _id: string;
+  type: "like" | "match" | "missed_call" | "favorite";
+  chat?: string;
+  callType?: "audio" | "video";
+  read: boolean;
+  createdAt: string;
+  fromUser: {
+    _id: string;
+    username: string;
+    profileImage?: string;
+  } | null;
+}
+
+export const getNotifications = async (): Promise<AppNotification[]> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/notifications`, {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch notifications");
+  return data;
+};
+
+export const getUnreadNotificationCount = async (): Promise<number> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/notifications/unread-count`, {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch unread count");
+  return data.count;
+};
+
+export const markNotificationRead = async (id: string): Promise<void> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  await fetch(`${BASE_URL}/api/notifications/${id}/read`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+};
+
+export const markAllNotificationsRead = async (): Promise<void> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  await fetch(`${BASE_URL}/api/notifications/read-all`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
 };

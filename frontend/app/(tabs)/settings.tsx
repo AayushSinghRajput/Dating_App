@@ -65,6 +65,9 @@ export default function Settings() {
           ]
         );
         break;
+      case "Delete Account":
+        router.push("/screen/DeleteAccount");
+        break;
       default:
         console.log(item.title, "pressed");
     }
@@ -83,7 +86,9 @@ export default function Settings() {
     ["Help & Support"].includes(item.title)
   );
 
-  const sessionSettings = settings.filter((item) => ["Logout"].includes(item.title));
+  const sessionSettings = settings.filter((item) =>
+    ["Logout", "Delete Account"].includes(item.title)
+  );
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>

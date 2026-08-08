@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -15,15 +16,27 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import EmojiSelector from "react-native-emoji-selector";
-import { Message, getMessagesByChatId, sendMessageApi } from "@/utils/api";
+import Toast from "react-native-toast-message";
 import {
-  socket,
-  connectSocket,
-  joinRoom,
-  sendMessage as socketSendMessage,
-} from "@/utils/socket";
+  Message,
+  getMessagesByChatId,
+  sendMessageApi,
+  sendVoiceMessageApi,
+  getCurrentUserId,
+  unmatchUser,
+  blockUserApi,
+  reportUserApi,
+} from "@/utils/api";
+import { showReportReasonPicker } from "@/src/utils/reportFlow";
+import { showActionSheet } from "@/src/components/GlobalActionSheet";
+import { socket, connectSocket, joinRoom } from "@/utils/socket";
 import { useCall } from "@/contexts/CallContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { buildListData, formatClockTime } from "../../../src/components/chat/chatListHelpers";
+import MessageBubble from "../../../src/components/chat/MessageBubble";
+import CallLogRow from "../../../src/components/chat/CallLogRow";
+import DateSeparator from "../../../src/components/chat/DateSeparator";
+import { useVoiceRecorder } from "../../../src/hooks/useVoiceRecorder";
 
 export default function ChatDetail() {
   const router = useRouter();
@@ -41,13 +54,18 @@ export default function ChatDetail() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const currentUserIdRef = useRef<string | null>(null);
 
-  // Fetch messages
+  // Fetch messages (backend returns oldest-first; reverse to newest-first for the inverted list)
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const messagesData = await getMessagesByChatId(chatId);
-        setMessages(messagesData);
+        const [messagesData, userId] = await Promise.all([
+          getMessagesByChatId(chatId),
+          getCurrentUserId(),
+        ]);
+        currentUserIdRef.current = userId;
+        setMessages(messagesData.slice().reverse());
       } catch (error) {
         console.error("Failed to fetch messages:", error);
       } finally {
@@ -62,32 +80,134 @@ export default function ChatDetail() {
     connectSocket();
     joinRoom(chatId);
 
-    socket.on("newMessage", (message: Message) => {
+    const handleNewMessage = (raw: any) => {
+      const normalized: Message = {
+        id: raw.id || raw._id,
+        text: raw.text,
+        fromMe: raw.sender?._id === currentUserIdRef.current,
+        createdAt: raw.createdAt,
+        timestamp: new Date(raw.createdAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        senderName: raw.sender?.username,
+        senderAvatar: raw.sender?.profileImage || "",
+        chat: raw.chat,
+        type: raw.type || "text",
+        call: raw.call,
+        audio: raw.audio,
+      };
       setMessages((prev) => {
-        const allMessages = [message, ...prev];
+        const allMessages = [normalized, ...prev];
         return allMessages.filter(
-          (msg, index, self) => index === self.findIndex((m) => m.id === msg.id)
+          (msg, index, self) =>
+            index === self.findIndex((m) => m.id === msg.id),
         );
       });
-    });
+    };
+
+    socket.on("newMessage", handleNewMessage);
 
     socket.on("messagesRead", ({ chatId: readChatId, userId }) => {
       setMessages((prev) =>
         prev.map((msg) =>
           msg.chat === readChatId && msg.sender?._id !== userId
             ? { ...msg, read: true }
-            : msg
-        )
+            : msg,
+        ),
       );
     });
 
+    const handleUnmatched = ({ byUserId }: { byUserId: string }) => {
+      if (byUserId !== otherUserId) return;
+      Toast.show({ type: "info", text1: `${name || "This user"} unmatched with you` });
+      router.back();
+    };
+    socket.on("unmatched", handleUnmatched);
+
     return () => {
-      socket.off("newMessage");
+      socket.off("newMessage", handleNewMessage);
       socket.off("messagesRead");
+      socket.off("unmatched", handleUnmatched);
     };
   }, [chatId]);
 
   const handleBack = () => router.back();
+
+  const handleUnmatch = () => {
+    Alert.alert(
+      "Unmatch",
+      `Unmatch with ${name || "this user"}? This deletes your conversation and can't be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Unmatch",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await unmatchUser(otherUserId);
+              router.back();
+            } catch (error: any) {
+              Toast.show({
+                type: "error",
+                text1: "Failed to unmatch",
+                text2: error.message,
+              });
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleBlock = () => {
+    Alert.alert(
+      "Block User",
+      `Block ${name || "this user"}? They won't be able to see your profile, message you, or call you. Your conversation will be deleted.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Block",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await blockUserApi(otherUserId);
+              router.back();
+            } catch (error: any) {
+              Toast.show({
+                type: "error",
+                text1: "Failed to block user",
+                text2: error.message,
+              });
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleReport = () => {
+    showReportReasonPicker(name || "this user", async (reason) => {
+      try {
+        await reportUserApi(otherUserId, reason);
+        Toast.show({ type: "success", text1: "Report submitted" });
+        router.back();
+      } catch (error: any) {
+        Toast.show({ type: "error", text1: "Failed to submit report", text2: error.message });
+      }
+    });
+  };
+
+  const handleChatOptions = () => {
+    showActionSheet({
+      title: name || "Chat options",
+      options: [
+        { label: "Report", destructive: true, onPress: handleReport },
+        { label: "Block", destructive: true, onPress: handleBlock },
+        { label: "Unmatch", destructive: true, onPress: handleUnmatch },
+      ],
+    });
+  };
 
   const toggleEmojiPicker = () => {
     if (showEmojiPicker) {
@@ -106,6 +226,7 @@ export default function ChatDetail() {
       id: tempId,
       text: input,
       fromMe: true,
+      createdAt: new Date().toISOString(),
       timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
@@ -123,14 +244,8 @@ export default function ChatDetail() {
       const savedMessage = await sendMessageApi(chatId, newMessage.text);
       if (!savedMessage) throw new Error("No response from server");
 
-      // Send via socket
-      socketSendMessage(chatId, {
-        chatId,
-        senderId: savedMessage.sender._id,
-        text: savedMessage.text,
-      });
-
-      // Replace temp message with saved message
+      // Replace temp message with saved message (the server also broadcasts this
+      // over the socket to the other participant; our own copy is deduped by id)
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === tempId
@@ -138,24 +253,25 @@ export default function ChatDetail() {
                 id: savedMessage._id,
                 text: savedMessage.text,
                 fromMe: true,
+                createdAt: savedMessage.createdAt,
                 timestamp: new Date(savedMessage.createdAt).toLocaleTimeString(
                   [],
                   {
                     hour: "2-digit",
                     minute: "2-digit",
-                  }
+                  },
                 ),
                 senderName: savedMessage.sender.username,
                 senderAvatar: savedMessage.sender.profileImage || "",
                 failed: false,
               }
-            : msg
-        )
+            : msg,
+        ),
       );
     } catch (error) {
       console.error("Failed to send message:", error);
       setMessages((prev) =>
-        prev.map((msg) => (msg.id === tempId ? { ...msg, failed: true } : msg))
+        prev.map((msg) => (msg.id === tempId ? { ...msg, failed: true } : msg)),
       );
     }
   };
@@ -165,40 +281,44 @@ export default function ChatDetail() {
       prev.map((msg) =>
         msg.id === failedMessage.id
           ? { ...msg, failed: false, retrying: true }
-          : msg
-      )
+          : msg,
+      ),
     );
 
     try {
-      const savedMessage = await sendMessageApi(chatId, failedMessage.text);
+      const isVoice = failedMessage.type === "audio" && failedMessage.audio;
+      const savedMessage = isVoice
+        ? await sendVoiceMessageApi(
+            chatId,
+            failedMessage.audio!.url,
+            failedMessage.audio!.duration,
+          )
+        : await sendMessageApi(chatId, failedMessage.text);
       if (!savedMessage) throw new Error("No response from server");
-
-      socketSendMessage(chatId, {
-        chatId,
-        senderId: savedMessage.sender._id,
-        text: savedMessage.text,
-      });
 
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === failedMessage.id
             ? {
                 id: savedMessage._id,
-                text: savedMessage.text,
+                text: savedMessage.text || "",
                 fromMe: true,
+                type: isVoice ? "audio" : "text",
+                audio: isVoice ? savedMessage.audio : undefined,
+                createdAt: savedMessage.createdAt,
                 timestamp: new Date(savedMessage.createdAt).toLocaleTimeString(
                   [],
                   {
                     hour: "2-digit",
                     minute: "2-digit",
-                  }
+                  },
                 ),
                 senderName: savedMessage.sender.username,
                 senderAvatar: savedMessage.sender.profileImage || "",
                 failed: false,
               }
-            : msg
-        )
+            : msg,
+        ),
       );
     } catch (error) {
       console.error("Retry failed:", error);
@@ -206,56 +326,82 @@ export default function ChatDetail() {
         prev.map((msg) =>
           msg.id === failedMessage.id
             ? { ...msg, failed: true, retrying: false }
-            : msg
-        )
+            : msg,
+        ),
       );
     }
   };
 
-  const renderItem = ({ item }: { item: Message }) => (
-    <View
-      style={[
-        styles.messageContainer,
-        item.fromMe ? styles.myMessageContainer : styles.theirMessageContainer,
-      ]}
-    >
-      <Image
-        source={{
-          uri: item.senderAvatar || "https://placehold.co/100x100",
-        }}
-        style={styles.avatar}
-      />
+  const handleRecordingComplete = async (uri: string, durationSec: number) => {
+    const tempId = `temp-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const optimistic: Message = {
+      id: tempId,
+      text: "",
+      fromMe: true,
+      type: "audio",
+      audio: { url: uri, duration: durationSec },
+      createdAt: new Date().toISOString(),
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      senderName: "You",
+      failed: false,
+    };
+    setMessages((prev) => [optimistic, ...prev]);
 
-      <Pressable
-        onPress={() => item.failed && retrySendMessage(item)}
-        style={[
-          styles.messageBubble,
-          item.fromMe
-            ? [styles.myMessage, { backgroundColor: colors.accent }]
-            : [styles.theirMessage, { backgroundColor: colors.surfaceAlt }],
-          item.failed && { borderColor: colors.accent, borderWidth: 1 },
-        ]}
-      >
-        <Text
-          style={[
-            item.fromMe ? styles.myMessageText : styles.theirMessageText,
-            !item.fromMe && { color: colors.text },
-          ]}
-        >
-          {item.text}
-        </Text>
-        <Text
-          style={[
-            styles.timestamp,
-            item.fromMe ? styles.myTimestamp : [styles.theirTimestamp, { color: colors.textSecondary }],
-            item.failed && { color: colors.accent },
-          ]}
-        >
-          {item.timestamp} {item.failed ? "(Failed)" : ""}
-        </Text>
-      </Pressable>
-    </View>
-  );
+    try {
+      const saved = await sendVoiceMessageApi(chatId, uri, durationSec);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === tempId
+            ? {
+                id: saved._id,
+                text: "",
+                fromMe: true,
+                type: "audio",
+                audio: saved.audio,
+                createdAt: saved.createdAt,
+                timestamp: new Date(saved.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+                senderName: saved.sender?.username,
+                senderAvatar: saved.sender?.profileImage || "",
+                failed: false,
+              }
+            : msg,
+        ),
+      );
+    } catch (err) {
+      console.error("Failed to send voice message:", err);
+      setMessages((prev) =>
+        prev.map((msg) => (msg.id === tempId ? { ...msg, failed: true } : msg)),
+      );
+    }
+  };
+
+  const { isRecording, isCancelling, durationMillis, micResponderHandlers } =
+    useVoiceRecorder(handleRecordingComplete);
+
+  const listData = useMemo(() => buildListData(messages), [messages]);
+
+  const renderItem = ({ item }: { item: ReturnType<typeof buildListData>[number] }) => {
+    if (item.type === "separator") {
+      return <DateSeparator label={item.label} />;
+    }
+    if (item.message.type === "call") {
+      return <CallLogRow message={item.message} />;
+    }
+    return (
+      <MessageBubble
+        message={item.message}
+        isFirstInGroup={item.isFirstInGroup}
+        isLastInGroup={item.isLastInGroup}
+        onRetry={retrySendMessage}
+      />
+    );
+  };
 
   if (loading)
     return (
@@ -265,7 +411,9 @@ export default function ChatDetail() {
     );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -278,33 +426,49 @@ export default function ChatDetail() {
           </Pressable>
           <View style={styles.profileSection}>
             <Image source={{ uri: avatar }} style={styles.profileImage} />
-            <Text style={[styles.profileName, { color: colors.text }]}>{name}</Text>
+            <Text
+              style={[styles.profileName, { color: colors.text }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {name}
+            </Text>
           </View>
           <View style={styles.headerIcons}>
             <Pressable
               style={styles.iconButton}
-              onPress={() => startCall(otherUserId, chatId, "audio", name, avatar)}
+              onPress={() =>
+                startCall(otherUserId, chatId, "audio", name, avatar)
+              }
             >
               <Ionicons name="call-outline" size={22} color={colors.accent} />
             </Pressable>
             <Pressable
               style={styles.iconButton}
-              onPress={() => startCall(otherUserId, chatId, "video", name, avatar)}
+              onPress={() =>
+                startCall(otherUserId, chatId, "video", name, avatar)
+              }
             >
-              <Ionicons name="videocam-outline" size={22} color={colors.accent} />
+              <Ionicons
+                name="videocam-outline"
+                size={22}
+                color={colors.accent}
+              />
             </Pressable>
-            <Pressable style={styles.iconButton}>
-              <Ionicons name="ellipsis-vertical" size={20} color={colors.text} />
+            <Pressable style={styles.iconButton} onPress={handleChatOptions}>
+              <Ionicons
+                name="ellipsis-vertical"
+                size={20}
+                color={colors.text}
+              />
             </Pressable>
           </View>
         </View>
 
         {/* Messages */}
         <FlatList
-          data={messages}
-          keyExtractor={(item) =>
-            item.id?.toString() || Math.random().toString()
-          }
+          data={listData}
+          keyExtractor={(item) => item.key}
           renderItem={renderItem}
           contentContainerStyle={styles.messagesContainer}
           inverted
@@ -313,32 +477,68 @@ export default function ChatDetail() {
 
         {/* Input + Emoji */}
         <View style={[styles.inputRow, { borderColor: colors.border }]}>
-          <Pressable onPress={toggleEmojiPicker} style={styles.emojiButton}>
-            <Ionicons name="happy-outline" size={28} color={colors.textSecondary} />
-          </Pressable>
-          <TextInput
-            style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text }]}
-            placeholder="Type a message..."
-            placeholderTextColor={colors.textTertiary}
-            value={input}
-            onChangeText={setInput}
-            multiline
-          />
-          <Pressable
-            style={[
-              styles.sendButton,
-              { backgroundColor: colors.accent },
-              !input.trim() && { backgroundColor: colors.textTertiary },
-            ]}
-            onPress={sendMessage}
-            disabled={!input.trim()}
-          >
-            <Ionicons
-              name="send"
-              size={20}
-              color={input.trim() ? "#fff" : colors.textTertiary}
-            />
-          </Pressable>
+          {isRecording ? (
+            <View style={styles.recordingBar}>
+              <View style={styles.recordingDot} />
+              <Text style={[styles.recordingDuration, { color: colors.text }]}>
+                {formatClockTime(durationMillis / 1000)}
+              </Text>
+              <Text
+                style={[
+                  styles.recordingHint,
+                  { color: isCancelling ? "#e05252" : colors.textTertiary },
+                ]}
+              >
+                {isCancelling ? "Release to cancel" : "‹ Slide to cancel"}
+              </Text>
+            </View>
+          ) : (
+            <>
+              <Pressable onPress={toggleEmojiPicker} style={styles.emojiButton}>
+                <Ionicons
+                  name="happy-outline"
+                  size={28}
+                  color={colors.textSecondary}
+                />
+              </Pressable>
+              <TextInput
+                style={[
+                  styles.input,
+                  { backgroundColor: colors.surfaceAlt, color: colors.text },
+                ]}
+                placeholder="Type a message..."
+                placeholderTextColor={colors.textTertiary}
+                value={input}
+                onChangeText={setInput}
+                multiline
+              />
+            </>
+          )}
+
+          {input.trim() ? (
+            <Pressable
+              style={[styles.sendButton, { backgroundColor: colors.accent }]}
+              onPress={sendMessage}
+            >
+              <Ionicons name="send" size={20} color="#fff" />
+            </Pressable>
+          ) : (
+            <View
+              {...micResponderHandlers}
+              style={[
+                styles.sendButton,
+                {
+                  backgroundColor: isCancelling
+                    ? "#e05252"
+                    : isRecording
+                      ? colors.accent
+                      : colors.textTertiary,
+                },
+              ]}
+            >
+              <Ionicons name="mic" size={20} color="#fff" />
+            </View>
+          )}
         </View>
 
         {showEmojiPicker && (
@@ -365,34 +565,43 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
     gap: 10,
   },
-  profileImage: { width: 40, height: 40, borderRadius: 20 },
-  profileName: { fontSize: 18, fontWeight: "600" },
-  headerIcons: { flexDirection: "row", gap: 12 },
+  profileImage: { width: 40, height: 40, borderRadius: 20, flexShrink: 0 },
+  profileName: { fontSize: 18, fontWeight: "600", flexShrink: 1 },
+  headerIcons: { flexDirection: "row", gap: 12, flexShrink: 0 },
   iconButton: { padding: 4 },
   messagesContainer: { paddingHorizontal: 12, paddingBottom: 10 },
-  messageContainer: {
-    flexDirection: "row",
-    marginVertical: 4,
-    alignItems: "flex-end",
-  },
-  myMessageContainer: { justifyContent: "flex-end" },
-  theirMessageContainer: { justifyContent: "flex-start" },
-  avatar: { width: 32, height: 32, borderRadius: 16, marginRight: 6 },
-  messageBubble: { maxWidth: "75%", borderRadius: 16, padding: 10 },
-  myMessage: { alignSelf: "flex-end" },
-  theirMessage: { alignSelf: "flex-start" },
-  myMessageText: { color: "#fff" },
-  theirMessageText: {},
-  timestamp: { fontSize: 10, marginTop: 4 },
-  myTimestamp: { color: "#ffd9dc", textAlign: "right" },
-  theirTimestamp: { textAlign: "left" },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     padding: 8,
     borderTopWidth: 1,
+  },
+  recordingBar: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+  },
+  recordingDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#e05252",
+  },
+  recordingDuration: {
+    fontSize: 15,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
+  },
+  recordingHint: {
+    flex: 1,
+    textAlign: "right",
+    fontSize: 13,
   },
   emojiButton: { padding: 4, marginRight: 4 },
   input: {

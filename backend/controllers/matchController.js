@@ -1,4 +1,7 @@
 import Profile from "../models/profileModel.js";
+import Chat from "../models/chatModel.js";
+import Message from "../models/messageModel.js";
+import { sendNotification } from "../utils/notify.js";
 
 /**
  * Like a profile
@@ -36,6 +39,18 @@ export const likeProfile = async (req, res) => {
       isMatch = true;
     }
 
+    const io = req.app.get("io");
+    if (targetProfile) {
+      if (isMatch) {
+        await Promise.all([
+          sendNotification(io, { userId: targetProfile.user, type: "match", fromUserId: currentUserId }),
+          sendNotification(io, { userId: currentUserId, type: "match", fromUserId: targetProfile.user }),
+        ]);
+      } else {
+        await sendNotification(io, { userId: targetProfile.user, type: "like", fromUserId: currentUserId });
+      }
+    }
+
     res.status(200).json({
       message: isMatch ? "It's a Match! 🎉" : "Profile liked",
       match: isMatch,
@@ -69,6 +84,65 @@ export const passProfile = async (req, res) => {
     res.status(200).json({ message: "Profile passed successfully" });
   } catch (error) {
     console.error("Error passing profile:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * Unmatch a user
+ * - Removes each other from likes[] and matches[]
+ * - Deletes the chat and message history between them
+ */
+export const unmatchProfile = async (req, res) => {
+  try {
+    const { targetUserId } = req.body;
+    const currentUserId = req.user.id;
+
+    if (!targetUserId) {
+      return res.status(400).json({ message: "targetUserId is required" });
+    }
+
+    const [currentProfile, targetProfile] = await Promise.all([
+      Profile.findOne({ user: currentUserId }),
+      Profile.findOne({ user: targetUserId }),
+    ]);
+
+    if (!currentProfile || !targetProfile) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+
+    currentProfile.matches = currentProfile.matches.filter(
+      (id) => id.toString() !== targetProfile._id.toString()
+    );
+    currentProfile.likes = currentProfile.likes.filter(
+      (id) => id.toString() !== targetProfile._id.toString()
+    );
+    targetProfile.matches = targetProfile.matches.filter(
+      (id) => id.toString() !== currentProfile._id.toString()
+    );
+    targetProfile.likes = targetProfile.likes.filter(
+      (id) => id.toString() !== currentProfile._id.toString()
+    );
+
+    await Promise.all([currentProfile.save(), targetProfile.save()]);
+
+    const chat = await Chat.findOne({
+      participants: { $all: [currentUserId, targetUserId] },
+    });
+
+    if (chat) {
+      await Message.deleteMany({ chat: chat._id });
+      await Chat.findByIdAndDelete(chat._id);
+    }
+
+    req.app.get("io")?.to(targetUserId).emit("unmatched", {
+      byUserId: currentUserId,
+      chatId: chat?._id,
+    });
+
+    res.status(200).json({ message: "Unmatched successfully" });
+  } catch (error) {
+    console.error("Error unmatching:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

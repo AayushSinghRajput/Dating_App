@@ -1,6 +1,7 @@
 import Chat from "../models/chatModel.js";
 import Message from "../models/messageModel.js";
 import Profile from "../models/profileModel.js";
+import { isBlockedEitherWay } from "../utils/block.js";
 
 export const getUserChats = async (req, res) => {
   try {
@@ -47,6 +48,10 @@ export const createOrGetChat = async (req, res) => {
     const { receiverId } = req.body;
     const userId = req.user.id;
 
+    if (await isBlockedEitherWay(userId, receiverId)) {
+      return res.status(403).json({ message: "You can't message this user." });
+    }
+
     // Check if chat already exists
     let chat = await Chat.findOne({
       participants: { $all: [userId, receiverId] },
@@ -65,6 +70,34 @@ export const createOrGetChat = async (req, res) => {
   }
 };
 
+// Populates sender info, updates the chat's last message, and broadcasts the
+// saved message over the socket. Shared by text and voice message sends.
+async function finalizeAndBroadcast(req, newMessage, senderId, extraFields = {}) {
+  await newMessage.populate("sender", "username email");
+
+  const profile = await Profile.findOne({ user: senderId }).select("profileImage");
+  const messageWithProfile = {
+    _id: newMessage._id,
+    chat: newMessage.chat,
+    createdAt: newMessage.createdAt,
+    sender: {
+      _id: newMessage.sender._id,
+      username: newMessage.sender.username,
+      profileImage: profile?.profileImage || "",
+    },
+    ...extraFields,
+  };
+
+  await Chat.findByIdAndUpdate(newMessage.chat, {
+    lastMessage: newMessage._id,
+    updatedAt: new Date(),
+  });
+
+  req.app.get("io")?.to(newMessage.chat.toString()).emit("newMessage", messageWithProfile);
+
+  return messageWithProfile;
+}
+
 export const sendMessage = async (req, res) => {
   try {
     const { chatId, text } = req.body;
@@ -74,41 +107,62 @@ export const sendMessage = async (req, res) => {
       return res.status(400).json({ message: "Chat ID and text are required" });
     }
 
+    const chat = await Chat.findById(chatId);
+    if (!chat) return res.status(404).json({ message: "Chat not found" });
+    const otherParticipant = chat.participants.find((p) => p.toString() !== senderId);
+    if (otherParticipant && (await isBlockedEitherWay(senderId, otherParticipant))) {
+      return res.status(403).json({ message: "You can't message this user." });
+    }
+
     const newMessage = await Message.create({
       chat: chatId,
       sender: senderId,
       text,
     });
-    //populate sender fields
-    await newMessage.populate("sender", "username email");
 
-    
-    //fetch sender profile manually
-    const profile = await Profile.findOne({
-      user: senderId,
-    }).select("profileImage");
-    const messagewithProfile = {
-      _id: newMessage._id,
-      chat: newMessage.chat,
+    const messageWithProfile = await finalizeAndBroadcast(req, newMessage, senderId, {
       text: newMessage.text,
-      createdAt: newMessage.createdAt,
-      sender: {
-        _id: newMessage.sender._id,
-        username: newMessage.sender.username,
-        profileImage: profile?.profileImage || "",
-      },
-    };
-    //update the chat's last message
-    const chat = await Chat.findById(chatId);
-    if (chat) {
-      chat.lastMessage = newMessage._id;
-      chat.updatedAt = new Date();
-      await chat.save();
-    }
-    res.status(201).json(messagewithProfile);
+    });
+
+    res.status(201).json(messageWithProfile);
   } catch (error) {
     console.error("Error sending message:", error);
     res.status(500).json({ message: "Error sending message", error });
+  }
+};
+
+export const sendVoiceMessage = async (req, res) => {
+  try {
+    const { chatId, duration } = req.body;
+    const senderId = req.user.id;
+
+    if (!chatId || !req.file) {
+      return res.status(400).json({ message: "Chat ID and an audio file are required" });
+    }
+
+    const chat = await Chat.findById(chatId);
+    if (!chat) return res.status(404).json({ message: "Chat not found" });
+    const otherParticipant = chat.participants.find((p) => p.toString() !== senderId);
+    if (otherParticipant && (await isBlockedEitherWay(senderId, otherParticipant))) {
+      return res.status(403).json({ message: "You can't message this user." });
+    }
+
+    const newMessage = await Message.create({
+      chat: chatId,
+      sender: senderId,
+      type: "audio",
+      audio: { url: req.file.path, duration: Number(duration) || 0 },
+    });
+
+    const messageWithProfile = await finalizeAndBroadcast(req, newMessage, senderId, {
+      type: "audio",
+      audio: newMessage.audio,
+    });
+
+    res.status(201).json(messageWithProfile);
+  } catch (error) {
+    console.error("Error sending voice message:", error);
+    res.status(500).json({ message: "Error sending voice message", error });
   }
 };
 

@@ -12,16 +12,33 @@ const messageSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    type: {
+      type: String,
+      enum: ["text", "call", "audio"],
+      default: "text",
+    },
     text: {
       type: String,
-      required: true,
+      required: function () {
+        return this.type === "text";
+      },
+    },
+    call: {
+      callType: { type: String, enum: ["audio", "video"] },
+      status: { type: String, enum: ["answered", "missed", "rejected"] },
+      duration: { type: Number, default: 0 },
+      caller: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    },
+    audio: {
+      url: { type: String },
+      duration: { type: Number, default: 0 },
     },
     read: {
       type: Boolean,
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Message = mongoose.model("Message", messageSchema);

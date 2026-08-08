@@ -5,12 +5,20 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
+  Alert,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
+import { useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { createOrGetChat } from "@/utils/api";
+import Toast from "react-native-toast-message";
+import { createOrGetChat, blockUserApi, reportUserApi } from "@/utils/api";
 import { useTheme } from "@/contexts/ThemeContext";
+import { showReportReasonPicker } from "@/src/utils/reportFlow";
+import { showActionSheet } from "@/src/components/GlobalActionSheet";
 
 // Define TypeScript interfaces for better type safety
 interface User {
@@ -31,15 +39,29 @@ interface User {
   compatibility?: number;
   distance?: number;
   profileImage: string;
+  photos?: string[];
   chatId: string;
   userId?: string;
 }
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function UserDetail() {
   const params = useLocalSearchParams();
   const user = params.user ? (JSON.parse(params.user as string) as User) : null;
   const router = useRouter();
   const { colors } = useTheme();
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+
+  const photos =
+    user?.photos && user.photos.length > 0
+      ? user.photos
+      : [user?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=500&fit=crop"];
+
+  const handlePhotoScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+    setActivePhotoIndex(index);
+  };
 
   if (!user) {
     return (
@@ -74,18 +96,79 @@ export default function UserDetail() {
     }
   };
 
+  const handleBlock = () => {
+    Alert.alert(
+      "Block User",
+      `Block ${user.name || "this user"}? They won't be able to see your profile, message you, or call you.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Block",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await blockUserApi(user.userId || user.id);
+              Toast.show({ type: "success", text1: `${user.name} has been blocked` });
+              router.back();
+            } catch (error: any) {
+              Toast.show({ type: "error", text1: "Failed to block user", text2: error.message });
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleReport = () => {
+    showReportReasonPicker(user.name || "this user", async (reason) => {
+      try {
+        await reportUserApi(user.userId || user.id, reason);
+        Toast.show({ type: "success", text1: "Report submitted" });
+        router.back();
+      } catch (error: any) {
+        Toast.show({ type: "error", text1: "Failed to submit report", text2: error.message });
+      }
+    });
+  };
+
+  const handleMoreOptions = () => {
+    showActionSheet({
+      title: user.name || "Options",
+      options: [
+        { label: "Report User", destructive: true, onPress: handleReport },
+        { label: "Block User", destructive: true, onPress: handleBlock },
+      ],
+    });
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header Image Section */}
       <View style={styles.header}>
-        <Image
-          source={{
-            uri:
-              user.profileImage ||
-              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=500&fit=crop",
-          }}
-          style={styles.avatar}
-        />
+        <ScrollView
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={handlePhotoScroll}
+        >
+          {photos.map((uri, index) => (
+            <Image key={uri + index} source={{ uri }} style={[styles.avatar, { width: SCREEN_WIDTH }]} />
+          ))}
+        </ScrollView>
+
+        {photos.length > 1 && (
+          <View style={styles.photoDots}>
+            {photos.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.photoDot,
+                  index === activePhotoIndex && styles.photoDotActive,
+                ]}
+              />
+            ))}
+          </View>
+        )}
 
         {/* Back Button */}
         <Pressable style={styles.backButton} onPress={handleBack}>
@@ -116,6 +199,15 @@ export default function UserDetail() {
               <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
             </LinearGradient>
           </Pressable>
+
+          <Pressable style={styles.headerActionButton} onPress={handleMoreOptions}>
+            <LinearGradient
+              colors={["rgba(0,0,0,0.6)", "rgba(0,0,0,0.4)"]}
+              style={styles.moreButton}
+            >
+              <Ionicons name="ellipsis-vertical" size={20} color="#fff" />
+            </LinearGradient>
+          </Pressable>
         </View>
 
         {/* Gradient Overlay */}
@@ -133,10 +225,7 @@ export default function UserDetail() {
         {/* Basic Info Card */}
         <View style={[styles.mainInfoCard, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
           <View style={styles.nameSection}>
-            <Text style={[styles.name, { color: colors.text }]}>
-              {user.name}
-              {user.age && <Text style={[styles.age, { color: colors.textSecondary }]}>, {user.age}</Text>}
-            </Text>
+            <Text style={[styles.name, { color: colors.text }]}>{user.name}</Text>
 
             {/* Verification Badge */}
             {user.isVerified && (
@@ -145,12 +234,6 @@ export default function UserDetail() {
                 <Text style={styles.verificationText}>Verified</Text>
               </View>
             )}
-          </View>
-
-          {/* Location */}
-          <View style={styles.locationSection}>
-            <Ionicons name="location-outline" size={16} color={colors.accent} />
-            <Text style={[styles.location, { color: colors.accent }]}>{user.location}</Text>
           </View>
 
           {/* Profession */}
@@ -193,6 +276,26 @@ export default function UserDetail() {
           </View>
 
           <View style={styles.infoGrid}>
+            {user.age && (
+              <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
+                <View style={styles.infoLabel}>
+                  <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
+                  <Text style={[styles.infoTitle, { color: colors.textSecondary }]}>Age</Text>
+                </View>
+                <Text style={[styles.infoValue, { color: colors.text }]}>{user.age}</Text>
+              </View>
+            )}
+
+            {user.location && (
+              <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
+                <View style={styles.infoLabel}>
+                  <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
+                  <Text style={[styles.infoTitle, { color: colors.textSecondary }]}>Location</Text>
+                </View>
+                <Text style={[styles.infoValue, { color: colors.text }]}>{user.location}</Text>
+              </View>
+            )}
+
             {user.gender && (
               <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
                 <View style={styles.infoLabel}>
@@ -314,6 +417,26 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
+  photoDots: {
+    position: "absolute",
+    top: 50,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 6,
+    zIndex: 10,
+  },
+  photoDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.5)",
+  },
+  photoDotActive: {
+    backgroundColor: "#fff",
+    width: 18,
+  },
   backButton: {
     position: "absolute",
     top: 50,
@@ -357,6 +480,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  moreButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   headerOverlay: {
     position: "absolute",
     top: 0,
@@ -394,10 +524,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     flex: 1,
   },
-  age: {
-    fontSize: 24,
-    fontWeight: "600",
-  },
   verificationBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -413,16 +539,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
     color: "#4A90E2",
-  },
-  locationSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 6,
-  },
-  location: {
-    fontSize: 16,
-    fontWeight: "600",
   },
   professionSection: {
     flexDirection: "row",

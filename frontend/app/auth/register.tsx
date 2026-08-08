@@ -30,6 +30,7 @@ export default function RegisterScreen() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
   const router = useRouter();
@@ -81,8 +82,18 @@ export default function RegisterScreen() {
       return;
     }
 
+    if (!acceptedTerms) {
+      Toast.show({
+        type: "error",
+        text1: "Please confirm you're 18+ and accept the Terms of Service",
+        position: "top",
+        visibilityTime: 3000,
+      });
+      return;
+    }
+
     try {
-      const data = await register(username.trim(), email.trim(), password);
+      const data = await register(username.trim(), email.trim(), password, acceptedTerms);
       if (data?.token) {
         Toast.show({
           type: "success",
@@ -112,7 +123,8 @@ export default function RegisterScreen() {
     }
   };
 
-  const allFieldsFilled = username && email && password && confirmPassword;
+  const allFieldsFilled =
+    username && email && password && confirmPassword && acceptedTerms;
 
   return (
     <>
@@ -265,6 +277,28 @@ export default function RegisterScreen() {
                 </View>
 
                 <TouchableOpacity
+                  style={styles.termsRow}
+                  onPress={() => setAcceptedTerms((prev) => !prev)}
+                  activeOpacity={0.7}
+                >
+                  <View
+                    style={[
+                      styles.checkbox,
+                      acceptedTerms && styles.checkboxChecked,
+                    ]}
+                  >
+                    {acceptedTerms && (
+                      <Ionicons name="checkmark" size={14} color="#ff6b6b" />
+                    )}
+                  </View>
+                  <Text style={styles.termsText}>
+                    I confirm I&apos;m 18 or older and agree to the{" "}
+                    <Text style={styles.termsLink}>Terms of Service</Text> and{" "}
+                    <Text style={styles.termsLink}>Privacy Policy</Text>
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
                   style={[
                     styles.registerBtn,
                     allFieldsFilled && styles.registerBtnActive,
@@ -395,6 +429,38 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 4,
+  },
+  termsRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginTop: 6,
+    marginBottom: 6,
+    gap: 10,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 1,
+  },
+  checkboxChecked: {
+    backgroundColor: "#fff",
+    borderColor: "#fff",
+  },
+  termsText: {
+    flex: 1,
+    color: "rgba(255,255,255,0.9)",
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  termsLink: {
+    fontWeight: "700",
+    textDecorationLine: "underline",
+    color: "#fff",
   },
   registerBtn: {
     backgroundColor: "rgba(255,255,255,0.3)",

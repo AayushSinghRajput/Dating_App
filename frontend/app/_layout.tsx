@@ -6,9 +6,11 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { initToken } from "../utils/api";
 import Toast from "react-native-toast-message";
 import { CallProvider } from "../contexts/CallContext";
+import { NotificationProvider } from "../contexts/NotificationContext";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import IncomingCallModal from "../src/components/calling/IncomingCallModal";
 import InCallScreen from "../src/components/calling/InCallScreen";
+import GlobalActionSheet from "../src/components/GlobalActionSheet";
 
 function AppShell({ isLoggedIn }: { isLoggedIn: boolean }) {
   const { colors } = useTheme();
@@ -37,6 +39,7 @@ function AppShell({ isLoggedIn }: { isLoggedIn: boolean }) {
         />
       </Stack>
       <Toast />
+      <GlobalActionSheet />
     </>
   );
 }
@@ -61,11 +64,13 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider>
         {isLoggedIn ? (
-          <CallProvider>
-            <AppShell isLoggedIn={isLoggedIn} />
-            <IncomingCallModal />
-            <InCallScreen />
-          </CallProvider>
+          <NotificationProvider>
+            <CallProvider>
+              <AppShell isLoggedIn={isLoggedIn} />
+              <IncomingCallModal />
+              <InCallScreen />
+            </CallProvider>
+          </NotificationProvider>
         ) : (
           <AppShell isLoggedIn={isLoggedIn} />
         )}

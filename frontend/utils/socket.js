@@ -25,7 +25,3 @@ export const disconnectSocket = () => {
 export const joinRoom = (chatId) => {
   socket.emit("joinRoom", chatId);
 };
-
-export const sendMessage = (chatId, message) => {
-  socket.emit("sendMessage", { chatId, message });
-};

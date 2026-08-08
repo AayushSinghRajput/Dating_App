@@ -90,7 +90,7 @@ export default function UserCard({ user, index = 0 }) {
       const favoritesList = await getFavorites();
       const ids = favoritesList.map((f) => f._id);
       setLoggedInUserFavorites(ids);
-      setFavorite(ids.includes(user.id));
+      setFavorite(ids.includes(user.userId));
     } catch (error) {
       console.error("Failed to fetch favorites:", error);
       setFavorite(false);
@@ -102,8 +102,8 @@ export default function UserCard({ user, index = 0 }) {
   }, []);
 
   useEffect(() => {
-    if (user?.id && loggedInUserFavorites.length > 0) {
-      setFavorite(loggedInUserFavorites.includes(user.id));
+    if (user?.userId && loggedInUserFavorites.length > 0) {
+      setFavorite(loggedInUserFavorites.includes(user.userId));
     }
   }, [loggedInUserFavorites, user]);
 
@@ -128,13 +128,13 @@ export default function UserCard({ user, index = 0 }) {
     setFavorite(!previousFavorite);
 
     try {
-      const result = await toggleFavorite(user.id);
+      const result = await toggleFavorite(user.userId);
       if (result?.favorites && Array.isArray(result.favorites)) {
         const updatedFavorites = result.favorites.map((f) =>
           typeof f === "object" ? f._id?.toString() : f.toString()
         );
         setLoggedInUserFavorites(updatedFavorites);
-        setFavorite(updatedFavorites.includes(user.id.toString()));
+        setFavorite(updatedFavorites.includes(user.userId.toString()));
       } else {
         console.warn("No favorites array returned from backend.");
       }

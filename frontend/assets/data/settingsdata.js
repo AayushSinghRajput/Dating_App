@@ -8,6 +8,7 @@ const settings = [
   { id: "6", title: "Language", icon: "language-outline" },
   { id: "7", title: "Help & Support", icon: "help-circle-outline" },
   { id: "8", title: "Logout", icon: "exit-outline" },
+  { id: "9", title: "Delete Account", icon: "trash-outline" },
 ];
 
 export default settings;

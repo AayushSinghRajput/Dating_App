@@ -8,9 +8,16 @@ const profileSchema = new mongoose.Schema(
       required: true,
       unique: true, 
     },
+    name: {
+      type: String,
+    },
     profileImage: {
       type: String,
       default: "",
+    },
+    photos: {
+      type: [String],
+      default: [],
     },
     location: {
       type: String,
@@ -64,6 +71,12 @@ const profileSchema = new mongoose.Schema(
         type:mongoose.Schema.Types.ObjectId,
         ref:"Profile",
       },
+    ],
+    blockedUsers:[
+      {
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"User",
+      }
     ],
   },
   { timestamps: true }

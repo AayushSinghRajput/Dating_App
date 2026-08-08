@@ -17,6 +17,18 @@ const userSchema = new mongoose.Schema(
       required: [true, "Please enter password"],
       minlength: 6,
     },
+    termsAcceptedAt: {
+      type: Date,
+      required: [true, "You must accept the Terms of Service to register"],
+    },
+    resetPasswordToken: {
+      type: String,
+      select: false,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      select: false,
+    },
   },
   { timestamps: true },
 );

@@ -56,7 +56,24 @@ interface CallContextValue {
   flipCamera: () => void;
 }
 
-const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+const ICE_SERVERS = [
+  { urls: "stun:stun.l.google.com:19302" },
+  {
+    urls: "turn:openrelay.metered.ca:80",
+    username: "openrelayproject",
+    credential: "openrelayproject",
+  },
+  {
+    urls: "turn:openrelay.metered.ca:443",
+    username: "openrelayproject",
+    credential: "openrelayproject",
+  },
+  {
+    urls: "turn:openrelay.metered.ca:443?transport=tcp",
+    username: "openrelayproject",
+    credential: "openrelayproject",
+  },
+];
 
 const CallContext = createContext<CallContextValue | null>(null);
 
@@ -86,8 +103,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const callTypeRef = useRef<CallType>("audio");
   const pendingOfferRef = useRef<any>(null);
   const pendingCandidatesRef = useRef<any[]>([]);
+  const callIdRef = useRef<string | null>(null);
 
   const cleanup = useCallback(() => {
+    InCallManager.stopRingtone();
+    InCallManager.stopRingback();
     InCallManager.stop();
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
@@ -98,6 +118,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     remoteUserRef.current = null;
     pendingOfferRef.current = null;
     pendingCandidatesRef.current = [];
+    callIdRef.current = null;
 
     setLocalStream(null);
     setRemoteStream(null);
@@ -148,11 +169,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       chatId,
       callType: incomingType,
       offer,
+      callId,
     }: any) => {
       // Busy: already in/starting a call, ignore silently (no call-waiting support yet)
       if (peerConnectionRef.current) return;
 
       pendingOfferRef.current = offer;
+      callIdRef.current = callId;
       const remote: RemoteCallUser = {
         userId: fromUserId,
         name: fromName || "Unknown",
@@ -164,6 +187,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       setRemoteUser(remote);
       setCallType(incomingType);
       setCallStatus("incoming-ringing");
+      InCallManager.startRingtone("_DEFAULT_", [1000, 1000], "", 30);
     };
 
     const handleCallAnswered = async ({ answer }: any) => {
@@ -172,7 +196,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(answer));
         await flushPendingCandidates(pc);
-        InCallManager.start({ media: callTypeRef.current });
+        InCallManager.setSpeakerphoneOn(true);
         setCallStatus("connected");
       } catch (err) {
         console.error("Failed to apply call answer:", err);
@@ -249,6 +273,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         const remote: RemoteCallUser = { userId: toUserId, name, avatar, chatId };
         remoteUserRef.current = remote;
         callTypeRef.current = type;
+        callIdRef.current = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
         setRemoteUser(remote);
         setCallType(type);
 
@@ -265,8 +290,12 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           chatId,
           callType: type,
           offer,
+          callId: callIdRef.current,
         });
 
+        // No ringback here: only the callee should hear a ring, the caller just
+        // sees the silent "Ringing…" screen until answered.
+        InCallManager.start({ media: type });
         setCallStatus("outgoing-ringing");
       } catch (err: any) {
         console.error("Failed to start call:", err);
@@ -291,7 +320,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         text1: "Permission required",
         text2: "Camera/microphone access is needed to answer.",
       });
-      socket.emit("rejectCall", { toUserId: remoteUserRef.current.userId });
+      socket.emit("rejectCall", { toUserId: remoteUserRef.current.userId, callId: callIdRef.current });
       cleanup();
       return;
     }
@@ -318,9 +347,12 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       socket.emit("answerCall", {
         toUserId: remoteUserRef.current.userId,
         answer,
+        callId: callIdRef.current,
       });
 
+      InCallManager.stopRingtone();
       InCallManager.start({ media: callTypeRef.current });
+      InCallManager.setSpeakerphoneOn(true);
       setCallStatus("connected");
     } catch (err) {
       console.error("Failed to accept call:", err);
@@ -335,14 +367,14 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
   const rejectCall = useCallback(() => {
     if (remoteUserRef.current) {
-      socket.emit("rejectCall", { toUserId: remoteUserRef.current.userId });
+      socket.emit("rejectCall", { toUserId: remoteUserRef.current.userId, callId: callIdRef.current });
     }
     cleanup();
   }, [cleanup]);
 
   const endCall = useCallback(() => {
     if (remoteUserRef.current) {
-      socket.emit("endCall", { toUserId: remoteUserRef.current.userId });
+      socket.emit("endCall", { toUserId: remoteUserRef.current.userId, callId: callIdRef.current });
     }
     cleanup();
   }, [cleanup]);
