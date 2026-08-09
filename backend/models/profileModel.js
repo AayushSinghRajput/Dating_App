@@ -78,6 +78,10 @@ const profileSchema = new mongoose.Schema(
         ref:"User",
       }
     ],
+    incognito: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

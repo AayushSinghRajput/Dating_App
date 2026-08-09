@@ -29,6 +29,24 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    notificationPreferences: {
+      like: { type: Boolean, default: true },
+      match: { type: Boolean, default: true },
+      missed_call: { type: Boolean, default: true },
+      favorite: { type: Boolean, default: true },
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationCode: {
+      type: String,
+      select: false,
+    },
+    emailVerificationExpires: {
+      type: Date,
+      select: false,
+    },
   },
   { timestamps: true },
 );

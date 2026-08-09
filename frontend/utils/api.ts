@@ -51,6 +51,7 @@ export interface Profile {
   goal?: string;
   name?: string;
   profilePic?: string;
+  incognito?: boolean;
 }
 
 export interface ProfileResponse {
@@ -71,6 +72,10 @@ export interface AudioMessageInfo {
   duration: number;
 }
 
+export interface MediaMessageInfo {
+  url: string;
+}
+
 export interface Message {
   id: string;
   text: string;
@@ -82,9 +87,10 @@ export interface Message {
   failed?:boolean;
   retrying?:boolean;
   chat?:string;
-  type?: "text" | "call" | "audio";
+  type?: "text" | "call" | "audio" | "image" | "video";
   call?: CallLogInfo;
   audio?: AudioMessageInfo;
+  media?: MediaMessageInfo;
   sender?:{
     _id:string;
     username?:string;
@@ -135,6 +141,87 @@ export const deleteAccount = async (password: string): Promise<void> => {
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to delete account");
   await clearToken();
+};
+
+export const changePassword = async (
+  currentPassword: string,
+  newPassword: string
+): Promise<void> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/auth/change-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to change password");
+};
+
+export interface CurrentUserInfo {
+  _id: string;
+  username: string;
+  email: string;
+  emailVerified: boolean;
+}
+
+export const getMe = async (): Promise<CurrentUserInfo> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/auth/me`, {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch account info");
+  return data;
+};
+
+export const sendVerificationEmail = async (): Promise<void> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/auth/send-verification-email`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to send verification email");
+};
+
+export const verifyEmail = async (code: string): Promise<void> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/auth/verify-email`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ code }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to verify email");
+};
+
+export const changeEmail = async (
+  newEmail: string,
+  password: string
+): Promise<{ email: string }> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/auth/change-email`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ newEmail, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to change email");
+  return data;
 };
 
 export const getCurrentUserId = async (): Promise<string | null> => {
@@ -332,6 +419,22 @@ export const setPrimaryPhotoApi = async (url: string): Promise<PhotosResponse> =
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to set primary photo");
   return data;
+};
+
+export const setIncognitoModeApi = async (incognito: boolean): Promise<boolean> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/profile/incognito`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ incognito }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to update incognito mode");
+  return data.incognito;
 };
 
 // 🔹 Get Current User Profile
@@ -547,6 +650,45 @@ export const sendVoiceMessageApi = async (
   return data;
 };
 
+export const sendMediaMessageApi = async (
+  chatId: string,
+  fileUri: string,
+  mimeType: string
+): Promise<any> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+
+  let result: FileSystem.FileSystemUploadResult;
+  try {
+    result = await FileSystem.uploadAsync(
+      `${BASE_URL}/api/chats/message/media`,
+      fileUri,
+      {
+        httpMethod: "POST",
+        uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+        fieldName: "media",
+        mimeType,
+        parameters: { chatId },
+        headers: { Authorization: `Bearer ${authToken}` },
+      }
+    );
+  } catch (err: any) {
+    throw new Error(`Upload failed: ${err?.message || "Unknown error"}`);
+  }
+
+  let data: any;
+  try {
+    data = JSON.parse(result.body);
+  } catch {
+    throw new Error("Failed to send media message: invalid server response");
+  }
+
+  if (result.status < 200 || result.status >= 300) {
+    throw new Error(data?.message || "Failed to send media message");
+  }
+  return data;
+};
+
 export const toggleFavorite = async (targetUserId: string) => {
   try {
     const token = await AsyncStorage.getItem("token");
@@ -745,6 +887,26 @@ export const getMatches = async () => {
   }
 };
 
+export interface LikedByProfile {
+  id: string;
+  userId: string;
+  name: string;
+  age?: number;
+  profileImage?: string;
+  location?: string;
+}
+
+export const getLikedByMe = async (): Promise<LikedByProfile[]> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/match/liked-by`, {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch who liked you");
+  return data.profiles;
+};
+
 export const unmatchUser = async (targetUserId: string): Promise<void> => {
   const authToken = await AsyncStorage.getItem("token");
   if (!authToken) throw new Error("User not authenticated");
@@ -816,4 +978,40 @@ export const markAllNotificationsRead = async (): Promise<void> => {
     method: "PATCH",
     headers: { Authorization: `Bearer ${authToken}` },
   });
+};
+
+export interface NotificationPreferences {
+  like: boolean;
+  match: boolean;
+  missed_call: boolean;
+  favorite: boolean;
+}
+
+export const getNotificationPreferences = async (): Promise<NotificationPreferences> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/notifications/preferences`, {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch preferences");
+  return data.preferences;
+};
+
+export const updateNotificationPreferences = async (
+  updates: Partial<NotificationPreferences>
+): Promise<NotificationPreferences> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/notifications/preferences`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to update preferences");
+  return data.preferences;
 };

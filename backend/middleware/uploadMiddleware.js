@@ -26,4 +26,18 @@ const audioStorage = new CloudinaryStorage({
 
 export const uploadAudio = multer({ storage: audioStorage });
 
+const chatMediaStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "chatMedia",
+    resource_type: "auto", // let Cloudinary detect image vs. video from content
+    allowed_formats: [
+      "jpg", "jpeg", "png", "gif", "webp",
+      "mp4", "mov", "3gp", "mkv", "webm", "avi",
+    ],
+  },
+});
+
+export const uploadChatMedia = multer({ storage: chatMediaStorage });
+
 export default upload;

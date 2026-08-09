@@ -1,5 +1,8 @@
 import Notification from "../models/notificationModel.js";
 import Profile from "../models/profileModel.js";
+import User from "../models/userModel.js";
+
+const NOTIFICATION_TYPES = ["like", "match", "missed_call", "favorite"];
 
 export const getNotifications = async (req, res) => {
   try {
@@ -73,5 +76,37 @@ export const markAllNotificationsRead = async (req, res) => {
   } catch (error) {
     console.error("Error marking all notifications as read:", error);
     res.status(500).json({ message: "Error marking all notifications as read" });
+  }
+};
+
+export const getNotificationPreferences = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("notificationPreferences");
+    res.status(200).json({ preferences: user.notificationPreferences });
+  } catch (error) {
+    console.error("Error fetching notification preferences:", error);
+    res.status(500).json({ message: "Error fetching notification preferences" });
+  }
+};
+
+export const updateNotificationPreferences = async (req, res) => {
+  try {
+    const updates = {};
+    for (const type of NOTIFICATION_TYPES) {
+      if (typeof req.body[type] === "boolean") {
+        updates[`notificationPreferences.${type}`] = req.body[type];
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: updates },
+      { new: true }
+    ).select("notificationPreferences");
+
+    res.status(200).json({ preferences: user.notificationPreferences });
+  } catch (error) {
+    console.error("Error updating notification preferences:", error);
+    res.status(500).json({ message: "Error updating notification preferences" });
   }
 };

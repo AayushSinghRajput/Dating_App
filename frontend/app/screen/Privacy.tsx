@@ -1,56 +1,52 @@
-import { View, Text, Switch, StyleSheet, ScrollView, Pressable } from "react-native";
-import { useState } from "react";
+import { View, Text, Switch, StyleSheet, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
+import { getProfile, setIncognitoModeApi } from "@/utils/api";
 
 export default function Privacy() {
   const router = useRouter();
   const { colors } = useTheme();
   const [showProfile, setShowProfile] = useState(true);
-  const [showOnlineStatus, setShowOnlineStatus] = useState(true);
-  const [allowMessages, setAllowMessages] = useState(true);
-  const [shareLocation, setShareLocation] = useState(false);
-  const [dataCollection, setDataCollection] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    getProfile()
+      .then((profile) => setShowProfile(!profile.incognito))
+      .catch((error: any) => {
+        Toast.show({ type: "error", text1: "Failed to load privacy settings", text2: error.message });
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleBack = () => {
     router.back();
   };
 
-  const PrivacyOption = ({ 
-    title, 
-    description, 
-    value, 
-    onValueChange,
-    icon 
-  }: {
-    title: string;
-    description?: string;
-    value: boolean;
-    onValueChange: (value: boolean) => void;
-    icon: string;
-  }) => (
-    <View style={[styles.option, { borderBottomColor: colors.border }]}>
-      <View style={styles.optionLeft}>
-        <View style={[styles.iconContainer, { backgroundColor: colors.accentSoft }]}>
-          <Ionicons name={icon as any} size={20} color={colors.accent} />
-        </View>
-        <View style={styles.textContainer}>
-          <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
-          {description && <Text style={[styles.description, { color: colors.textSecondary }]}>{description}</Text>}
-        </View>
-      </View>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        trackColor={{ false: colors.border, true: colors.accentSoft }}
-        thumbColor={value ? colors.accent : "#f4f3f4"}
-        ios_backgroundColor={colors.border}
-      />
-    </View>
-  );
+  const handleToggleVisibility = async (value: boolean) => {
+    const previous = showProfile;
+    setShowProfile(value);
+    setSaving(true);
+    try {
+      await setIncognitoModeApi(!value);
+      Toast.show({
+        type: "success",
+        text1: value ? "Your profile is visible again" : "Incognito mode enabled",
+        text2: value
+          ? "New people can discover your profile."
+          : "You're hidden from discovery. Existing matches and chats are unaffected.",
+      });
+    } catch (error: any) {
+      setShowProfile(previous);
+      Toast.show({ type: "error", text1: "Failed to update", text2: error.message });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -63,7 +59,7 @@ export default function Privacy() {
         <View style={styles.headerPlaceholder} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -72,107 +68,51 @@ export default function Privacy() {
         <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Profile Visibility</Text>
           <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
-            Control who can see your profile and information
+            Control who can discover your profile
           </Text>
 
-          <PrivacyOption
-            title="Show my profile to everyone"
-            description="Your profile will be visible to all users"
-            value={showProfile}
-            onValueChange={setShowProfile}
-            icon="eye-outline"
-          />
-          
-          <PrivacyOption
-            title="Show online status"
-            description="Let others see when you're online"
-            value={showOnlineStatus}
-            onValueChange={setShowOnlineStatus}
-            icon="radio-button-on-outline"
-          />
-          
-          <PrivacyOption
-            title="Share approximate location"
-            description="Show your city/region to nearby users"
-            value={shareLocation}
-            onValueChange={setShareLocation}
-            icon="location-outline"
-          />
-        </View>
-
-        {/* Communication Section */}
-        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Communication</Text>
-          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
-            Manage how others can interact with you
-          </Text>
-
-          <PrivacyOption
-            title="Allow messages from strangers"
-            description="Receive messages from users you haven't matched with"
-            value={allowMessages}
-            onValueChange={setAllowMessages}
-            icon="chatbubble-outline"
-          />
-          
-          <PrivacyOption
-            title="Push notifications"
-            description="Receive notifications for new messages and matches"
-            value={pushNotifications}
-            onValueChange={setPushNotifications}
-            icon="notifications-outline"
-          />
-        </View>
-
-        {/* Data & Privacy Section */}
-        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Data & Privacy</Text>
-          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
-            Control how your data is used
-          </Text>
-
-          <PrivacyOption
-            title="Data collection for improvement"
-            description="Help us improve the app with anonymous usage data"
-            value={dataCollection}
-            onValueChange={setDataCollection}
-            icon="analytics-outline"
-          />
+          <View style={[styles.option, { borderBottomColor: "transparent" }]}>
+            <View style={styles.optionLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: colors.accentSoft }]}>
+                <Ionicons name={showProfile ? "eye-outline" : "eye-off-outline"} size={20} color={colors.accent} />
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={[styles.title, { color: colors.text }]}>
+                  {showProfile ? "Show my profile to everyone" : "Incognito mode"}
+                </Text>
+                <Text style={[styles.description, { color: colors.textSecondary }]}>
+                  {showProfile
+                    ? "New people can find and match with you"
+                    : "Hidden from discovery. Existing matches and chats still work."}
+                </Text>
+              </View>
+            </View>
+            {loading || saving ? (
+              <ActivityIndicator size="small" color={colors.accent} />
+            ) : (
+              <Switch
+                value={showProfile}
+                onValueChange={handleToggleVisibility}
+                trackColor={{ false: colors.border, true: colors.accentSoft }}
+                thumbColor={showProfile ? colors.accent : "#f4f3f4"}
+                ios_backgroundColor={colors.border}
+              />
+            )}
+          </View>
         </View>
 
         {/* Additional Privacy Options */}
         <View style={[styles.additionalOptions, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
-          <Pressable style={[styles.additionalOption, { borderBottomColor: colors.border }]}>
+          <Pressable
+            style={[styles.additionalOption, { borderBottomColor: colors.border }]}
+            onPress={() => router.push("/screen/PrivacyPolicy")}
+          >
             <View style={styles.additionalOptionLeft}>
               <Ionicons name="shield-checkmark-outline" size={20} color={colors.textSecondary} />
               <Text style={[styles.additionalOptionText, { color: colors.textSecondary }]}>Privacy Policy</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
           </Pressable>
-
-          <Pressable style={[styles.additionalOption, { borderBottomColor: colors.border }]}>
-            <View style={styles.additionalOptionLeft}>
-              <Ionicons name="document-text-outline" size={20} color={colors.textSecondary} />
-              <Text style={[styles.additionalOptionText, { color: colors.textSecondary }]}>Terms of Service</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-          </Pressable>
-
-          <Pressable style={[styles.additionalOption, { borderBottomColor: colors.border }]}>
-            <View style={styles.additionalOptionLeft}>
-              <Ionicons name="help-circle-outline" size={20} color={colors.textSecondary} />
-              <Text style={[styles.additionalOptionText, { color: colors.textSecondary }]}>Privacy Help Center</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-          </Pressable>
-        </View>
-
-        {/* Info Text */}
-        <View style={styles.infoContainer}>
-          <Ionicons name="information-circle-outline" size={16} color={colors.textSecondary} />
-          <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-            Your privacy settings help us protect your personal information and ensure a safe experience.
-          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -295,23 +235,6 @@ const styles = StyleSheet.create({
   },
   additionalOptionText: {
     fontSize: 15,
-    fontWeight: "500",
-  },
-  infoContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: "#F0F9FF",
-    marginHorizontal: 16,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E8F4FF",
-    gap: 12,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 16,
     fontWeight: "500",
   },
 });

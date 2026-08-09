@@ -1,10 +1,12 @@
 import { View, Text, Image, StyleSheet, Pressable } from "react-native";
+import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { getLikedByMe } from "@/utils/api";
 
 const logo = require("../../assets/images/logo.png");
 
@@ -12,6 +14,13 @@ export default function Navbar() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const { unreadCount } = useNotifications();
+  const [likedByCount, setLikedByCount] = useState(0);
+
+  useEffect(() => {
+    getLikedByMe()
+      .then((profiles) => setLikedByCount(profiles.length))
+      .catch(() => {});
+  }, []);
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.surface }]} edges={["top"]}>
@@ -24,24 +33,44 @@ export default function Navbar() {
           <Image source={logo} style={styles.logoImage} resizeMode="cover" />
         </View>
 
-        {/* Right Side - Notifications */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.notificationWrapper,
-            { backgroundColor: colors.accentSoft },
-            pressed && { backgroundColor: colors.accentSoftPressed, transform: [{ scale: 0.96 }] },
-          ]}
-          onPress={() => router.push("/screen/Notification")}
-        >
-          <Ionicons name="notifications-outline" size={22} color={colors.accent} />
-          {unreadCount > 0 && (
-            <View style={[styles.badge, { backgroundColor: colors.accent, borderColor: colors.surface }]}>
-              <Text style={styles.badgeText}>
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </Text>
-            </View>
-          )}
-        </Pressable>
+        {/* Right Side - Likes + Notifications */}
+        <View style={styles.right}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.notificationWrapper,
+              { backgroundColor: colors.accentSoft },
+              pressed && { backgroundColor: colors.accentSoftPressed, transform: [{ scale: 0.96 }] },
+            ]}
+            onPress={() => router.push("/screen/LikedYou")}
+          >
+            <Ionicons name="heart-outline" size={22} color={colors.accent} />
+            {likedByCount > 0 && (
+              <View style={[styles.badge, { backgroundColor: colors.accent, borderColor: colors.surface }]}>
+                <Text style={styles.badgeText}>
+                  {likedByCount > 9 ? "9+" : likedByCount}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.notificationWrapper,
+              { backgroundColor: colors.accentSoft },
+              pressed && { backgroundColor: colors.accentSoftPressed, transform: [{ scale: 0.96 }] },
+            ]}
+            onPress={() => router.push("/screen/Notification")}
+          >
+            <Ionicons name="notifications-outline" size={22} color={colors.accent} />
+            {unreadCount > 0 && (
+              <View style={[styles.badge, { backgroundColor: colors.accent, borderColor: colors.surface }]}>
+                <Text style={styles.badgeText}>
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
       </LinearGradient>
     </SafeAreaView>
   );
@@ -63,6 +92,11 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   left: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  right: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,

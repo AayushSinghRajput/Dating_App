@@ -93,9 +93,10 @@ export const getAllProfiles = async (req, res) => {
     const myProfile = await Profile.findOne({ user: loggedInUserId }).select("blockedUsers");
     const blockedByMe = (myProfile?.blockedUsers || []).map((id) => id.toString());
 
-    //fetch all profiles except the current user
+    //fetch all profiles except the current user and those in incognito mode
     const allProfiles = await Profile.find({
         user:{$ne:loggedInUserId},
+        incognito: { $ne: true },
     }).populate("user", "username email");
 
     // Hide profiles in both directions: people I've blocked, and people who've blocked me
@@ -362,6 +363,28 @@ export const setPrimaryPhoto = async (req, res) => {
     });
   } catch (error) {
     console.error("Error setting primary photo:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * @desc Toggle incognito mode: hides your profile from discovery for new
+ * people while leaving existing matches/chats unaffected.
+ * @route PATCH /api/profile/incognito
+ * @access Private
+ */
+export const setIncognitoMode = async (req, res) => {
+  try {
+    const { incognito } = req.body;
+    const profile = await Profile.findOneAndUpdate(
+      { user: req.user.id },
+      { incognito: Boolean(incognito) },
+      { new: true }
+    );
+    if (!profile) return res.status(404).json({ message: "Profile not found" });
+    res.status(200).json({ incognito: profile.incognito });
+  } catch (error) {
+    console.error("Error updating incognito mode:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

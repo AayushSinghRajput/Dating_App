@@ -147,6 +147,15 @@ const setupSocket = (io) => {
       finalizeCall(callId, call?.answeredAt ? "answered" : "missed");
     });
 
+    // Typing indicator (relayed only to other participants in the room)
+    socket.on("typing", ({ chatId }) => {
+      socket.to(chatId).emit("userTyping", { chatId, userId: socket.userId });
+    });
+
+    socket.on("stopTyping", ({ chatId }) => {
+      socket.to(chatId).emit("userStoppedTyping", { chatId, userId: socket.userId });
+    });
+
     // Mark messages as read
     socket.on("markAsRead", async ({ chatId, userId }) => {
       try {

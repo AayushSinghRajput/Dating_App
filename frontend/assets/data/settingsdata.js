@@ -2,6 +2,8 @@
 const settings = [
   { id: "1", title: "Edit Profile", icon: "person-circle-outline" },
   { id: "2", title: "Account Privacy", icon: "lock-closed-outline" },
+  { id: "10", title: "Change Password", icon: "key-outline" },
+  { id: "11", title: "Email & Verification", icon: "mail-outline" },
   { id: "3", title: "Notifications", icon: "notifications-outline" },
   { id: "4", title: "Payment & Subscriptions", icon: "card-outline" },
   { id: "5", title: "Blocked Users", icon: "ban-outline" },

@@ -23,12 +23,22 @@ export const getUserChats = async (req, res) => {
 
           const profile = await Profile.findOne({ user: otherUser._id });
 
+          const lastMsg = chat.lastMessage;
+          let lastMessagePreview = "Say hi 👋";
+          if (lastMsg) {
+            if (lastMsg.type === "audio") lastMessagePreview = "🎤 Voice message";
+            else if (lastMsg.type === "image") lastMessagePreview = "📷 Photo";
+            else if (lastMsg.type === "video") lastMessagePreview = "🎥 Video";
+            else if (lastMsg.type === "call") lastMessagePreview = "📞 Call";
+            else lastMessagePreview = lastMsg.text || "Say hi 👋";
+          }
+
           return {
             id: chat._id,
             otherUserId: otherUser._id,
             userName: otherUser.username,
             avatar: profile?.profileImage || "https://placehold.co/100x100",
-            lastMessage: chat.lastMessage?.text || "Say hi 👋",
+            lastMessage: lastMessagePreview,
             time: chat.lastMessage?.createdAt || chat.updatedAt,
             unread: 0,
           };
@@ -163,6 +173,43 @@ export const sendVoiceMessage = async (req, res) => {
   } catch (error) {
     console.error("Error sending voice message:", error);
     res.status(500).json({ message: "Error sending voice message", error });
+  }
+};
+
+export const sendMediaMessage = async (req, res) => {
+  try {
+    const { chatId } = req.body;
+    const senderId = req.user.id;
+
+    if (!chatId || !req.file) {
+      return res.status(400).json({ message: "Chat ID and a media file are required" });
+    }
+
+    const chat = await Chat.findById(chatId);
+    if (!chat) return res.status(404).json({ message: "Chat not found" });
+    const otherParticipant = chat.participants.find((p) => p.toString() !== senderId);
+    if (otherParticipant && (await isBlockedEitherWay(senderId, otherParticipant))) {
+      return res.status(403).json({ message: "You can't message this user." });
+    }
+
+    const messageType = req.file.mimetype?.startsWith("video/") ? "video" : "image";
+
+    const newMessage = await Message.create({
+      chat: chatId,
+      sender: senderId,
+      type: messageType,
+      media: { url: req.file.path },
+    });
+
+    const messageWithProfile = await finalizeAndBroadcast(req, newMessage, senderId, {
+      type: messageType,
+      media: newMessage.media,
+    });
+
+    res.status(201).json(messageWithProfile);
+  } catch (error) {
+    console.error("Error sending media message:", error);
+    res.status(500).json({ message: "Error sending media message", error });
   }
 };
 

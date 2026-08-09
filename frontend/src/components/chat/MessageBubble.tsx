@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Message } from "@/utils/api";
 import VoiceMessageBubble from "./VoiceMessageBubble";
+import MediaMessageBubble from "./MediaMessageBubble";
 
 export default function MessageBubble({
   message,
@@ -39,6 +40,7 @@ export default function MessageBubble({
                 { backgroundColor: colors.surfaceAlt },
                 isLastInGroup ? styles.theirMessageTail : styles.theirMessageGrouped,
               ],
+          (message.type === "image" || message.type === "video") && styles.mediaBubble,
           message.failed && { borderColor: colors.accent, borderWidth: 1 },
         ]}
       >
@@ -48,6 +50,8 @@ export default function MessageBubble({
             duration={message.audio.duration}
             isMine={message.fromMe}
           />
+        ) : (message.type === "image" || message.type === "video") && message.media ? (
+          <MediaMessageBubble url={message.media.url} type={message.type} />
         ) : (
           <Text
             style={[
@@ -82,6 +86,7 @@ const styles = StyleSheet.create({
   myMessageContainer: { justifyContent: "flex-end" },
   theirMessageContainer: { justifyContent: "flex-start" },
   messageBubble: { maxWidth: "75%", borderRadius: 16, padding: 10 },
+  mediaBubble: { padding: 4 },
   myMessage: { alignSelf: "flex-end" },
   theirMessage: { alignSelf: "flex-start" },
   myMessageGrouped: { borderBottomRightRadius: 16 },

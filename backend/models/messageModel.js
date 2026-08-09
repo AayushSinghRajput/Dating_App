@@ -14,7 +14,7 @@ const messageSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["text", "call", "audio"],
+      enum: ["text", "call", "audio", "image", "video"],
       default: "text",
     },
     text: {
@@ -32,6 +32,9 @@ const messageSchema = new mongoose.Schema(
     audio: {
       url: { type: String },
       duration: { type: Number, default: 0 },
+    },
+    media: {
+      url: { type: String },
     },
     read: {
       type: Boolean,

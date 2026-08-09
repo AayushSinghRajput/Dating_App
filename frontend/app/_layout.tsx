@@ -11,6 +11,7 @@ import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import IncomingCallModal from "../src/components/calling/IncomingCallModal";
 import InCallScreen from "../src/components/calling/InCallScreen";
 import GlobalActionSheet from "../src/components/GlobalActionSheet";
+import GlobalMatchCelebration from "../src/components/GlobalMatchCelebration";
 
 function AppShell({ isLoggedIn }: { isLoggedIn: boolean }) {
   const { colors } = useTheme();
@@ -40,6 +41,7 @@ function AppShell({ isLoggedIn }: { isLoggedIn: boolean }) {
       </Stack>
       <Toast />
       <GlobalActionSheet />
+      <GlobalMatchCelebration />
     </>
   );
 }

@@ -1,5 +1,5 @@
 import express from "express";
-import {createOrUpateProfile , getProfile, getAllProfiles,toggleFavorite,getFavorites,blockUser,unblockUser,getBlockedUsers,removePhoto,setPrimaryPhoto} from '../controllers/profileController.js';
+import {createOrUpateProfile , getProfile, getAllProfiles,toggleFavorite,getFavorites,blockUser,unblockUser,getBlockedUsers,removePhoto,setPrimaryPhoto,setIncognitoMode} from '../controllers/profileController.js';
 import {protect} from '../middleware/authMiddleware.js';
 import upload from "../middleware/uploadMiddleware.js";
 
@@ -17,5 +17,6 @@ router.post("/:targetUserId/block",protect,blockUser);
 router.post("/:targetUserId/unblock",protect,unblockUser);
 router.delete('/photos',protect,removePhoto);
 router.patch('/photos/primary',protect,setPrimaryPhoto);
+router.patch('/incognito',protect,setIncognitoMode);
 
 export default router;

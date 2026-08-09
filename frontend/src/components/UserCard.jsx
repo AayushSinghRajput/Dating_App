@@ -16,7 +16,6 @@ import {
   getFavorites,
   likeProfile,
   passProfile,
-  getMatches,
   createOrGetChat,
 } from "@/utils/api";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -174,24 +173,16 @@ export default function UserCard({ user, index = 0 }) {
   const age = calculateAge(user?.birthDate);
   const onlineStatus = getOnlineStatus();
 
-  /** ✅ Handles Like Action and Match Fetch */
+  /** ✅ Handles Like Action */
   const handleLike = async () => {
     try {
       const response = await likeProfile(user.id);
 
-      if (response?.match) {
-        Toast.show({
-          type: "success",
-          text1: "It's a Match! 🎉",
-          text2:
-            "You and " + (user?.name || "this user") + " liked each other.",
-          position: "top",
-          visibilityTime: 3000,
-        });
-
-        // 🧠 Trigger match fetch when both liked each other
-        await fetchMatches();
-      } else {
+      // On a match, both users get a real-time "match" notification (see
+      // matchController.js) which triggers the full-screen celebration from
+      // NotificationContext — that covers both people symmetrically, so
+      // nothing extra to do here for the match case.
+      if (!response?.match) {
         Toast.show({
           type: "info",
           text1: "Profile Liked ❤️",
@@ -253,28 +244,6 @@ export default function UserCard({ user, index = 0 }) {
         type: "error",
         text1: "Error",
         text2: err.message || "Failed to open chat.",
-        position: "top",
-        visibilityTime: 3000,
-      });
-    }
-  };
-
-  /** ✅ Fetch Matches when both liked */
-  const fetchMatches = async () => {
-    try {
-      const matches = await getMatches();
-      Toast.show({
-        type: "success",
-        text1: "New Match Found 🎉",
-        text2: `You have ${matches.length} matches now!`,
-        position: "top",
-        visibilityTime: 3000,
-      });
-    } catch (err) {
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: err.message || "Failed to fetch matches.",
         position: "top",
         visibilityTime: 3000,
       });

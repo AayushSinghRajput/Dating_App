@@ -17,11 +17,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import EmojiSelector from "react-native-emoji-selector";
 import Toast from "react-native-toast-message";
+import * as ImagePicker from "expo-image-picker";
 import {
   Message,
   getMessagesByChatId,
   sendMessageApi,
   sendVoiceMessageApi,
+  sendMediaMessageApi,
   getCurrentUserId,
   unmatchUser,
   blockUserApi,
@@ -29,7 +31,7 @@ import {
 } from "@/utils/api";
 import { showReportReasonPicker } from "@/src/utils/reportFlow";
 import { showActionSheet } from "@/src/components/GlobalActionSheet";
-import { socket, connectSocket, joinRoom } from "@/utils/socket";
+import { socket, connectSocket, joinRoom, emitTyping, emitStopTyping } from "@/utils/socket";
 import { useCall } from "@/contexts/CallContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { buildListData, formatClockTime } from "../../../src/components/chat/chatListHelpers";
@@ -54,7 +56,9 @@ export default function ChatDetail() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isOtherTyping, setIsOtherTyping] = useState(false);
   const currentUserIdRef = useRef<string | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch messages (backend returns oldest-first; reverse to newest-first for the inverted list)
   useEffect(() => {
@@ -125,10 +129,23 @@ export default function ChatDetail() {
     };
     socket.on("unmatched", handleUnmatched);
 
+    const handleUserTyping = ({ chatId: tChatId, userId }: { chatId: string; userId: string }) => {
+      if (tChatId === chatId && userId === otherUserId) setIsOtherTyping(true);
+    };
+    const handleUserStoppedTyping = ({ chatId: tChatId, userId }: { chatId: string; userId: string }) => {
+      if (tChatId === chatId && userId === otherUserId) setIsOtherTyping(false);
+    };
+    socket.on("userTyping", handleUserTyping);
+    socket.on("userStoppedTyping", handleUserStoppedTyping);
+
     return () => {
       socket.off("newMessage", handleNewMessage);
       socket.off("messagesRead");
       socket.off("unmatched", handleUnmatched);
+      socket.off("userTyping", handleUserTyping);
+      socket.off("userStoppedTyping", handleUserStoppedTyping);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      emitStopTyping(chatId);
     };
   }, [chatId]);
 
@@ -209,6 +226,21 @@ export default function ChatDetail() {
     });
   };
 
+  const handleInputChange = (text: string) => {
+    setInput(text);
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    if (text.trim()) {
+      emitTyping(chatId);
+      typingTimeoutRef.current = setTimeout(() => {
+        emitStopTyping(chatId);
+      }, 2000);
+    } else {
+      emitStopTyping(chatId);
+    }
+  };
+
   const toggleEmojiPicker = () => {
     if (showEmojiPicker) {
       setShowEmojiPicker(false);
@@ -235,6 +267,9 @@ export default function ChatDetail() {
 
   const sendMessage = async () => {
     if (!input.trim()) return;
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    emitStopTyping(chatId);
 
     const tempId = `temp-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const newMessage: Message = {
@@ -372,6 +407,71 @@ export default function ChatDetail() {
     }
   };
 
+  const handleMediaSelected = async (
+    uri: string,
+    mediaType: "image" | "video",
+    mimeType: string,
+  ) => {
+    const tempId = `temp-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const optimistic: Message = {
+      id: tempId,
+      text: "",
+      fromMe: true,
+      type: mediaType,
+      media: { url: uri },
+      createdAt: new Date().toISOString(),
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      senderName: "You",
+      failed: false,
+    };
+    setMessages((prev) => [optimistic, ...prev]);
+
+    try {
+      const saved = await sendMediaMessageApi(chatId, uri, mimeType);
+      confirmMessage(tempId, {
+        id: saved._id,
+        text: "",
+        fromMe: true,
+        type: saved.type,
+        media: saved.media,
+        createdAt: saved.createdAt,
+        timestamp: new Date(saved.createdAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        senderName: saved.sender?.username,
+        senderAvatar: saved.sender?.profileImage || "",
+        failed: false,
+      });
+    } catch (err) {
+      console.error("Failed to send media message:", err);
+      setMessages((prev) =>
+        prev.map((msg) => (msg.id === tempId ? { ...msg, failed: true } : msg)),
+      );
+    }
+  };
+
+  const handlePickMedia = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert("Permission Denied", "You need to allow photo & video access.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images", "videos"],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+
+    const asset = result.assets[0];
+    const mediaType: "image" | "video" = asset.type === "video" ? "video" : "image";
+    const mimeType = asset.mimeType || (mediaType === "video" ? "video/mp4" : "image/jpeg");
+    handleMediaSelected(asset.uri, mediaType, mimeType);
+  };
+
   const { isRecording, isCancelling, durationMillis, micResponderHandlers } =
     useVoiceRecorder(handleRecordingComplete);
 
@@ -417,13 +517,20 @@ export default function ChatDetail() {
           </Pressable>
           <View style={styles.profileSection}>
             <Image source={{ uri: avatar }} style={styles.profileImage} />
-            <Text
-              style={[styles.profileName, { color: colors.text }]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {name}
-            </Text>
+            <View style={{ flexShrink: 1, minWidth: 0 }}>
+              <Text
+                style={[styles.profileName, { color: colors.text }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {name}
+              </Text>
+              {isOtherTyping && (
+                <Text style={[styles.typingIndicator, { color: colors.accent }]}>
+                  typing...
+                </Text>
+              )}
+            </View>
           </View>
           <View style={styles.headerIcons}>
             <Pressable
@@ -492,6 +599,13 @@ export default function ChatDetail() {
                   color={colors.textSecondary}
                 />
               </Pressable>
+              <Pressable onPress={handlePickMedia} style={styles.emojiButton}>
+                <Ionicons
+                  name="image-outline"
+                  size={26}
+                  color={colors.textSecondary}
+                />
+              </Pressable>
               <TextInput
                 style={[
                   styles.input,
@@ -500,7 +614,7 @@ export default function ChatDetail() {
                 placeholder="Type a message..."
                 placeholderTextColor={colors.textTertiary}
                 value={input}
-                onChangeText={setInput}
+                onChangeText={handleInputChange}
                 multiline
               />
             </>
@@ -562,6 +676,7 @@ const styles = StyleSheet.create({
   },
   profileImage: { width: 40, height: 40, borderRadius: 20, flexShrink: 0 },
   profileName: { fontSize: 18, fontWeight: "600", flexShrink: 1 },
+  typingIndicator: { fontSize: 12, fontWeight: "500", marginTop: 1 },
   headerIcons: { flexDirection: "row", gap: 12, flexShrink: 0 },
   iconButton: { padding: 4 },
   messagesContainer: { paddingHorizontal: 12, paddingBottom: 10 },

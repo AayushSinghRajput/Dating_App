@@ -18,6 +18,11 @@ async function buildFromUserPayload(fromUserId) {
 // Persists a notification for `userId` and pushes it live over that user's
 // personal socket room (joined as `socket.join(socket.userId)`).
 export async function sendNotification(io, { userId, type, fromUserId, chat, callType }) {
+  const recipient = await User.findById(userId).select("notificationPreferences");
+  if (recipient?.notificationPreferences?.[type] === false) {
+    return null; // recipient has muted this notification type
+  }
+
   const notificationId = new mongoose.Types.ObjectId();
   const createdAt = new Date();
 

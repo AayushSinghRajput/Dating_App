@@ -148,6 +148,48 @@ export const unmatchProfile = async (req, res) => {
 };
 
 /**
+ * Get profiles that have liked the current user but aren't matched yet
+ */
+export const getLikedByProfiles = async (req, res) => {
+  try {
+    const currentUserId = req.user.id;
+    const currentProfile = await Profile.findOne({ user: currentUserId });
+
+    if (!currentProfile)
+      return res.status(404).json({ message: "Profile not found" });
+
+    const blockedByMe = (currentProfile.blockedUsers || []).map((id) => id.toString());
+
+    const likedByProfiles = await Profile.find({
+      likes: currentProfile._id,
+      _id: { $nin: currentProfile.matches },
+    }).populate("user", "username");
+
+    const visible = likedByProfiles.filter((p) => {
+      const otherUserId = p.user?._id?.toString();
+      if (!otherUserId) return false;
+      const iBlockedThem = blockedByMe.includes(otherUserId);
+      const theyBlockedMe = p.blockedUsers.some((id) => id.toString() === currentUserId);
+      return !iBlockedThem && !theyBlockedMe;
+    });
+
+    const profiles = visible.map((p) => ({
+      id: p._id,
+      userId: p.user?._id,
+      name: p.name || p.user?.username,
+      age: p.age,
+      profileImage: p.profileImage,
+      location: p.location,
+    }));
+
+    res.status(200).json({ profiles });
+  } catch (error) {
+    console.error("Error fetching who-liked-me:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
  * Get all matches for the logged-in user
  */
 export const getMatches = async (req, res) => {

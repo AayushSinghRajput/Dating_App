@@ -25,3 +25,11 @@ export const disconnectSocket = () => {
 export const joinRoom = (chatId) => {
   socket.emit("joinRoom", chatId);
 };
+
+export const emitTyping = (chatId) => {
+  socket.emit("typing", { chatId });
+};
+
+export const emitStopTyping = (chatId) => {
+  socket.emit("stopTyping", { chatId });
+};

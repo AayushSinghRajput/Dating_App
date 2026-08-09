@@ -13,6 +13,7 @@ import {
   markNotificationRead as markNotificationReadApi,
   markAllNotificationsRead as markAllNotificationsReadApi,
 } from "@/utils/api";
+import { showMatchCelebration } from "@/src/components/GlobalMatchCelebration";
 
 interface NotificationContextValue {
   notifications: AppNotification[];
@@ -51,6 +52,18 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     const handleNewNotification = (notification: AppNotification) => {
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
+
+      // Both matched users get a "match" notification (see matchController.js),
+      // so triggering the celebration here — rather than from the like action
+      // itself — covers both people symmetrically without double-firing for
+      // whichever one tapped "like" last.
+      if (notification.type === "match" && notification.fromUser) {
+        showMatchCelebration({
+          userName: notification.fromUser.username,
+          userAvatar: notification.fromUser.profileImage,
+          otherUserId: notification.fromUser._id,
+        });
+      }
     };
 
     const handleNotificationRemoved = ({

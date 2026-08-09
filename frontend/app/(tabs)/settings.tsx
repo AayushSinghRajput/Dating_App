@@ -30,6 +30,12 @@ export default function Settings() {
       case "Account Privacy":
         router.push("/screen/Privacy");
         break;
+      case "Change Password":
+        router.push("/screen/ChangePassword");
+        break;
+      case "Email & Verification":
+        router.push("/screen/EmailSettings");
+        break;
       case "Notifications":
         router.push("/screen/NotificationSettings");
         break;
@@ -75,7 +81,7 @@ export default function Settings() {
 
   // Group settings into logical sections
   const accountSettings = settings.filter((item) =>
-    ["Edit Profile", "Account Privacy", "Notifications"].includes(item.title)
+    ["Edit Profile", "Account Privacy", "Change Password", "Email & Verification", "Notifications"].includes(item.title)
   );
 
   const preferencesSettings = settings.filter((item) =>
