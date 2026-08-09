@@ -51,7 +51,8 @@
     "@config-plugins/react-native-webrtc": "13.0.0",
     "expo-audio": "~1.1.1",
     "expo-file-system": "~19.0.23",
-    "expo-video": "~3.0.16"
+    "expo-video": "~3.0.16",
+    "expo-location": "~19.0.8"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",

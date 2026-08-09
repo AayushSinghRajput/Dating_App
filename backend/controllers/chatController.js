@@ -213,6 +213,54 @@ export const sendMediaMessage = async (req, res) => {
   }
 };
 
+export const deleteMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { mode } = req.body; // "me" | "everyone"
+    const userId = req.user.id;
+
+    const message = await Message.findById(messageId);
+    if (!message) return res.status(404).json({ message: "Message not found" });
+
+    const chat = await Chat.findById(message.chat);
+    if (!chat || !chat.participants.some((p) => p.toString() === userId)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    if (mode === "everyone") {
+      if (message.sender.toString() !== userId) {
+        return res.status(403).json({ message: "Only the sender can delete for everyone" });
+      }
+      message.deleted = true;
+      message.text = "";
+      message.audio = undefined;
+      message.media = undefined;
+      await message.save();
+
+      req.app.get("io")?.to(message.chat.toString()).emit("messageDeleted", {
+        messageId: message._id,
+        chatId: message.chat,
+        mode: "everyone",
+      });
+    } else {
+      if (!message.deletedFor.some((id) => id.toString() === userId)) {
+        message.deletedFor.push(userId);
+        await message.save();
+      }
+      req.app.get("io")?.to(userId).emit("messageDeleted", {
+        messageId: message._id,
+        chatId: message.chat,
+        mode: "me",
+      });
+    }
+
+    res.status(200).json({ message: "Message deleted" });
+  } catch (error) {
+    console.error("Error deleting message:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const getMessages = async (req, res) => {
   try {
     const { chatId } = req.params;
@@ -222,7 +270,7 @@ export const getMessages = async (req, res) => {
         message: "Chat ID is required.",
       });
     }
-    const messages = await Message.find({ chat: chatId })
+    const messages = await Message.find({ chat: chatId, deletedFor: { $ne: userId } })
       .populate("sender", "username")
       .sort({ createdAt: 1 });
 

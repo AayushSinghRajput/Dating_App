@@ -1,7 +1,7 @@
 import express from "express";
-import {createOrUpateProfile , getProfile, getAllProfiles,toggleFavorite,getFavorites,blockUser,unblockUser,getBlockedUsers,removePhoto,setPrimaryPhoto,setIncognitoMode} from '../controllers/profileController.js';
+import {createOrUpateProfile , getProfile, getAllProfiles,toggleFavorite,getFavorites,blockUser,unblockUser,getBlockedUsers,removePhoto,setPrimaryPhoto,setIncognitoMode,verifyProfilePhoto} from '../controllers/profileController.js';
 import {protect} from '../middleware/authMiddleware.js';
-import upload from "../middleware/uploadMiddleware.js";
+import upload, { uploadVerificationSelfie } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
@@ -18,5 +18,6 @@ router.post("/:targetUserId/unblock",protect,unblockUser);
 router.delete('/photos',protect,removePhoto);
 router.patch('/photos/primary',protect,setPrimaryPhoto);
 router.patch('/incognito',protect,setIncognitoMode);
+router.post('/verify',protect,uploadVerificationSelfie.single("selfie"),verifyProfilePhoto);
 
 export default router;

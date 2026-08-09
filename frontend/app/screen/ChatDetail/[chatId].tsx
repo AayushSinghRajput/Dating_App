@@ -24,6 +24,7 @@ import {
   sendMessageApi,
   sendVoiceMessageApi,
   sendMediaMessageApi,
+  deleteMessageApi,
   getCurrentUserId,
   unmatchUser,
   blockUserApi,
@@ -31,6 +32,7 @@ import {
 } from "@/utils/api";
 import { showReportReasonPicker } from "@/src/utils/reportFlow";
 import { showActionSheet } from "@/src/components/GlobalActionSheet";
+import { shareMyLocation } from "@/src/utils/safety";
 import { socket, connectSocket, joinRoom, emitTyping, emitStopTyping } from "@/utils/socket";
 import { useCall } from "@/contexts/CallContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -100,6 +102,7 @@ export default function ChatDetail() {
         type: raw.type || "text",
         call: raw.call,
         audio: raw.audio,
+        media: raw.media,
       };
       setMessages((prev) => {
         const allMessages = [normalized, ...prev];
@@ -138,12 +141,34 @@ export default function ChatDetail() {
     socket.on("userTyping", handleUserTyping);
     socket.on("userStoppedTyping", handleUserStoppedTyping);
 
+    const handleMessageDeleted = ({
+      messageId,
+      mode,
+    }: {
+      messageId: string;
+      mode: "me" | "everyone";
+    }) => {
+      if (mode === "everyone") {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === messageId
+              ? { ...msg, deleted: true, text: "", media: undefined, audio: undefined }
+              : msg,
+          ),
+        );
+      } else {
+        setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+      }
+    };
+    socket.on("messageDeleted", handleMessageDeleted);
+
     return () => {
       socket.off("newMessage", handleNewMessage);
       socket.off("messagesRead");
       socket.off("unmatched", handleUnmatched);
       socket.off("userTyping", handleUserTyping);
       socket.off("userStoppedTyping", handleUserStoppedTyping);
+      socket.off("messageDeleted", handleMessageDeleted);
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       emitStopTyping(chatId);
     };
@@ -215,15 +240,63 @@ export default function ChatDetail() {
     });
   };
 
+  const handleShareLocation = async () => {
+    try {
+      await shareMyLocation();
+    } catch (error: any) {
+      Toast.show({ type: "error", text1: "Couldn't share location", text2: error.message });
+    }
+  };
+
   const handleChatOptions = () => {
     showActionSheet({
       title: name || "Chat options",
       options: [
+        { label: "Share My Location", onPress: handleShareLocation },
         { label: "Report", destructive: true, onPress: handleReport },
         { label: "Block", destructive: true, onPress: handleBlock },
         { label: "Unmatch", destructive: true, onPress: handleUnmatch },
       ],
     });
+  };
+
+  const runDeleteMessage = async (message: Message, mode: "me" | "everyone") => {
+    const previous = messages;
+    if (mode === "everyone") {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === message.id
+            ? { ...msg, deleted: true, text: "", media: undefined, audio: undefined }
+            : msg,
+        ),
+      );
+    } else {
+      setMessages((prev) => prev.filter((msg) => msg.id !== message.id));
+    }
+
+    try {
+      await deleteMessageApi(message.id, mode);
+    } catch (error: any) {
+      setMessages(previous);
+      Toast.show({ type: "error", text1: "Failed to delete message", text2: error.message });
+    }
+  };
+
+  const handleLongPressMessage = (message: Message) => {
+    const options = message.fromMe
+      ? [
+          { label: "Delete for me", destructive: true, onPress: () => runDeleteMessage(message, "me") },
+          {
+            label: "Delete for everyone",
+            destructive: true,
+            onPress: () => runDeleteMessage(message, "everyone"),
+          },
+        ]
+      : [
+          { label: "Delete for me", destructive: true, onPress: () => runDeleteMessage(message, "me") },
+        ];
+
+    showActionSheet({ title: "Message options", options });
   };
 
   const handleInputChange = (text: string) => {
@@ -490,6 +563,7 @@ export default function ChatDetail() {
         isFirstInGroup={item.isFirstInGroup}
         isLastInGroup={item.isLastInGroup}
         onRetry={retrySendMessage}
+        onLongPress={handleLongPressMessage}
       />
     );
   };

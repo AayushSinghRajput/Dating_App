@@ -47,6 +47,12 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    emergencyContacts: [
+      {
+        name: { type: String, required: true },
+        phone: { type: String, required: true },
+      },
+    ],
   },
   { timestamps: true },
 );

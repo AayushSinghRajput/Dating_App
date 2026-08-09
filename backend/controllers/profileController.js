@@ -123,6 +123,7 @@ export const getAllProfiles = async (req, res) => {
       hobbies:p.hobbies,
       education:p.education,
       relationshipGoals:p.relationshipGoals,
+      isVerified: p.verified,
     }));
     res.status(200).json(users);
   } catch (error) {
@@ -385,6 +386,33 @@ export const setIncognitoMode = async (req, res) => {
     res.status(200).json({ incognito: profile.incognito });
   } catch (error) {
     console.error("Error updating incognito mode:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * @desc Submit a verification selfie. This is a self-attestation flow (no
+ * third-party face-matching service is configured), so submitting a valid
+ * photo immediately marks the profile as verified.
+ * @route POST /api/profile/verify
+ * @access Private
+ */
+export const verifyProfilePhoto = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "A selfie photo is required" });
+    }
+
+    const profile = await Profile.findOneAndUpdate(
+      { user: req.user.id },
+      { verified: true, verificationPhoto: req.file.path },
+      { new: true }
+    );
+    if (!profile) return res.status(404).json({ message: "Profile not found" });
+
+    res.status(200).json({ message: "Profile verified", verified: profile.verified });
+  } catch (error) {
+    console.error("Error verifying profile photo:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

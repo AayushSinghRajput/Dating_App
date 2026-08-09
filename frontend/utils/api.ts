@@ -52,6 +52,7 @@ export interface Profile {
   name?: string;
   profilePic?: string;
   incognito?: boolean;
+  verified?: boolean;
 }
 
 export interface ProfileResponse {
@@ -91,6 +92,7 @@ export interface Message {
   call?: CallLogInfo;
   audio?: AudioMessageInfo;
   media?: MediaMessageInfo;
+  deleted?: boolean;
   sender?:{
     _id:string;
     username?:string;
@@ -437,6 +439,74 @@ export const setIncognitoModeApi = async (incognito: boolean): Promise<boolean> 
   return data.incognito;
 };
 
+export const submitVerificationSelfie = async (fileUri: string): Promise<boolean> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+
+  let result: FileSystem.FileSystemUploadResult;
+  try {
+    result = await FileSystem.uploadAsync(
+      `${BASE_URL}/api/profile/verify`,
+      fileUri,
+      {
+        httpMethod: "POST",
+        uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+        fieldName: "selfie",
+        mimeType: "image/jpeg",
+        headers: { Authorization: `Bearer ${authToken}` },
+      }
+    );
+  } catch (err: any) {
+    throw new Error(`Upload failed: ${err?.message || "Unknown error"}`);
+  }
+
+  let data: any;
+  try {
+    data = JSON.parse(result.body);
+  } catch {
+    throw new Error("Failed to submit verification photo: invalid server response");
+  }
+
+  if (result.status < 200 || result.status >= 300) {
+    throw new Error(data?.message || "Failed to submit verification photo");
+  }
+  return data.verified;
+};
+
+export interface EmergencyContact {
+  name: string;
+  phone: string;
+}
+
+export const getEmergencyContacts = async (): Promise<EmergencyContact[]> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/safety/emergency-contacts`, {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to load emergency contacts");
+  return data.contacts;
+};
+
+export const updateEmergencyContacts = async (
+  contacts: EmergencyContact[]
+): Promise<EmergencyContact[]> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/safety/emergency-contacts`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ contacts }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to update emergency contacts");
+  return data.contacts;
+};
+
 // 🔹 Get Current User Profile
 export const getProfile = async (): Promise<Profile> => {
   try {
@@ -581,6 +651,8 @@ export const getMessagesByChatId = async (
     type: m.type || "text",
     call: m.call,
     audio: m.audio,
+    media: m.media,
+    deleted: m.deleted,
   }));
 };
 
@@ -687,6 +759,24 @@ export const sendMediaMessageApi = async (
     throw new Error(data?.message || "Failed to send media message");
   }
   return data;
+};
+
+export const deleteMessageApi = async (
+  messageId: string,
+  mode: "me" | "everyone"
+): Promise<void> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/chats/message/${messageId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ mode }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to delete message");
 };
 
 export const toggleFavorite = async (targetUserId: string) => {

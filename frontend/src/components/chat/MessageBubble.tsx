@@ -9,11 +9,13 @@ export default function MessageBubble({
   isFirstInGroup,
   isLastInGroup,
   onRetry,
+  onLongPress,
 }: {
   message: Message;
   isFirstInGroup: boolean;
   isLastInGroup: boolean;
   onRetry: (message: Message) => void;
+  onLongPress?: (message: Message) => void;
 }) {
   const { colors } = useTheme();
 
@@ -27,6 +29,7 @@ export default function MessageBubble({
     >
       <Pressable
         onPress={() => message.failed && onRetry(message)}
+        onLongPress={() => !message.deleted && !message.failed && onLongPress?.(message)}
         style={[
           styles.messageBubble,
           message.fromMe
@@ -40,11 +43,22 @@ export default function MessageBubble({
                 { backgroundColor: colors.surfaceAlt },
                 isLastInGroup ? styles.theirMessageTail : styles.theirMessageGrouped,
               ],
-          (message.type === "image" || message.type === "video") && styles.mediaBubble,
+          (message.type === "image" || message.type === "video") &&
+            !message.deleted &&
+            styles.mediaBubble,
           message.failed && { borderColor: colors.accent, borderWidth: 1 },
         ]}
       >
-        {message.type === "audio" && message.audio ? (
+        {message.deleted ? (
+          <Text
+            style={[
+              styles.deletedText,
+              { color: message.fromMe ? "#ffe5e7" : colors.textTertiary },
+            ]}
+          >
+            🚫 This message was deleted
+          </Text>
+        ) : message.type === "audio" && message.audio ? (
           <VoiceMessageBubble
             uri={message.audio.url}
             duration={message.audio.duration}
@@ -95,6 +109,7 @@ const styles = StyleSheet.create({
   theirMessageTail: { borderBottomLeftRadius: 4 },
   myMessageText: { color: "#fff" },
   theirMessageText: {},
+  deletedText: { fontStyle: "italic", fontSize: 13 },
   timestamp: { fontSize: 10, marginTop: 4 },
   myTimestamp: { color: "#ffd9dc", textAlign: "right" },
   theirTimestamp: { textAlign: "left" },

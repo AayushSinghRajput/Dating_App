@@ -301,7 +301,12 @@ export default function UserCard({ user, index = 0 }) {
 
           {/* INFO SECTION */}
           <View style={styles.infoWrapper}>
-            <Text style={[styles.name, { color: colors.text }]}>{user?.name || "Unknown"}</Text>
+            <View style={styles.nameRow}>
+              <Text style={[styles.name, { color: colors.text }]}>{user?.name || "Unknown"}</Text>
+              {user?.isVerified && (
+                <Ionicons name="checkmark-circle" size={18} color="#4A90E2" />
+              )}
+            </View>
             {age && <Text style={[styles.age, { color: colors.textSecondary }]}>{age}</Text>}
             <Text style={[styles.location, { color: colors.textTertiary }]}>
               {user?.location || "Location not specified"}
@@ -372,6 +377,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   infoWrapper: { padding: 16 },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   name: { fontSize: 22, fontWeight: "700", color: "#1a1a1a" },
   age: { fontSize: 18, color: "#555" },
   location: { color: "#888", marginTop: 4 },

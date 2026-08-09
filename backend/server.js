@@ -11,6 +11,7 @@ import chatRoutes from "./routes/chatRoutes.js";
 import matchRoutes from "./routes/matchRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
+import safetyRoutes from "./routes/safetyRoutes.js";
 dotenv.config();
 connectDB();
 
@@ -44,6 +45,7 @@ app.use("/api/chats", chatRoutes);
 app.use("/api/match", matchRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/safety", safetyRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend is running...");

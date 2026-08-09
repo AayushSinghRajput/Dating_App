@@ -5,6 +5,7 @@ import {
   sendMessage,
   sendVoiceMessage,
   sendMediaMessage,
+  deleteMessage,
   getMessages,
 } from "../controllers/chatController.js";
 import { protect } from "../middleware/authMiddleware.js";
@@ -17,6 +18,7 @@ router.post("/", protect, createOrGetChat);
 router.post("/message", protect, sendMessage);
 router.post("/message/audio", protect, uploadAudio.single("audio"), sendVoiceMessage);
 router.post("/message/media", protect, uploadChatMedia.single("media"), sendMediaMessage);
+router.delete("/message/:messageId", protect, deleteMessage);
 router.get("/:chatId/messages", protect, getMessages);
 
 export default router;

@@ -40,4 +40,14 @@ const chatMediaStorage = new CloudinaryStorage({
 
 export const uploadChatMedia = multer({ storage: chatMediaStorage });
 
+const verificationStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "verificationSelfies",
+    allowed_formats: ["jpg", "jpeg", "png"],
+  },
+});
+
+export const uploadVerificationSelfie = multer({ storage: verificationStorage });
+
 export default upload;

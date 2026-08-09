@@ -14,7 +14,7 @@ function VideoMessageBubble({ url }: { url: string }) {
       style={styles.thumbnail}
       player={player}
       nativeControls
-      allowsFullscreen
+      fullscreenOptions={{ enable: true }}
       allowsPictureInPicture={false}
       contentFit="cover"
     />

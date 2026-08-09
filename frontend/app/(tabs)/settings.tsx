@@ -36,6 +36,12 @@ export default function Settings() {
       case "Email & Verification":
         router.push("/screen/EmailSettings");
         break;
+      case "Photo Verification":
+        router.push("/screen/PhotoVerification");
+        break;
+      case "Safety Center":
+        router.push("/screen/SafetyCenter");
+        break;
       case "Notifications":
         router.push("/screen/NotificationSettings");
         break;
@@ -81,8 +87,10 @@ export default function Settings() {
 
   // Group settings into logical sections
   const accountSettings = settings.filter((item) =>
-    ["Edit Profile", "Account Privacy", "Change Password", "Email & Verification", "Notifications"].includes(item.title)
+    ["Edit Profile", "Account Privacy", "Change Password", "Email & Verification", "Photo Verification", "Notifications"].includes(item.title)
   );
+
+  const safetySettings = settings.filter((item) => ["Safety Center"].includes(item.title));
 
   const preferencesSettings = settings.filter((item) =>
     ["Payment & Subscriptions", "Blocked Users", "Language"].includes(item.title)
@@ -111,6 +119,13 @@ export default function Settings() {
           title="Account"
           description="Manage your profile and privacy"
           items={accountSettings}
+          onItemPress={handlePress}
+        />
+
+        <SettingsSection
+          title="Safety"
+          description="Stay safe when meeting matches in person"
+          items={safetySettings}
           onItemPress={handlePress}
         />
 
