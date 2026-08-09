@@ -1,418 +1,147 @@
+import mongoose from "mongoose";
 import Profile from "../models/profileModel.js";
-import { sendNotification, retractNotification } from "../utils/notify.js";
-import { performBlock } from "../utils/block.js";
-
+import { containsBannedContent } from "../utils/moderation.js";
 
 const MAX_PHOTOS = 6;
+const DEFAULT_PAGE_SIZE = 20;
+const MAX_PAGE_SIZE = 50;
 
-//create or update profile
-export const createOrUpateProfile = async (req,res) => {
-    try {
-        const userId = req.user.id;
-        const profileData = req.body;
+// @desc    Create or update the logged-in user's profile
+// @route   POST /api/profile/create
+// @access  Private
+export const createOrUpateProfile = async (req, res) => {
+  const userId = req.user.id;
+  const profileData = req.body;
 
-        //enforce minimum age server-side (the onboarding UI also checks this,
-        //but that's trivially bypassable by calling the API directly)
-        if (profileData.age !== undefined && profileData.age !== "") {
-            const age = Number(profileData.age);
-            if (Number.isNaN(age) || age < 18) {
-                return res.status(400).json({
-                    message: "You must be at least 18 years old to use this app.",
-                });
-            }
-        }
-
-        let profile = await Profile.findOne({
-            user:userId
-        });
-
-        //newly uploaded photos get appended to whatever the user already has
-        //(removing/reordering photos is handled by the dedicated endpoints below)
-        const newPhotoUrls = (req.files || []).map((f) => f.path);
-        if (newPhotoUrls.length > 0) {
-            const existingPhotos = profile?.photos || [];
-            const mergedPhotos = [...existingPhotos, ...newPhotoUrls].slice(0, MAX_PHOTOS);
-            profileData.photos = mergedPhotos;
-            profileData.profileImage = mergedPhotos[0];
-        }
-
-        if (profile){
-            //update existing profile
-            profile = await Profile.findOneAndUpdate({
-                user:userId
-            },profileData,{
-                new:true,
-                runValidators:true
-            });
-            return res.status(200).json({
-                message:"Profile Updated",profile
-            });
-        } else {
-            //create new profile
-            const newProfile = new Profile({
-                ...profileData,
-                user:userId,
-            });
-            await newProfile.save();
-            return res.status(201).json({
-                message:"Profile Created",profile:newProfile
-            })
-        }
-    } catch (error) {
-        res.status(500).json({
-            message:"Error creating/updating profile",error
-        });
-        
+  // Enforce minimum age server-side (the onboarding UI also checks this,
+  // but that's trivially bypassable by calling the API directly).
+  if (profileData.age !== undefined && profileData.age !== "") {
+    const age = Number(profileData.age);
+    if (Number.isNaN(age) || age < 18) {
+      return res.status(400).json({
+        message: "You must be at least 18 years old to use this app.",
+      });
     }
-}
+  }
 
+  if (containsBannedContent(profileData.name) || containsBannedContent(profileData.aboutMe)) {
+    return res.status(400).json({
+      message: "Your profile contains language that isn't allowed. Please revise it.",
+    });
+  }
 
+  let profile = await Profile.findOne({ user: userId });
 
-// Get profile by user ID
+  // Newly uploaded photos get appended to whatever the user already has
+  // (removing/reordering photos is handled by the dedicated endpoints below).
+  const newPhotoUrls = (req.files || []).map((f) => f.path);
+  if (newPhotoUrls.length > 0) {
+    const existingPhotos = profile?.photos || [];
+    const mergedPhotos = [...existingPhotos, ...newPhotoUrls].slice(0, MAX_PHOTOS);
+    profileData.photos = mergedPhotos;
+    profileData.profileImage = mergedPhotos[0];
+  }
+
+  if (profile) {
+    profile = await Profile.findOneAndUpdate({ user: userId }, profileData, {
+      new: true,
+      runValidators: true,
+    });
+    return res.status(200).json({ message: "Profile Updated", profile });
+  }
+
+  const newProfile = new Profile({ ...profileData, user: userId });
+  await newProfile.save();
+  res.status(201).json({ message: "Profile Created", profile: newProfile });
+};
+
+// @desc    Get the logged-in user's own profile
+// @route   GET /api/profile/me
+// @access  Private
 export const getProfile = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const profile = await Profile.findOne({ user: userId }).populate("user", "username email");
-
-    if (!profile) return res.status(404).json({ message: "Profile not found" });
-
-    res.status(200).json(profile);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching profile", error });
-  }
+  const profile = await Profile.findOne({ user: req.user.id }).populate("user", "username email");
+  if (!profile) return res.status(404).json({ message: "Profile not found" });
+  res.status(200).json(profile);
 };
 
-
-//Get all profile
+// @desc    Discovery feed: everyone except the logged-in user, blocked
+//          users (either direction), and incognito profiles. Actively
+//          boosted profiles are surfaced first.
+// @route   GET /api/profile/allprofiles?page=&limit=
+// @access  Private
 export const getAllProfiles = async (req, res) => {
-  try {
+  const loggedInUserId = req.user.id;
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, parseInt(req.query.limit, 10) || DEFAULT_PAGE_SIZE));
 
-    //Get logged-in user ID
-    const loggedInUserId = req.user?.id;
+  const myProfile = await Profile.findOne({ user: loggedInUserId }).select("blockedUsers").lean();
+  const blockedByMe = (myProfile?.blockedUsers || []).map((id) => new mongoose.Types.ObjectId(id));
 
-    const myProfile = await Profile.findOne({ user: loggedInUserId }).select("blockedUsers");
-    const blockedByMe = (myProfile?.blockedUsers || []).map((id) => id.toString());
+  const now = new Date();
+  const loggedInObjectId = new mongoose.Types.ObjectId(loggedInUserId);
 
-    //fetch all profiles except the current user and those in incognito mode
-    const allProfiles = await Profile.find({
-        user:{$ne:loggedInUserId},
-        incognito: { $ne: true },
-    }).populate("user", "username email");
+  const matchStage = {
+    user: { $ne: loggedInObjectId, $nin: blockedByMe },
+    incognito: { $ne: true },
+    blockedUsers: { $ne: loggedInObjectId },
+  };
 
-    // Hide profiles in both directions: people I've blocked, and people who've blocked me
-    const profiles = allProfiles.filter((p) => {
-      const otherUserId = p.user?._id?.toString();
-      if (!otherUserId) return false;
-      const iBlockedThem = blockedByMe.includes(otherUserId);
-      const theyBlockedMe = p.blockedUsers.some((id) => id.toString() === loggedInUserId);
-      return !iBlockedThem && !theyBlockedMe;
-    });
+  const profiles = await Profile.aggregate([
+    { $match: matchStage },
+    // Only an *active* boost should rank a profile first — an expired one
+    // shouldn't permanently outrank profiles that never boosted.
+    {
+      $addFields: {
+        boostRank: { $cond: [{ $gt: ["$boostedUntil", now] }, "$boostedUntil", null] },
+      },
+    },
+    { $sort: { boostRank: -1, _id: 1 } },
+    { $skip: (page - 1) * limit },
+    { $limit: limit },
+    {
+      $lookup: {
+        from: "users",
+        localField: "user",
+        foreignField: "_id",
+        as: "userDoc",
+        pipeline: [{ $project: { username: 1 } }],
+      },
+    },
+    { $unwind: { path: "$userDoc", preserveNullAndEmptyArrays: true } },
+  ]);
 
-    const users = profiles.map(p => ({
-      id: p._id,
-      userId: p.user && p.user._id,
-      name: p.name || (p.user && p.user.username),
-      age: p.age,
-      profileImage: p.profileImage,
-      photos: p.photos,
-      profession: p.profession,
-      location: p.location,
-      aboutMe:p.aboutMe,
-      gender:p.gender,
-      interestedIn:p.interestedIn,
-      hobbies:p.hobbies,
-      education:p.education,
-      relationshipGoals:p.relationshipGoals,
-      isVerified: p.verified,
-    }));
-    res.status(200).json(users);
-  } catch (error) {
-    console.error("Error fetching users:",error);
-    res.status(500).json({ message: "Error fetching users", error });
-  }
+  const users = profiles.map((p) => ({
+    id: p._id,
+    userId: p.user,
+    name: p.name || p.userDoc?.username,
+    age: p.age,
+    profileImage: p.profileImage,
+    photos: p.photos,
+    profession: p.profession,
+    location: p.location,
+    aboutMe: p.aboutMe,
+    gender: p.gender,
+    interestedIn: p.interestedIn,
+    hobbies: p.hobbies,
+    education: p.education,
+    relationshipGoals: p.relationshipGoals,
+    isVerified: p.verified,
+  }));
+
+  res.status(200).json(users);
 };
 
-
-
-/**
- * @desc Toggle favorite user (add or remove)
- * @route POST /api/profile/:targetUserId/favorite
- * @access Private
- */
-export const toggleFavorite = async (req, res) => {
-  try {
-    const loggedInUserId = req.user.id;
-    const { targetUserId } = req.params;
-
-    if (loggedInUserId === targetUserId) {
-      return res.status(400).json({ message: "You cannot favorite yourself." });
-    }
-
-    const profile = await Profile.findOne({ user: loggedInUserId });
-
-    if (!profile)
-      return res.status(404).json({ message: "Profile not found for this user." });
-
-    const isFavorite = profile.favorites.includes(targetUserId);
-
-    if (isFavorite) {
-      // Remove from favorites
-      profile.favorites = profile.favorites.filter(
-        (id) => id.toString() !== targetUserId
-      );
-      await profile.save();
-
-      await retractNotification(req.app.get("io"), {
-        userId: targetUserId,
-        fromUserId: loggedInUserId,
-        type: "favorite",
-      });
-
-      return res.json({
-        message: "Removed from favorites",
-        favorites: profile.favorites,
-      });
-    } else {
-      // Add to favorites
-      profile.favorites.push(targetUserId);
-      await profile.save();
-
-      await sendNotification(req.app.get("io"), {
-        userId: targetUserId,
-        type: "favorite",
-        fromUserId: loggedInUserId,
-      });
-
-      return res.json({
-        message: "Added to favorites",
-        favorites: profile.favorites,
-      });
-    }
-  } catch (error) {
-    console.error("Error toggling favorite:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-/**
- * @desc Get all favorite users of the logged-in user
- * @route GET /api/profile/favorites
- * @access Private
- */
-export const getFavorites = async (req, res) => {
-  try {
-    const loggedInUserId = req.user.id;
-
-    const profile = await Profile.findOne({ user: loggedInUserId }).populate(
-      "favorites",
-      "username email"
-    );
-
-    if (!profile)
-      return res.status(404).json({ message: "Profile not found for this user." });
-
-    res.json({ favorites: profile.favorites });
-  } catch (error) {
-    console.error("Error fetching favorites:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-/**
- * @desc Block a user: hides each other from discovery, breaks any existing
- * match/like, and deletes their chat history. Blocking is silent (no notification).
- * @route POST /api/profile/:targetUserId/block
- * @access Private
- */
-export const blockUser = async (req, res) => {
-  try {
-    const loggedInUserId = req.user.id;
-    const { targetUserId } = req.params;
-
-    if (loggedInUserId === targetUserId) {
-      return res.status(400).json({ message: "You cannot block yourself." });
-    }
-
-    const blockedUsers = await performBlock(loggedInUserId, targetUserId);
-
-    res.status(200).json({ message: "User blocked", blockedUsers });
-  } catch (error) {
-    console.error("Error blocking user:", error);
-    res.status(500).json({ message: error.message || "Server error" });
-  }
-};
-
-/**
- * @desc Unblock a user
- * @route POST /api/profile/:targetUserId/unblock
- * @access Private
- */
-export const unblockUser = async (req, res) => {
-  try {
-    const loggedInUserId = req.user.id;
-    const { targetUserId } = req.params;
-
-    const profile = await Profile.findOne({ user: loggedInUserId });
-    if (!profile)
-      return res.status(404).json({ message: "Profile not found for this user." });
-
-    profile.blockedUsers = profile.blockedUsers.filter(
-      (id) => id.toString() !== targetUserId
-    );
-    await profile.save();
-
-    res.status(200).json({ message: "User unblocked", blockedUsers: profile.blockedUsers });
-  } catch (error) {
-    console.error("Error unblocking user:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-/**
- * @desc Get all users the logged-in user has blocked
- * @route GET /api/profile/blocked
- * @access Private
- */
-export const getBlockedUsers = async (req, res) => {
-  try {
-    const loggedInUserId = req.user.id;
-
-    const profile = await Profile.findOne({ user: loggedInUserId }).populate(
-      "blockedUsers",
-      "username email"
-    );
-    if (!profile)
-      return res.status(404).json({ message: "Profile not found for this user." });
-
-    const blockedUsers = await Promise.all(
-      profile.blockedUsers.map(async (u) => {
-        const blockedProfile = await Profile.findOne({ user: u._id }).select(
-          "profileImage age location"
-        );
-        return {
-          _id: u._id,
-          username: u.username,
-          profileImage: blockedProfile?.profileImage || "",
-          age: blockedProfile?.age,
-          location: blockedProfile?.location,
-        };
-      })
-    );
-
-    res.status(200).json({ blockedUsers });
-  } catch (error) {
-    console.error("Error fetching blocked users:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-/**
- * @desc Remove a single photo from the logged-in user's profile
- * @route DELETE /api/profile/photos
- * @access Private
- */
-export const removePhoto = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { url } = req.body;
-    if (!url) return res.status(400).json({ message: "Photo url is required" });
-
-    const profile = await Profile.findOne({ user: userId });
-    if (!profile) return res.status(404).json({ message: "Profile not found" });
-
-    profile.photos = profile.photos.filter((p) => p !== url);
-    profile.profileImage = profile.photos[0] || "";
-    await profile.save();
-
-    res.status(200).json({
-      message: "Photo removed",
-      photos: profile.photos,
-      profileImage: profile.profileImage,
-    });
-  } catch (error) {
-    console.error("Error removing photo:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-/**
- * @desc Reorder photos so the given one becomes the primary/profile photo
- * @route PATCH /api/profile/photos/primary
- * @access Private
- */
-export const setPrimaryPhoto = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { url } = req.body;
-    if (!url) return res.status(400).json({ message: "Photo url is required" });
-
-    const profile = await Profile.findOne({ user: userId });
-    if (!profile) return res.status(404).json({ message: "Profile not found" });
-
-    if (!profile.photos.includes(url)) {
-      return res.status(400).json({ message: "Photo not found on this profile" });
-    }
-
-    profile.photos = [url, ...profile.photos.filter((p) => p !== url)];
-    profile.profileImage = url;
-    await profile.save();
-
-    res.status(200).json({
-      message: "Primary photo updated",
-      photos: profile.photos,
-      profileImage: profile.profileImage,
-    });
-  } catch (error) {
-    console.error("Error setting primary photo:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-/**
- * @desc Toggle incognito mode: hides your profile from discovery for new
- * people while leaving existing matches/chats unaffected.
- * @route PATCH /api/profile/incognito
- * @access Private
- */
+// @desc    Toggle incognito mode: hides your profile from discovery for new
+// people while leaving existing matches/chats unaffected.
+// @route   PATCH /api/profile/incognito
+// @access  Private
 export const setIncognitoMode = async (req, res) => {
-  try {
-    const { incognito } = req.body;
-    const profile = await Profile.findOneAndUpdate(
-      { user: req.user.id },
-      { incognito: Boolean(incognito) },
-      { new: true }
-    );
-    if (!profile) return res.status(404).json({ message: "Profile not found" });
-    res.status(200).json({ incognito: profile.incognito });
-  } catch (error) {
-    console.error("Error updating incognito mode:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-/**
- * @desc Submit a verification selfie. This is a self-attestation flow (no
- * third-party face-matching service is configured), so submitting a valid
- * photo immediately marks the profile as verified.
- * @route POST /api/profile/verify
- * @access Private
- */
-export const verifyProfilePhoto = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: "A selfie photo is required" });
-    }
-
-    const profile = await Profile.findOneAndUpdate(
-      { user: req.user.id },
-      { verified: true, verificationPhoto: req.file.path },
-      { new: true }
-    );
-    if (!profile) return res.status(404).json({ message: "Profile not found" });
-
-    res.status(200).json({ message: "Profile verified", verified: profile.verified });
-  } catch (error) {
-    console.error("Error verifying profile photo:", error);
-    res.status(500).json({ message: "Server error" });
-  }
+  const { incognito } = req.body;
+  const profile = await Profile.findOneAndUpdate(
+    { user: req.user.id },
+    { incognito: Boolean(incognito) },
+    { new: true }
+  );
+  if (!profile) return res.status(404).json({ message: "Profile not found" });
+  res.status(200).json({ incognito: profile.incognito });
 };

@@ -1,0 +1,35 @@
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #f8f9fa; color: #1a1a1a; }
+header { background: #e63946; color: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+header h1 { font-size: 18px; margin: 0; }
+#logoutBtn { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+main { max-width: 1000px; margin: 0 auto; padding: 24px; }
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.tab { padding: 10px 18px; border-radius: 20px; border: 1px solid #eee; background: #fff; cursor: pointer; font-weight: 600; font-size: 14px; }
+.tab.active { background: #e63946; color: #fff; border-color: #e63946; }
+.card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.stat { text-align: center; }
+.stat .value { font-size: 28px; font-weight: 800; color: #e63946; }
+.stat .label { font-size: 12px; color: #666; margin-top: 4px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #f0f0f0; }
+th { color: #888; font-weight: 600; text-transform: uppercase; font-size: 11px; }
+button.action { background: #f8f9fa; border: 1px solid #ddd; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-right: 4px; }
+button.danger { color: #e63946; border-color: #ffd9dc; }
+button.primary { background: #e63946; color: #fff; border: none; }
+input[type=text], input[type=email], input[type=password] { padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; width: 100%; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+.badge.banned { background: #ffe5e7; color: #e63946; }
+.badge.premium { background: #fdeced; color: #e63946; }
+.badge.admin { background: #e8f4ff; color: #4a90e2; }
+#loginView { max-width: 360px; margin: 80px auto; }
+#loginView h2 { text-align: center; }
+#loginView label { font-size: 13px; font-weight: 600; display: block; margin: 12px 0 6px; }
+#loginView button { width: 100%; margin-top: 20px; padding: 12px; border-radius: 8px; border: none; background: #e63946; color: #fff; font-weight: 700; cursor: pointer; }
+.muted { color: #888; font-size: 13px; }
+.photo-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.photo-grid img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; }
+.photo-item { position: relative; }
+.photo-item button { position: absolute; top: 4px; right: 4px; }

@@ -6,6 +6,7 @@ const settings = [
   { id: "11", title: "Email & Verification", icon: "mail-outline" },
   { id: "12", title: "Photo Verification", icon: "shield-checkmark-outline" },
   { id: "13", title: "Safety Center", icon: "shield-half-outline" },
+  { id: "14", title: "Invite Friends", icon: "gift-outline" },
   { id: "3", title: "Notifications", icon: "notifications-outline" },
   { id: "4", title: "Payment & Subscriptions", icon: "card-outline" },
   { id: "5", title: "Blocked Users", icon: "ban-outline" },

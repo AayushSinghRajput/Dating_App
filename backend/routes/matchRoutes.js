@@ -1,17 +1,15 @@
 import express from "express";
-import {
-  likeProfile,
-  passProfile,
-  unmatchProfile,
-  getMatches,
-  getLikedByProfiles,
-} from "../controllers/matchController.js";
+import { likeProfile, superLikeProfile, passProfile, rewindLastSwipe } from "../controllers/swipeController.js";
+import { unmatchProfile, getMatches, getLikedByProfiles } from "../controllers/matchController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.post("/like", protect, likeProfile);
+router.post("/super-like", protect, superLikeProfile);
 router.post("/pass", protect, passProfile);
+router.post("/rewind", protect, rewindLastSwipe);
+
 router.post("/unmatch", protect, unmatchProfile);
 router.get("/matches", protect, getMatches);
 router.get("/liked-by", protect, getLikedByProfiles);

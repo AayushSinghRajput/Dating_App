@@ -19,5 +19,9 @@ const chatSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// getUserChats queries `{ participants: userId }` and sorts by updatedAt;
+// createOrGetChat queries `{ participants: { $all: [a, b] } }`.
+chatSchema.index({ participants: 1, updatedAt: -1 });
+
 const Chat = mongoose.model("Chat", chatSchema);
 export default Chat;

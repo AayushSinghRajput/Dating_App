@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Soulmate Admin</title>
+<link rel="stylesheet" href="/admin/style.css" />
+</head>
+<body>
+
+<div id="loginView">
+  <h2>Soulmate Admin</h2>
+  <div class="card">
+    <label>Email</label>
+    <input type="email" id="loginEmail" />
+    <label>Password</label>
+    <input type="password" id="loginPassword" />
+    <button id="loginBtn">Sign In</button>
+    <p class="muted" id="loginError"></p>
+  </div>
+</div>
+
+<div id="appView" style="display:none">
+  <header>
+    <h1>Soulmate Admin</h1>
+    <button id="logoutBtn">Log out</button>
+  </header>
+  <main>
+    <div class="tabs">
+      <div class="tab active" data-tab="analytics">Analytics</div>
+      <div class="tab" data-tab="reports">Reports</div>
+      <div class="tab" data-tab="users">Users</div>
+    </div>
+
+    <div id="analyticsTab"></div>
+    <div id="reportsTab" style="display:none"></div>
+    <div id="usersTab" style="display:none"></div>
+  </main>
+</div>
+
+<script src="/admin/app.js" defer></script>
+</body>
+</html>

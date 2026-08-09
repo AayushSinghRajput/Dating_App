@@ -85,6 +85,9 @@ const setupSocket = (io) => {
     // Personal room so this user can be reached directly (e.g. for calls)
     socket.join(socket.userId);
 
+    // Best-effort DAU/retention signal — a socket connection means the app was opened.
+    User.findByIdAndUpdate(socket.userId, { lastActiveAt: new Date() }).catch(() => {});
+
     // Join a chat room
     socket.on("joinRoom", (chatId) => {
       socket.join(chatId);

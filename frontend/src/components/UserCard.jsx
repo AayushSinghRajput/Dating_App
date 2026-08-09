@@ -15,6 +15,7 @@ import {
   toggleFavorite,
   getFavorites,
   likeProfile,
+  superLikeProfile,
   passProfile,
   createOrGetChat,
 } from "@/utils/api";
@@ -202,6 +203,31 @@ export default function UserCard({ user, index = 0 }) {
     }
   };
 
+  /** ✅ Handles Super Like Action */
+  const handleSuperLike = async () => {
+    try {
+      const response = await superLikeProfile(user.id);
+
+      if (!response?.match) {
+        Toast.show({
+          type: "info",
+          text1: "Super Like sent ⭐",
+          text2: (user?.name || "This user") + " will see you super liked them!",
+          position: "top",
+          visibilityTime: 3000,
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to send super like.",
+        position: "top",
+        visibilityTime: 3000,
+      });
+    }
+  };
+
   /** ✅ Handles Pass (Skip) */
   const handlePass = async () => {
     try {
@@ -321,6 +347,13 @@ export default function UserCard({ user, index = 0 }) {
                 <Ionicons name="close" size={24} color={colors.accent} />
               </Pressable>
 
+              <Pressable
+                onPress={handleSuperLike}
+                style={[styles.superLikeButton, { backgroundColor: colors.surface, borderColor: "#D6EBFF" }]}
+              >
+                <Ionicons name="star" size={20} color="#4A90E2" />
+              </Pressable>
+
               <Pressable onPress={handleLike} style={styles.likeButton}>
                 <LinearGradient
                   colors={["#FF6B6B", "#FF8E8E"]}
@@ -385,6 +418,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     marginTop: 15,
+  },
+  superLikeButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    alignSelf: "center",
   },
   passButton: {
     width: 52,

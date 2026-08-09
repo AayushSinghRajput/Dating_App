@@ -2,11 +2,24 @@ import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "../config/cloudinary.js";
 
+// Only active if a Cloudinary moderation add-on (e.g. "aws_rek" or
+// "webpurify") is enabled on the account and configured via env — off by
+// default since those are paid add-ons. When set, Cloudinary screens each
+// upload asynchronously and calls CLOUDINARY_MODERATION_WEBHOOK_URL with the
+// result (see paymentController-style webhook in adminModerationController.js).
+const photoModerationParams = process.env.CLOUDINARY_MODERATION
+  ? {
+      moderation: process.env.CLOUDINARY_MODERATION,
+      notification_url: `${process.env.BACKEND_PUBLIC_URL || "http://localhost:5000"}/api/admin/cloudinary-webhook`,
+    }
+  : {};
+
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: "profileImages",
     allowed_formats: ["jpg", "jpeg", "png"],
+    ...photoModerationParams,
   },
 });
 

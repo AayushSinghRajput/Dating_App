@@ -55,6 +55,18 @@ export async function sendNotification(io, { userId, type, fromUserId, chat, cal
   return payload;
 }
 
+// Tells a just-banned user's app to log itself out immediately, then force-
+// disconnects their live socket(s) shortly after (delayed so the event has
+// time to actually reach the client first — an instant disconnect could beat
+// the emit across the wire).
+export function notifyBannedUser(io, userId, reason) {
+  const room = userId.toString();
+  io?.to(room).emit("accountBanned", { reason: reason || "" });
+  setTimeout(() => {
+    io?.in(room).disconnectSockets(true);
+  }, 500);
+}
+
 // Removes a previously-sent notification (e.g. when an action that created it,
 // like favoriting, is undone) and tells the recipient's client to drop it live.
 export async function retractNotification(io, { userId, fromUserId, type }) {

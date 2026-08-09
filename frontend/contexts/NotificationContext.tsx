@@ -5,6 +5,8 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import { useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
 import { socket, connectSocket } from "@/utils/socket";
 import {
   AppNotification,
@@ -12,6 +14,7 @@ import {
   getUnreadNotificationCount,
   markNotificationRead as markNotificationReadApi,
   markAllNotificationsRead as markAllNotificationsReadApi,
+  clearToken,
 } from "@/utils/api";
 import { showMatchCelebration } from "@/src/components/GlobalMatchCelebration";
 
@@ -26,6 +29,7 @@ interface NotificationContextValue {
 const NotificationContext = createContext<NotificationContextValue | null>(null);
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -77,11 +81,24 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       if (wasUnread) setUnreadCount((prev) => Math.max(0, prev - 1));
     };
 
+    const handleAccountBanned = async ({ reason }: { reason?: string }) => {
+      Toast.show({
+        type: "error",
+        text1: "Your account has been suspended",
+        text2: reason || "Contact support if you think this is a mistake.",
+        visibilityTime: 6000,
+      });
+      await clearToken();
+      router.replace("/auth/login");
+    };
+
     socket.on("newNotification", handleNewNotification);
     socket.on("notificationRemoved", handleNotificationRemoved);
+    socket.on("accountBanned", handleAccountBanned);
     return () => {
       socket.off("newNotification", handleNewNotification);
       socket.off("notificationRemoved", handleNotificationRemoved);
+      socket.off("accountBanned", handleAccountBanned);
     };
   }, []);
 

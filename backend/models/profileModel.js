@@ -89,9 +89,46 @@ const profileSchema = new mongoose.Schema(
     verificationPhoto: {
       type: String,
     },
+    superLikes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Profile",
+      },
+    ],
+    superLikesUsedToday: {
+      type: Number,
+      default: 0,
+    },
+    superLikesDate: {
+      type: Date,
+    },
+    likesUsedToday: {
+      type: Number,
+      default: 0,
+    },
+    likesDate: {
+      type: Date,
+    },
+    boostedUntil: {
+      type: Date,
+    },
+    lastBoostActivatedAt: {
+      type: Date,
+    },
+    lastSwipe: {
+      targetProfile: { type: mongoose.Schema.Types.ObjectId, ref: "Profile" },
+      action: { type: String, enum: ["like", "pass"] },
+      matched: { type: Boolean, default: false },
+      swipedAt: { type: Date },
+    },
   },
   { timestamps: true }
 );
+
+// getLikedByProfiles queries `{ likes: currentProfile._id }`; getAllProfiles
+// filters out incognito profiles on every discovery-feed fetch.
+profileSchema.index({ likes: 1 });
+profileSchema.index({ incognito: 1 });
 
 const Profile = mongoose.model("Profile", profileSchema);
 export default Profile;

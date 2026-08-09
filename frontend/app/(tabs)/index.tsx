@@ -8,6 +8,7 @@ import {
   RefreshControl,
 } from "react-native";
 import Navbar from "../../src/components/Navbar";
+import DiscoveryToolbar from "../../src/components/DiscoveryToolbar";
 import UserCard from "../../src/components/UserCard";
 import { getAllProfiles } from "../../utils/api";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -64,6 +65,7 @@ export default function Home() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Navbar />
+      <DiscoveryToolbar />
       <FlatList
         style={styles.list}
         data={users}

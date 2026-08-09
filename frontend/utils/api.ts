@@ -275,6 +275,26 @@ export const login = async (
   }
 };
 
+// 🔹 Sign in (or sign up) with a Google ID token
+export const googleSignIn = async (
+  idToken: string,
+  acceptedTerms?: boolean
+): Promise<AuthResponse> => {
+  const res = await fetch(`${BASE_URL}/api/auth/google`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ idToken, acceptedTerms }),
+  });
+  const data: AuthResponse & { requiresSignup?: boolean } = await res.json();
+  if (!res.ok) {
+    const error: any = new Error(data.message || "Google sign-in failed.");
+    error.requiresSignup = data.requiresSignup;
+    throw error;
+  }
+  if (data.token) await saveToken(data.token);
+  return data;
+};
+
 // 🔹 Forgot password: request a reset code by email
 export const forgotPassword = async (email: string): Promise<void> => {
   const res = await fetch(`${BASE_URL}/api/auth/forgot-password`, {
@@ -306,13 +326,14 @@ export const register = async (
   username: string,
   email: string,
   password: string,
-  acceptedTerms: boolean
+  acceptedTerms: boolean,
+  referralCode?: string
 ): Promise<AuthResponse> => {
   try {
     const res = await fetch(`${BASE_URL}/api/auth/register`, {
       method: "POST",
       headers: getHeaders(),
-      body: JSON.stringify({ username, email, password, acceptedTerms }),
+      body: JSON.stringify({ username, email, password, acceptedTerms, referralCode }),
     });
 
     const data: AuthResponse = await res.json();
@@ -325,6 +346,22 @@ export const register = async (
       throw new Error("Network error. Check your connection.");
     throw new Error(error.message);
   }
+};
+
+export interface ReferralInfo {
+  referralCode: string;
+  referralCount: number;
+}
+
+export const getReferralInfo = async (): Promise<ReferralInfo> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/referrals/me`, {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to load referral info");
+  return data;
 };
 
 // ================================
@@ -918,17 +955,106 @@ export const likeProfile = async (targetProfileId: string) => {
       body: JSON.stringify({ targetProfileId }),
     });
     const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Failed to like profile");
     return data;
   } catch (error: any) {
-    console.error(
-      "Error liking profile:",
-      error.response?.data || error.message
-    );
-    throw new Error(error.response?.data?.message || "Failed to like profile");
+    console.error("Error liking profile:", error.message);
+    throw new Error(error.message || "Failed to like profile");
   }
 };
 
 //  Pass a profile
+
+export const superLikeProfile = async (targetProfileId: string) => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) throw new Error("User not authenticated");
+    const response = await fetch(`${BASE_URL}/api/match/super-like`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ targetProfileId }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Failed to send super like");
+    return data;
+  } catch (error: any) {
+    console.error("Error super-liking profile:", error.message);
+    throw new Error(error.message || "Failed to send super like");
+  }
+};
+
+export interface PremiumStatus {
+  isPremium: boolean;
+  premiumExpiresAt: string | null;
+  likesUsedToday: number;
+  likesRemaining: number | null;
+  superLikesUsedToday: number;
+  superLikesRemaining: number;
+  boostedUntil: string | null;
+  boostActive: boolean;
+}
+
+export const initiateEsewaPayment = async (): Promise<{ formUrl: string }> => {
+  const token = await AsyncStorage.getItem("token");
+  if (!token) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/payments/esewa/initiate`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to start eSewa payment");
+  return data;
+};
+
+export const initiateKhaltiPayment = async (): Promise<{ paymentUrl: string }> => {
+  const token = await AsyncStorage.getItem("token");
+  if (!token) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/payments/khalti/initiate`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to start Khalti payment");
+  return data;
+};
+
+export const getPremiumStatus = async (): Promise<PremiumStatus> => {
+  const token = await AsyncStorage.getItem("token");
+  if (!token) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/premium/status`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to load premium status");
+  return data;
+};
+
+export const activateBoost = async (): Promise<{ boostedUntil: string }> => {
+  const token = await AsyncStorage.getItem("token");
+  if (!token) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/premium/boost`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to activate boost");
+  return data;
+};
+
+export const rewindLastSwipe = async (): Promise<{ targetProfileId: string }> => {
+  const token = await AsyncStorage.getItem("token");
+  if (!token) throw new Error("User not authenticated");
+  const response = await fetch(`${BASE_URL}/api/match/rewind`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "Failed to rewind");
+  return data;
+};
 
 export const passProfile = async (targetProfileId: string) => {
   try {
@@ -984,6 +1110,7 @@ export interface LikedByProfile {
   age?: number;
   profileImage?: string;
   location?: string;
+  isSuperLike?: boolean;
 }
 
 export const getLikedByMe = async (): Promise<LikedByProfile[]> => {

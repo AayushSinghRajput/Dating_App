@@ -106,6 +106,12 @@ export default function LikedYou() {
                 source={{ uri: item.profileImage || "https://placehold.co/300x300" }}
                 style={styles.cardImage}
               />
+              {item.isSuperLike && (
+                <View style={styles.superLikeBadge}>
+                  <Ionicons name="star" size={12} color="#fff" />
+                  <Text style={styles.superLikeBadgeText}>Super Like</Text>
+                </View>
+              )}
               <View style={styles.cardInfo}>
                 <Text style={[styles.cardName, { color: colors.text }]} numberOfLines={1}>
                   {item.name}
@@ -181,6 +187,19 @@ const styles = StyleSheet.create({
     width: "100%",
     aspectRatio: 0.85,
   },
+  superLikeBadge: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#4A90E2",
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  superLikeBadgeText: { color: "#fff", fontSize: 10, fontWeight: "700" },
   cardInfo: { padding: 10, paddingBottom: 6 },
   cardName: { fontSize: 15, fontWeight: "700" },
   cardLocation: { fontSize: 12, marginTop: 2 },

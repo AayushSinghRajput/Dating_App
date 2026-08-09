@@ -29,5 +29,8 @@ const reportSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// The admin panel's Reports tab filters by status and sorts by createdAt.
+reportSchema.index({ status: 1, createdAt: -1 });
+
 const Report = mongoose.model("Report", reportSchema);
 export default Report;

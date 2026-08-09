@@ -42,6 +42,9 @@ export default function Settings() {
       case "Safety Center":
         router.push("/screen/SafetyCenter");
         break;
+      case "Invite Friends":
+        router.push("/screen/ReferralProgram");
+        break;
       case "Notifications":
         router.push("/screen/NotificationSettings");
         break;
@@ -93,7 +96,7 @@ export default function Settings() {
   const safetySettings = settings.filter((item) => ["Safety Center"].includes(item.title));
 
   const preferencesSettings = settings.filter((item) =>
-    ["Payment & Subscriptions", "Blocked Users", "Language"].includes(item.title)
+    ["Payment & Subscriptions", "Invite Friends", "Blocked Users", "Language"].includes(item.title)
   );
 
   const supportSettings = settings.filter((item) =>

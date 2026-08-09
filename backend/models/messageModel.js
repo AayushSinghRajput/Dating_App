@@ -49,5 +49,9 @@ const messageSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// getMessages filters by chat and sorts by createdAt on every chat open —
+// this compound index covers that access pattern directly.
+messageSchema.index({ chat: 1, createdAt: 1 });
+
 const Message = mongoose.model("Message", messageSchema);
 export default Message;

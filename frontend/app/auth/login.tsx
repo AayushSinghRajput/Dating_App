@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { login } from "../../utils/api";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useGoogleAuth } from "@/src/hooks/useGoogleAuth";
 
 const { width, height } = Dimensions.get("window");
 
@@ -29,6 +30,28 @@ export default function AuthScreen() {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
   const router = useRouter();
+
+  const { ready: googleReady, loading: googleLoading, promptAsync: promptGoogle, result: googleResult } =
+    useGoogleAuth(false);
+
+  useEffect(() => {
+    if (!googleResult) return;
+    if (googleResult.data?.token) {
+      Toast.show({ type: "success", text1: "Login successful!" });
+      router.push("/(tabs)");
+    } else if (googleResult.error) {
+      if (googleResult.error.requiresSignup) {
+        Toast.show({
+          type: "info",
+          text1: "No account found",
+          text2: "Please create an account first.",
+        });
+        router.push("/auth/register");
+      } else {
+        Toast.show({ type: "error", text1: "Google sign-in failed", text2: googleResult.error.message });
+      }
+    }
+  }, [googleResult]);
 
   // ---------------- ANIMATION ----------------
   useEffect(() => {
@@ -208,6 +231,23 @@ export default function AuthScreen() {
                   <Text style={styles.loginText}>Continue</Text>
                 </TouchableOpacity>
 
+                <View style={styles.dividerRow}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>OR</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                <TouchableOpacity
+                  style={styles.googleBtn}
+                  onPress={() => promptGoogle()}
+                  disabled={!googleReady || googleLoading}
+                >
+                  <Ionicons name="logo-google" size={20} color="#DB4437" />
+                  <Text style={styles.googleBtnText}>
+                    {googleLoading ? "Signing in..." : "Continue with Google"}
+                  </Text>
+                </TouchableOpacity>
+
                 <View style={styles.registerContainer}>
                   <Text style={styles.registerText}>
                     Don&apos;t have an account?{" "}
@@ -361,6 +401,37 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "700",
     fontSize: 16,
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.4)",
+  },
+  dividerText: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  googleBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    paddingVertical: 16,
+    marginBottom: 25,
+  },
+  googleBtnText: {
+    color: "#1a1a1a",
+    fontWeight: "700",
+    fontSize: 15,
   },
   registerContainer: {
     flexDirection: "row",
