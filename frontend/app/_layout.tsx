@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { StatusBar } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { initToken } from "../utils/api";
+import { initToken } from "../services/apiClient";
 import Toast from "react-native-toast-message";
 import { CallProvider } from "../contexts/CallContext";
 import { NotificationProvider } from "../contexts/NotificationContext";

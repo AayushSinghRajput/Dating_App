@@ -25,11 +25,11 @@ import {
   sendVoiceMessageApi,
   sendMediaMessageApi,
   deleteMessageApi,
-  getCurrentUserId,
-  unmatchUser,
-  blockUserApi,
-  reportUserApi,
-} from "@/utils/api";
+} from "@/services/chatService";
+import { getCurrentUserId } from "@/services/apiClient";
+import { unmatchUser } from "@/services/matchService";
+import { blockUserApi } from "@/services/profileService";
+import { reportUserApi } from "@/services/reportService";
 import { showReportReasonPicker } from "@/src/utils/reportFlow";
 import { showActionSheet } from "@/src/components/GlobalActionSheet";
 import { shareMyLocation } from "@/src/utils/safety";

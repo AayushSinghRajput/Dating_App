@@ -14,8 +14,8 @@ import {
   getUnreadNotificationCount,
   markNotificationRead as markNotificationReadApi,
   markAllNotificationsRead as markAllNotificationsReadApi,
-  clearToken,
-} from "@/utils/api";
+} from "@/services/notificationService";
+import { clearToken } from "@/services/apiClient";
 import { showMatchCelebration } from "@/src/components/GlobalMatchCelebration";
 
 interface NotificationContextValue {

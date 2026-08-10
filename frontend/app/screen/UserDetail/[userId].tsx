@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   ScrollView,
   Pressable,
@@ -10,48 +9,34 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from "react-native";
+import { Image } from "expo-image";
 import { useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import Toast from "react-native-toast-message";
-import { createOrGetChat, blockUserApi, reportUserApi } from "@/utils/api";
+import { createOrGetChat } from "@/services/chatService";
+import { blockUserApi, DiscoveryProfile } from "@/services/profileService";
+import { reportUserApi } from "@/services/reportService";
+import { likeProfile } from "@/services/matchService";
 import { useTheme } from "@/contexts/ThemeContext";
 import { showReportReasonPicker } from "@/src/utils/reportFlow";
 import { showActionSheet } from "@/src/components/GlobalActionSheet";
-
-// Define TypeScript interfaces for better type safety
-interface User {
-  id: string;
-  name: string;
-  age?: number;
-  avatar?: string;
-  location?: string;
-  profession?: string;
-  isVerified?: boolean;
-  isOnline?: boolean;
-  bio?: string;
-  gender?: string;
-  interestedIn?: string;
-  hobbies?: string[];
-  education?: string;
-  relationshipGoals?: string;
-  compatibility?: number;
-  distance?: number;
-  profileImage: string;
-  photos?: string[];
-  chatId: string;
-  userId?: string;
-}
+import { spacing } from "@/src/theme/spacing";
+import { radius } from "@/src/theme/radius";
+import { typography } from "@/src/theme/typography";
+import Badge from "@/src/components/ui/Badge";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const BLURHASH = "L5H2EC=PM+yV0g-mq.wG9c010J}I";
 
 export default function UserDetail() {
   const params = useLocalSearchParams();
-  const user = params.user ? (JSON.parse(params.user as string) as User) : null;
+  const user = params.user ? (JSON.parse(params.user as string) as DiscoveryProfile) : null;
   const router = useRouter();
   const { colors } = useTheme();
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const [liked, setLiked] = useState(false);
 
   const photos =
     user?.photos && user.photos.length > 0
@@ -65,18 +50,28 @@ export default function UserDetail() {
 
   if (!user) {
     return (
-      <View style={styles.center}>
-        <Text>User not found</Text>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Text style={[typography.body, { color: colors.textSecondary }]}>User not found</Text>
       </View>
     );
   }
 
-  const handleBack = () => {
-    router.back();
-  };
+  const handleBack = () => router.back();
 
-  const handleLike = () => {
-    console.log("Liked user:", user.id);
+  const handleLike = async () => {
+    if (liked) return;
+    setLiked(true);
+    try {
+      const response = await likeProfile(user.id);
+      // On a match, both users get a real-time "match" notification that
+      // triggers the full-screen celebration — nothing extra needed here.
+      if (!response?.match) {
+        Toast.show({ type: "info", text1: "Profile Liked ❤️", text2: `You liked ${user.name || "this user"}.` });
+      }
+    } catch (error: any) {
+      setLiked(false);
+      Toast.show({ type: "error", text1: "Failed to like profile", text2: error.message });
+    }
   };
 
   const handleMessage = async () => {
@@ -91,8 +86,8 @@ export default function UserDetail() {
           otherUserId: user.userId || user.id,
         },
       });
-    } catch (error) {
-      console.error("Failed to open chat:", error);
+    } catch (error: any) {
+      Toast.show({ type: "error", text1: "Failed to open chat", text2: error.message });
     }
   };
 
@@ -152,65 +147,77 @@ export default function UserDetail() {
           onMomentumScrollEnd={handlePhotoScroll}
         >
           {photos.map((uri, index) => (
-            <Image key={uri + index} source={{ uri }} style={[styles.avatar, { width: SCREEN_WIDTH }]} />
+            <Image
+              key={uri + index}
+              source={{ uri }}
+              style={[styles.photo, { width: SCREEN_WIDTH }]}
+              contentFit="cover"
+              placeholder={{ blurhash: BLURHASH }}
+              transition={200}
+              cachePolicy="disk"
+            />
           ))}
         </ScrollView>
 
         {photos.length > 1 && (
           <View style={styles.photoDots}>
             {photos.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.photoDot,
-                  index === activePhotoIndex && styles.photoDotActive,
-                ]}
-              />
+              <View key={index} style={[styles.photoDot, index === activePhotoIndex && styles.photoDotActive]} />
             ))}
           </View>
         )}
 
         {/* Back Button */}
-        <Pressable style={styles.backButton} onPress={handleBack}>
-          <LinearGradient
-            colors={["rgba(0,0,0,0.6)", "rgba(0,0,0,0.4)"]}
-            style={styles.backButtonGradient}
-          >
+        <Pressable
+          style={styles.backButton}
+          onPress={handleBack}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          hitSlop={8}
+        >
+          <LinearGradient colors={["rgba(0,0,0,0.6)", "rgba(0,0,0,0.4)"]} style={styles.backButtonGradient}>
             <Ionicons name="chevron-back" size={24} color="#fff" />
           </LinearGradient>
         </Pressable>
 
         {/* Action Buttons */}
         <View style={styles.headerActions}>
-          <Pressable style={styles.headerActionButton} onPress={handleLike}>
-            <LinearGradient
-              colors={["#FF6B6B", "#FF8E8E"]}
-              style={styles.likeButton}
-            >
-              <Ionicons name="heart" size={20} color="#fff" />
+          <Pressable
+            style={styles.headerActionButton}
+            onPress={handleLike}
+            disabled={liked}
+            accessibilityRole="button"
+            accessibilityLabel={`Like ${user.name || "this user"}`}
+            accessibilityState={{ disabled: liked }}
+          >
+            <LinearGradient colors={["#FF6B6B", "#FF8E8E"]} style={[styles.circleButton, liked && styles.circleButtonDisabled]}>
+              <Ionicons name={liked ? "heart" : "heart-outline"} size={20} color="#fff" />
             </LinearGradient>
           </Pressable>
 
-          <Pressable style={styles.headerActionButton} onPress={handleMessage}>
-            <LinearGradient
-              colors={["#4A90E2", "#6AA8FF"]}
-              style={styles.messageButton}
-            >
+          <Pressable
+            style={styles.headerActionButton}
+            onPress={handleMessage}
+            accessibilityRole="button"
+            accessibilityLabel={`Message ${user.name || "this user"}`}
+          >
+            <LinearGradient colors={[colors.info, "#6AA8FF"]} style={styles.circleButton}>
               <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
             </LinearGradient>
           </Pressable>
 
-          <Pressable style={styles.headerActionButton} onPress={handleMoreOptions}>
-            <LinearGradient
-              colors={["rgba(0,0,0,0.6)", "rgba(0,0,0,0.4)"]}
-              style={styles.moreButton}
-            >
+          <Pressable
+            style={styles.headerActionButton}
+            onPress={handleMoreOptions}
+            accessibilityRole="button"
+            accessibilityLabel="More options"
+          >
+            <LinearGradient colors={["rgba(0,0,0,0.6)", "rgba(0,0,0,0.4)"]} style={styles.circleButton}>
               <Ionicons name="ellipsis-vertical" size={20} color="#fff" />
             </LinearGradient>
           </Pressable>
         </View>
 
-        {/* Gradient Overlay */}
         <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.1)", "rgba(0,0,0,0.3)"]}
           style={styles.headerOverlay}
@@ -225,46 +232,28 @@ export default function UserDetail() {
         {/* Basic Info Card */}
         <View style={[styles.mainInfoCard, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
           <View style={styles.nameSection}>
-            <Text style={[styles.name, { color: colors.text }]}>{user.name}</Text>
-
-            {/* Verification Badge */}
-            {user.isVerified && (
-              <View style={styles.verificationBadge}>
-                <Ionicons name="checkmark-circle" size={16} color="#4A90E2" />
-                <Text style={styles.verificationText}>Verified</Text>
-              </View>
-            )}
+            <Text style={[typography.h1, styles.name, { color: colors.text }]}>{user.name}</Text>
+            {user.isVerified && <Badge label="Verified" icon="checkmark-circle" tone="info" />}
           </View>
 
-          {/* Profession */}
           {user.profession && (
             <View style={styles.professionSection}>
               <Ionicons name="briefcase-outline" size={16} color={colors.textSecondary} />
-              <Text style={[styles.profession, { color: colors.textSecondary }]}>{user.profession}</Text>
-            </View>
-          )}
-
-          {/* Online Status */}
-          {user.isOnline && (
-            <View style={styles.onlineStatus}>
-              <View style={[styles.onlineDot, { backgroundColor: colors.success }]} />
-              <Text style={styles.onlineText}>Online now</Text>
+              <Text style={[typography.body, { color: colors.textSecondary }]}>{user.profession}</Text>
             </View>
           )}
         </View>
 
         {/* Bio Section */}
-        {user.bio && (
+        {user.aboutMe && (
           <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
             <View style={styles.sectionHeader}>
-              <Ionicons
-                name="document-text-outline"
-                size={20}
-                color={colors.accent}
-              />
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>About Me</Text>
+              <Ionicons name="document-text-outline" size={20} color={colors.accent} />
+              <Text style={[typography.h3, { color: colors.text }]}>About Me</Text>
             </View>
-            <Text style={[styles.sectionContent, { color: colors.textSecondary }]}>{user.bio}</Text>
+            <Text style={[typography.body, styles.sectionContent, { color: colors.textSecondary }]}>
+              {user.aboutMe}
+            </Text>
           </View>
         )}
 
@@ -272,7 +261,7 @@ export default function UserDetail() {
         <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
           <View style={styles.sectionHeader}>
             <Ionicons name="person-circle-outline" size={20} color={colors.accent} />
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Personal Info</Text>
+            <Text style={[typography.h3, { color: colors.text }]}>Personal Info</Text>
           </View>
 
           <View style={styles.infoGrid}>
@@ -280,9 +269,9 @@ export default function UserDetail() {
               <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
                 <View style={styles.infoLabel}>
                   <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
-                  <Text style={[styles.infoTitle, { color: colors.textSecondary }]}>Age</Text>
+                  <Text style={[typography.label, { color: colors.textSecondary }]}>Age</Text>
                 </View>
-                <Text style={[styles.infoValue, { color: colors.text }]}>{user.age}</Text>
+                <Text style={[typography.body, styles.infoValue, { color: colors.text }]}>{user.age}</Text>
               </View>
             )}
 
@@ -290,9 +279,9 @@ export default function UserDetail() {
               <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
                 <View style={styles.infoLabel}>
                   <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
-                  <Text style={[styles.infoTitle, { color: colors.textSecondary }]}>Location</Text>
+                  <Text style={[typography.label, { color: colors.textSecondary }]}>Location</Text>
                 </View>
-                <Text style={[styles.infoValue, { color: colors.text }]}>{user.location}</Text>
+                <Text style={[typography.body, styles.infoValue, { color: colors.text }]}>{user.location}</Text>
               </View>
             )}
 
@@ -300,9 +289,9 @@ export default function UserDetail() {
               <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
                 <View style={styles.infoLabel}>
                   <Ionicons name="male-female-outline" size={16} color={colors.textSecondary} />
-                  <Text style={[styles.infoTitle, { color: colors.textSecondary }]}>Gender</Text>
+                  <Text style={[typography.label, { color: colors.textSecondary }]}>Gender</Text>
                 </View>
-                <Text style={[styles.infoValue, { color: colors.text }]}>{user.gender}</Text>
+                <Text style={[typography.body, styles.infoValue, { color: colors.text }]}>{user.gender}</Text>
               </View>
             )}
 
@@ -310,9 +299,9 @@ export default function UserDetail() {
               <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
                 <View style={styles.infoLabel}>
                   <Ionicons name="heart-outline" size={16} color={colors.textSecondary} />
-                  <Text style={[styles.infoTitle, { color: colors.textSecondary }]}>Interested In</Text>
+                  <Text style={[typography.label, { color: colors.textSecondary }]}>Interested In</Text>
                 </View>
-                <Text style={[styles.infoValue, { color: colors.text }]}>{user.interestedIn}</Text>
+                <Text style={[typography.body, styles.infoValue, { color: colors.text }]}>{user.interestedIn}</Text>
               </View>
             )}
           </View>
@@ -322,18 +311,16 @@ export default function UserDetail() {
         {user.hobbies && user.hobbies.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
             <View style={styles.sectionHeader}>
-              <Ionicons
-                name="game-controller-outline"
-                size={20}
-                color={colors.accent}
-              />
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Hobbies & Interests</Text>
+              <Ionicons name="game-controller-outline" size={20} color={colors.accent} />
+              <Text style={[typography.h3, { color: colors.text }]}>Hobbies & Interests</Text>
             </View>
             <View style={styles.hobbiesContainer}>
               {user.hobbies.map((hobby: string, index: number) => (
-                <View key={index} style={[styles.hobbyTag, { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed }]}>
-                  <Ionicons name="star" size={14} color={colors.accent} />
-                  <Text style={[styles.hobbyText, { color: colors.accent }]}>{hobby}</Text>
+                <View
+                  key={index}
+                  style={[styles.hobbyTag, { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed }]}
+                >
+                  <Text style={[typography.bodySmall, styles.hobbyText, { color: colors.accent }]}>{hobby}</Text>
                 </View>
               ))}
             </View>
@@ -341,58 +328,36 @@ export default function UserDetail() {
         )}
 
         {/* Education & Goals */}
-        <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="school-outline" size={20} color={colors.accent} />
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Education & Goals</Text>
-          </View>
+        {(user.education || user.relationshipGoals) && (
+          <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="school-outline" size={20} color={colors.accent} />
+              <Text style={[typography.h3, { color: colors.text }]}>Education & Goals</Text>
+            </View>
 
-          <View style={styles.infoGrid}>
-            {user.education && (
-              <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
-                <View style={styles.infoLabel}>
-                  <Ionicons name="school" size={16} color={colors.textSecondary} />
-                  <Text style={[styles.infoTitle, { color: colors.textSecondary }]}>Education</Text>
+            <View style={styles.infoGrid}>
+              {user.education && (
+                <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
+                  <View style={styles.infoLabel}>
+                    <Ionicons name="school" size={16} color={colors.textSecondary} />
+                    <Text style={[typography.label, { color: colors.textSecondary }]}>Education</Text>
+                  </View>
+                  <Text style={[typography.body, styles.infoValue, { color: colors.text }]}>{user.education}</Text>
                 </View>
-                <Text style={[styles.infoValue, { color: colors.text }]}>{user.education}</Text>
-              </View>
-            )}
+              )}
 
-            {user.relationshipGoals && (
-              <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
-                <View style={styles.infoLabel}>
-                  <Ionicons name="flag-outline" size={16} color={colors.textSecondary} />
-                  <Text style={[styles.infoTitle, { color: colors.textSecondary }]}>Relationship Goals</Text>
+              {user.relationshipGoals && (
+                <View style={[styles.infoItem, { borderBottomColor: colors.border }]}>
+                  <View style={styles.infoLabel}>
+                    <Ionicons name="flag-outline" size={16} color={colors.textSecondary} />
+                    <Text style={[typography.label, { color: colors.textSecondary }]}>Relationship Goals</Text>
+                  </View>
+                  <Text style={[typography.body, styles.infoValue, { color: colors.text }]}>
+                    {user.relationshipGoals}
+                  </Text>
                 </View>
-                <Text style={[styles.infoValue, { color: colors.text }]}>{user.relationshipGoals}</Text>
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* Additional Info */}
-        {(user.compatibility || user.distance) && (
-          <View style={styles.statsSection}>
-            {user.compatibility && (
-              <View style={styles.statItem}>
-                <LinearGradient
-                  colors={["#FF6B6B", "#FF8E8E"]}
-                  style={styles.statCircle}
-                >
-                  <Text style={styles.statValue}>{user.compatibility}%</Text>
-                </LinearGradient>
-                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Match</Text>
-              </View>
-            )}
-
-            {user.distance && (
-              <View style={styles.statItem}>
-                <View style={[styles.statCircle, styles.distanceCircle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                  <Ionicons name="location" size={20} color="#4A90E2" />
-                </View>
-                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{user.distance}km away</Text>
-              </View>
-            )}
+              )}
+            </View>
           </View>
         )}
       </ScrollView>
@@ -401,22 +366,10 @@ export default function UserDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  header: {
-    height: 400,
-    position: "relative",
-  },
-  avatar: {
-    width: "100%",
-    height: "100%",
-  },
+  container: { flex: 1 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  header: { height: 400, position: "relative" },
+  photo: { height: "100%" },
   photoDots: {
     position: "absolute",
     top: 50,
@@ -424,40 +377,26 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: "row",
     justifyContent: "center",
-    gap: 6,
+    gap: spacing.xs,
     zIndex: 10,
   },
-  photoDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(255,255,255,0.5)",
-  },
-  photoDotActive: {
-    backgroundColor: "#fff",
-    width: 18,
-  },
-  backButton: {
-    position: "absolute",
-    top: 50,
-    left: 20,
-    zIndex: 10,
-  },
+  photoDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.5)" },
+  photoDotActive: { backgroundColor: "#fff", width: 18 },
+  backButton: { position: "absolute", top: 50, left: spacing.xl, zIndex: 10 },
   backButtonGradient: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: radius.full,
     justifyContent: "center",
     alignItems: "center",
-    backdropFilter: "blur(10px)",
   },
   headerActions: {
     position: "absolute",
     top: 50,
-    right: 20,
+    right: spacing.xl,
     zIndex: 10,
     flexDirection: "row",
-    gap: 12,
+    gap: spacing.md,
   },
   headerActionButton: {
     shadowColor: "#000",
@@ -466,46 +405,16 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  likeButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  messageButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  moreButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  content: {
-    flex: 1,
-    marginTop: -40,
-  },
-  contentContainer: {
-    paddingBottom: 30,
-  },
+  circleButton: { width: 50, height: 50, borderRadius: radius.full, justifyContent: "center", alignItems: "center" },
+  circleButtonDisabled: { opacity: 0.7 },
+  headerOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+  content: { flex: 1, marginTop: -40 },
+  contentContainer: { paddingBottom: spacing.xxl },
   mainInfoCard: {
-    marginHorizontal: 20,
-    padding: 24,
-    borderRadius: 24,
-    marginBottom: 16,
+    marginHorizontal: spacing.xl,
+    padding: spacing.xl,
+    borderRadius: radius.xl,
+    marginBottom: spacing.lg,
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 8 },
     shadowRadius: 16,
@@ -515,164 +424,40 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: spacing.sm,
     flexWrap: "wrap",
+    gap: spacing.sm,
   },
-  name: {
-    fontSize: 28,
-    fontWeight: "800",
-    letterSpacing: -0.5,
-    flex: 1,
-  },
-  verificationBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F0F8FF",
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    gap: 4,
-    borderWidth: 1,
-    borderColor: "#E3F2FD",
-  },
-  verificationText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#4A90E2",
-  },
-  professionSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
-  },
-  profession: {
-    fontSize: 15,
-    fontWeight: "500",
-  },
-  onlineStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    alignSelf: "flex-start",
-    backgroundColor: "#F0F9F0",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E8F5E8",
-  },
-  onlineDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  onlineText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#2E7D32",
-  },
+  name: { flexShrink: 1 },
+  professionSection: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.sm },
   section: {
-    marginHorizontal: 20,
-    padding: 20,
-    borderRadius: 20,
-    marginBottom: 16,
+    marginHorizontal: spacing.xl,
+    padding: spacing.lg,
+    borderRadius: radius.lg,
+    marginBottom: spacing.lg,
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 12,
     elevation: 6,
   },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  sectionContent: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  infoGrid: {
-    gap: 16,
-  },
+  sectionHeader: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginBottom: spacing.lg },
+  sectionContent: { lineHeight: 22 },
+  infoGrid: { gap: spacing.lg },
   infoItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
   },
-  infoLabel: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flex: 1,
-  },
-  infoTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  infoValue: {
-    fontSize: 15,
-    fontWeight: "500",
-    textAlign: "right",
-    flex: 1,
-  },
-  hobbiesContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
+  infoLabel: { flexDirection: "row", alignItems: "center", gap: spacing.sm, flex: 1 },
+  infoValue: { textAlign: "right", flex: 1 },
+  hobbiesContainer: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   hobbyTag: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 6,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderWidth: 1,
   },
-  hobbyText: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  statsSection: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 40,
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  statItem: {
-    alignItems: "center",
-    gap: 8,
-  },
-  statCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  distanceCircle: {
-    borderWidth: 2,
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#fff",
-  },
-  statLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
+  hobbyText: { fontWeight: "600" },
 });

@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
-import { getLikedByMe, likeProfile, passProfile, LikedByProfile } from "@/utils/api";
+import { getLikedByMe, likeProfile, passProfile, LikedByProfile } from "@/services/matchService";
 import { showMatchCelebration } from "@/src/components/GlobalMatchCelebration";
 
 export default function LikedYou() {

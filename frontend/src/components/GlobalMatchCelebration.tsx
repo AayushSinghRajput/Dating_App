@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Modal, View, Text, Image, Pressable, StyleSheet, Animated } from "react-native";
+import { Modal, View, Text, Pressable, StyleSheet, Animated } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
-import { createOrGetChat } from "@/utils/api";
+import { createOrGetChat } from "@/services/chatService";
+import { spacing } from "@/src/theme/spacing";
+import { radius } from "@/src/theme/radius";
+import { typography } from "@/src/theme/typography";
 
 interface MatchParams {
   userName: string;
@@ -19,6 +23,8 @@ let listener: ((params: MatchParams) => void) | null = null;
 export function showMatchCelebration(params: MatchParams) {
   listener?.(params);
 }
+
+const BLURHASH = "L5H2EC=PM+yV0g-mq.wG9c010J}I";
 
 export default function GlobalMatchCelebration() {
   const router = useRouter();
@@ -74,32 +80,46 @@ export default function GlobalMatchCelebration() {
       <LinearGradient
         colors={["#ff6b6b", "#ff8e8e", "#ffa8a8", "#ffb3ba"]}
         style={styles.container}
+        accessibilityViewIsModal
       >
         <Animated.View style={[styles.content, { transform: [{ scale: scaleAnim }] }]}>
           <Ionicons name="heart" size={68} color="#fff" />
-          <Text style={styles.title}>It&apos;s a Match!</Text>
+          <Text style={styles.title} accessibilityRole="header">
+            It&apos;s a Match!
+          </Text>
 
           <View style={styles.avatarWrapper}>
             <Image
               source={{ uri: params.userAvatar || "https://placehold.co/200x200" }}
               style={styles.avatar}
+              contentFit="cover"
+              placeholder={{ blurhash: BLURHASH }}
+              transition={200}
+              cachePolicy="disk"
+              accessibilityLabel={`${params.userName}'s profile photo`}
             />
           </View>
 
-          <Text style={styles.subtitle}>
-            You and {params.userName} liked each other
-          </Text>
+          <Text style={styles.subtitle}>You and {params.userName} liked each other</Text>
 
           <Pressable
             style={[styles.primaryButton, opening && styles.buttonDisabled]}
             onPress={handleMessage}
             disabled={opening}
+            accessibilityRole="button"
+            accessibilityLabel={`Send a message to ${params.userName}`}
+            accessibilityState={{ disabled: opening, busy: opening }}
           >
             <Ionicons name="chatbubble-ellipses" size={18} color="#ff6b6b" />
             <Text style={styles.primaryButtonText}>Send a Message</Text>
           </Pressable>
 
-          <Pressable style={styles.secondaryButton} onPress={close}>
+          <Pressable
+            style={styles.secondaryButton}
+            onPress={close}
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss and keep swiping"
+          >
             <Text style={styles.secondaryButtonText}>Keep Swiping</Text>
           </Pressable>
         </Animated.View>
@@ -113,27 +133,26 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: spacing.xl,
   },
   content: {
     alignItems: "center",
     width: "100%",
   },
   title: {
-    fontSize: 40,
-    fontWeight: "800",
+    ...typography.display,
     color: "#fff",
-    marginTop: 12,
-    marginBottom: 24,
+    marginTop: spacing.md,
+    marginBottom: spacing.xl,
     textShadowColor: "rgba(0,0,0,0.25)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 6,
   },
   avatarWrapper: {
-    borderRadius: 90,
+    borderRadius: radius.full,
     borderWidth: 4,
     borderColor: "#fff",
-    marginBottom: 20,
+    marginBottom: spacing.xl,
     shadowColor: "#000",
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 6 },
@@ -146,38 +165,37 @@ const styles = StyleSheet.create({
     borderRadius: 80,
   },
   subtitle: {
-    fontSize: 16,
+    ...typography.bodyLarge,
     fontWeight: "600",
     color: "#fff",
     textAlign: "center",
-    marginBottom: 36,
-    paddingHorizontal: 20,
+    marginBottom: spacing.xxxl,
+    paddingHorizontal: spacing.lg,
   },
   primaryButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: spacing.sm,
     backgroundColor: "#fff",
-    paddingVertical: 16,
-    borderRadius: 16,
+    paddingVertical: spacing.lg,
+    borderRadius: radius.lg,
     width: "100%",
-    marginBottom: 14,
+    marginBottom: spacing.md,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   primaryButtonText: {
+    ...typography.button,
     color: "#ff6b6b",
-    fontSize: 16,
-    fontWeight: "700",
   },
   secondaryButton: {
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
   },
   secondaryButtonText: {
-    color: "#fff",
-    fontSize: 15,
+    ...typography.body,
     fontWeight: "600",
+    color: "#fff",
   },
 });

@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
-import { changePassword } from "@/utils/api";
+import { changePassword } from "@/services/authService";
 
 export default function ChangePassword() {
   const router = useRouter();

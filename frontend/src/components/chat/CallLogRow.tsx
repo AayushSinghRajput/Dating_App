@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Message } from "@/utils/api";
+import { Message } from "@/services/chatService";
 
 export default function CallLogRow({ message }: { message: Message }) {
   const { colors } = useTheme();

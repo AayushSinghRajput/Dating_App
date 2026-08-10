@@ -14,7 +14,7 @@ import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import * as ImagePicker from "expo-image-picker";
 import { useTheme } from "@/contexts/ThemeContext";
-import { submitVerificationSelfie } from "@/utils/api";
+import { submitVerificationSelfie } from "@/services/profileService";
 
 const PROMPTS = [
   "Hold up 1 finger next to your face",
@@ -72,7 +72,7 @@ export default function PhotoVerification() {
           <View style={[styles.successIcon, { backgroundColor: colors.accentSoft }]}>
             <Ionicons name="checkmark-circle" size={64} color={colors.accent} />
           </View>
-          <Text style={[styles.successTitle, { color: colors.text }]}>You're verified!</Text>
+          <Text style={[styles.successTitle, { color: colors.text }]}>You&apos;re verified!</Text>
           <Text style={[styles.successSubtitle, { color: colors.textSecondary }]}>
             A verified badge now appears next to your name on your profile.
           </Text>

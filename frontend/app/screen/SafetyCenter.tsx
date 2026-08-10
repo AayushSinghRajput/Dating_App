@@ -19,7 +19,7 @@ import {
   EmergencyContact,
   getEmergencyContacts,
   updateEmergencyContacts,
-} from "@/utils/api";
+} from "@/services/safetyService";
 import { shareMyLocation } from "@/src/utils/safety";
 
 const MAX_CONTACTS = 5;
@@ -133,7 +133,7 @@ export default function SafetyCenter() {
             <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Trusted Contacts</Text>
               <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
-                Save people you'd want to reach quickly in an emergency.
+                Save people you&apos;d want to reach quickly in an emergency.
               </Text>
 
               {contacts.map((contact, index) => (

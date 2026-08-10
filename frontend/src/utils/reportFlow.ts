@@ -1,5 +1,5 @@
 import { showActionSheet } from "@/src/components/GlobalActionSheet";
-import { ReportReason } from "@/utils/api";
+import { ReportReason } from "@/services/reportService";
 
 const REPORT_REASONS: { label: string; value: ReportReason }[] = [
   { label: "Inappropriate content", value: "inappropriate_content" },

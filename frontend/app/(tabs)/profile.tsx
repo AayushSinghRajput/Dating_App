@@ -9,7 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { getProfile } from "../../utils/api";
+import { getProfile } from "../../services/profileService";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface UserProfile {

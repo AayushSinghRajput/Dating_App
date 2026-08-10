@@ -9,7 +9,7 @@ import {
   getNotificationPreferences,
   updateNotificationPreferences,
   NotificationPreferences,
-} from "@/utils/api";
+} from "@/services/notificationService";
 
 const DEFAULT_PREFERENCES: NotificationPreferences = {
   like: true,

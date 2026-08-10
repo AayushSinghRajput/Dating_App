@@ -1,4 +1,4 @@
-import { Message } from "@/utils/api";
+import { Message } from "@/services/chatService";
 
 export type ListItem =
   | {

@@ -20,7 +20,7 @@ import {
   sendVerificationEmail,
   verifyEmail,
   changeEmail,
-} from "@/utils/api";
+} from "@/services/authService";
 
 export default function EmailSettings() {
   const router = useRouter();

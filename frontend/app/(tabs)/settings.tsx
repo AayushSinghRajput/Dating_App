@@ -1,13 +1,12 @@
 import { useRouter } from "expo-router";
-import { Alert, StyleSheet, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Alert, StyleSheet, ScrollView, View } from "react-native";
 import settings from "../../assets/data/settingsdata";
-import SettingsHeader from "../../src/components/settings/SettingsHeader";
+import ScreenHeader from "../../src/components/ui/ScreenHeader";
 import SettingsSection from "../../src/components/settings/SettingsSection";
 import AppearanceSection from "../../src/components/settings/AppearanceSection";
 import SettingsFooter from "../../src/components/settings/SettingsFooter";
 import { useTheme } from "@/contexts/ThemeContext";
-import { clearToken } from "@/utils/api";
+import { clearToken } from "@/services/apiClient";
 
 interface SettingsItem {
   id: string;
@@ -108,8 +107,8 @@ export default function Settings() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
-      <SettingsHeader />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScreenHeader title="Settings" subtitle="Manage your account preferences" />
 
       <ScrollView
         style={styles.scrollView}
@@ -156,7 +155,7 @@ export default function Settings() {
 
         <SettingsFooter />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

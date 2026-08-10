@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
-import { deleteAccount } from "@/utils/api";
+import { deleteAccount } from "@/services/authService";
 
 export default function DeleteAccount() {
   const router = useRouter();

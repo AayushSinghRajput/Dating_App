@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
-import { googleSignIn, AuthResponse } from "@/utils/api";
+import { googleSignIn, AuthResponse } from "@/services/authService";
 
 WebBrowser.maybeCompleteAuthSession();
 

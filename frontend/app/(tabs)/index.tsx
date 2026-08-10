@@ -1,21 +1,33 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  FlatList,
-  StyleSheet,
-  ActivityIndicator,
-  Text,
-  RefreshControl,
-} from "react-native";
-import Navbar from "../../src/components/Navbar";
-import DiscoveryToolbar from "../../src/components/DiscoveryToolbar";
+import { View, FlatList, StyleSheet, RefreshControl, Dimensions } from "react-native";
+import HomeHeader from "../../src/components/HomeHeader";
 import UserCard from "../../src/components/UserCard";
-import { getAllProfiles } from "../../utils/api";
+import { getAllProfiles, DiscoveryProfile } from "../../services/profileService";
 import { useTheme } from "@/contexts/ThemeContext";
+import { spacing } from "@/src/theme/spacing";
+import { radius } from "@/src/theme/radius";
+import Skeleton from "@/src/components/ui/Skeleton";
+import EmptyState from "@/src/components/ui/EmptyState";
+
+const { width } = Dimensions.get("window");
+
+function ProfileCardSkeleton() {
+  return (
+    <View style={styles.skeletonWrapper}>
+      <View style={styles.skeletonCard}>
+        <Skeleton borderRadius={0} style={styles.skeletonImage} />
+        <View style={styles.skeletonInfo}>
+          <Skeleton width="55%" height={22} />
+          <Skeleton width="35%" height={14} style={{ marginTop: spacing.sm }} />
+        </View>
+      </View>
+    </View>
+  );
+}
 
 export default function Home() {
   const { colors } = useTheme();
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<DiscoveryProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,32 +57,38 @@ export default function Home() {
 
   if (loading) {
     return (
-      <View style={[styles.centered, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.accent} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-          Loading profiles...
-        </Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <HomeHeader />
+        <View style={styles.skeletonList}>
+          <ProfileCardSkeleton />
+        </View>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={[styles.centered, { backgroundColor: colors.background }]}>
-        <Text style={[styles.errorText, { color: colors.accent }]}>⚠️ {error}</Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <HomeHeader />
+        <EmptyState
+          icon="cloud-offline-outline"
+          title="Couldn't load profiles"
+          description={error}
+          actionLabel="Try Again"
+          onAction={loadProfiles}
+        />
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Navbar />
-      <DiscoveryToolbar />
+      <HomeHeader />
       <FlatList
         style={styles.list}
         data={users}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <UserCard user={item} />}
+        renderItem={({ item, index }) => <UserCard user={item} index={index} />}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -80,9 +98,13 @@ export default function Home() {
           />
         }
         ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            No profiles found 😕
-          </Text>
+          <EmptyState
+            icon="people-outline"
+            title="No one new nearby"
+            description="Check back soon, or widen your preferences to see more people."
+            actionLabel="Refresh"
+            onAction={loadProfiles}
+          />
         }
       />
     </View>
@@ -96,21 +118,18 @@ const styles = StyleSheet.create({
   list: {
     flex: 1,
   },
-  centered: {
+  skeletonList: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    paddingTop: spacing.sm,
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
+  skeletonWrapper: { alignItems: "center", marginVertical: spacing.sm },
+  skeletonCard: {
+    width: width * 0.88,
+    height: 480,
+    borderRadius: radius.xl,
+    overflow: "hidden",
   },
-  errorText: {
-    fontSize: 16,
-  },
-  emptyText: {
-    textAlign: "center",
-    marginTop: 40,
-    fontSize: 16,
-  },
+  skeletonImage: { flex: 1 },
+  skeletonInfo: { padding: spacing.lg },
 });

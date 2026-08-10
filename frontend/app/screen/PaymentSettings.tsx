@@ -12,7 +12,7 @@ import {
   initiateEsewaPayment,
   initiateKhaltiPayment,
   PremiumStatus,
-} from "@/utils/api";
+} from "@/services/paymentService";
 
 const PLAN_PRICE_NPR = 500;
 
@@ -99,7 +99,7 @@ export default function PaymentSettings() {
           {status?.isPremium ? (
             <View style={[styles.activeCard, { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed }]}>
               <Ionicons name="diamond" size={32} color={colors.accent} />
-              <Text style={[styles.activeTitle, { color: colors.text }]}>You're Premium</Text>
+              <Text style={[styles.activeTitle, { color: colors.text }]}>You&apos;re Premium</Text>
               <Text style={[styles.activeSubtitle, { color: colors.textSecondary }]}>
                 Active until {formatDate(status.premiumExpiresAt)}
               </Text>
@@ -150,7 +150,7 @@ export default function PaymentSettings() {
 
           {status && !status.isPremium && (
             <View style={[styles.usageCard, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
-              <Text style={[styles.usageTitle, { color: colors.text }]}>Today's Free Usage</Text>
+              <Text style={[styles.usageTitle, { color: colors.text }]}>Today&apos;s Free Usage</Text>
               <Text style={[styles.usageText, { color: colors.textSecondary }]}>
                 {status.likesRemaining} of your free likes remaining
               </Text>

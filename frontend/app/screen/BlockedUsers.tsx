@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
-import { BlockedUser, getBlockedUsersApi, unblockUserApi } from "@/utils/api";
+import { BlockedUser, getBlockedUsersApi, unblockUserApi } from "@/services/profileService";
 
 export default function BlockedUsers() {
   const router = useRouter();

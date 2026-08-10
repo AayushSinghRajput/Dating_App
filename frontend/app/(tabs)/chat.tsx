@@ -14,8 +14,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import { getAllChats } from "@/utils/api";
+import { getAllChats } from "@/services/chatService";
 import ChatCard from "../../src/components/ChatCard";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -52,7 +51,7 @@ interface ChatsHeaderProps {
 
 export default function Chats() {
   const router = useRouter();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
@@ -161,13 +160,10 @@ export default function Chats() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
-      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.surface} />
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.background} />
 
       {/* Header */}
-      <LinearGradient
-        colors={isDark ? [colors.surface, colors.surface] : ["#ffffff", "#fff5f6"]}
-        style={[styles.header, { borderBottomColor: colors.border }]}
-      >
+      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         {isSearching ? (
           <View style={styles.searchRow}>
             <View style={[styles.searchBar, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
@@ -218,7 +214,7 @@ export default function Chats() {
             </Pressable>
           </>
         )}
-      </LinearGradient>
+      </View>
 
       {/* Online Users Strip */}
       {!isSearching && onlineUsers.length > 0 && (
@@ -277,14 +273,6 @@ export default function Chats() {
           }
         />
       </View>
-
-      {/* New Message Floating Button */}
-      <Pressable
-        style={[styles.newMessageButton, { backgroundColor: colors.accent }]}
-        onPress={() => console.log("New message")}
-      >
-        <Ionicons name="create" size={24} color="#fff" />
-      </Pressable>
     </SafeAreaView>
   );
 }
@@ -302,19 +290,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 14,
-    borderBottomWidth: 1,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 4,
-    minHeight: 76,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    minHeight: 68,
   },
   headerContent: { gap: 2 },
   headerTitle: {
     fontSize: 26,
     fontWeight: "800",
-    letterSpacing: -0.5,
   },
   headerSubtitle: {
     fontSize: 13,
@@ -421,19 +403,4 @@ const styles = StyleSheet.create({
   chatsTitle: { fontSize: 18, fontWeight: "700" },
   chatsCount: { fontSize: 14, fontWeight: "600" },
   chatsList: { paddingBottom: 8 },
-  newMessageButton: {
-    position: "absolute",
-    bottom: 30,
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 16,
-    elevation: 12,
-  },
 });

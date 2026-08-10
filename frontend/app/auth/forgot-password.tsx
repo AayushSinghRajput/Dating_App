@@ -14,7 +14,7 @@ import {
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { forgotPassword, resetPassword } from "../../utils/api";
+import { forgotPassword, resetPassword } from "../../services/authService";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
 

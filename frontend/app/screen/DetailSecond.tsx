@@ -15,7 +15,7 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, Feather } from "@expo/vector-icons";
-import { createOrUpdateProfile, Profile } from "@/utils/api";
+import { createOrUpdateProfile, Profile } from "@/services/profileService";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
 

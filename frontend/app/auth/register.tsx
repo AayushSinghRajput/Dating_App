@@ -15,7 +15,7 @@ import {
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { register } from "../../utils/api";
+import { register } from "../../services/authService";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useGoogleAuth } from "@/src/hooks/useGoogleAuth";

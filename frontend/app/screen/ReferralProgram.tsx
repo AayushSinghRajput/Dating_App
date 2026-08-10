@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
-import { getReferralInfo } from "@/utils/api";
+import { getReferralInfo } from "@/services/referralService";
 
 export default function ReferralProgram() {
   const router = useRouter();

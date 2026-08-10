@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
-import { getProfile, setIncognitoModeApi } from "@/utils/api";
+import { getProfile, setIncognitoModeApi } from "@/services/profileService";
 
 export default function Privacy() {
   const router = useRouter();

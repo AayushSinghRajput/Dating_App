@@ -14,7 +14,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNotifications } from "@/contexts/NotificationContext";
-import { AppNotification, createOrGetChat } from "@/utils/api";
+import { AppNotification } from "@/services/notificationService";
+import { createOrGetChat } from "@/services/chatService";
 
 function formatRelativeTime(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -280,7 +281,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: "800",
-    letterSpacing: -0.5,
   },
   headerIcons: {
     flexDirection: "row",

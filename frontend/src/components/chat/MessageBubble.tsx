@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Message } from "@/utils/api";
+import { Message } from "@/services/chatService";
 import VoiceMessageBubble from "./VoiceMessageBubble";
 import MediaMessageBubble from "./MediaMessageBubble";
 

@@ -21,7 +21,7 @@ import {
   createOrUpdateProfile,
   removePhotoApi,
   setPrimaryPhotoApi,
-} from "@/utils/api";
+} from "@/services/profileService";
 
 const MAX_PHOTOS = 6;
 
