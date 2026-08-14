@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
 import Profile from "../models/profileModel.js";
 import { containsBannedContent } from "../utils/moderation.js";
+import { getDiscoveryFeed } from "../services/recommendation/index.js";
 
 const MAX_PHOTOS = 6;
 const DEFAULT_PAGE_SIZE = 20;
@@ -14,13 +14,20 @@ export const createOrUpateProfile = async (req, res) => {
   const profileData = req.body;
 
   // multipart/form-data can't carry nested objects, so the client sends
-  // prompts as a JSON string in a single field — parse it back into an
-  // array here before validation/save.
+  // prompts/preferences as JSON strings in a single field — parse them back
+  // into objects here before validation/save.
   if (typeof profileData.prompts === "string") {
     try {
       profileData.prompts = JSON.parse(profileData.prompts);
     } catch {
       return res.status(400).json({ message: "Invalid prompts data." });
+    }
+  }
+  if (typeof profileData.preferences === "string") {
+    try {
+      profileData.preferences = JSON.parse(profileData.preferences);
+    } catch {
+      return res.status(400).json({ message: "Invalid preferences data." });
     }
   }
 
@@ -33,6 +40,18 @@ export const createOrUpateProfile = async (req, res) => {
         message: "You must be at least 18 years old to use this app.",
       });
     }
+  }
+
+  if (profileData.preferences) {
+    const minAge = Number(profileData.preferences.minAge);
+    const maxAge = Number(profileData.preferences.maxAge);
+    if (
+      Number.isNaN(minAge) || Number.isNaN(maxAge) ||
+      minAge < 18 || maxAge < 18 || minAge > maxAge
+    ) {
+      return res.status(400).json({ message: "Invalid age preference range." });
+    }
+    profileData.preferences = { minAge, maxAge };
   }
 
   const promptTextFlagged = Array.isArray(profileData.prompts)
@@ -83,9 +102,12 @@ export const getProfile = async (req, res) => {
   res.status(200).json(profile);
 };
 
-// @desc    Discovery feed: everyone except the logged-in user, blocked
-//          users (either direction), and incognito profiles. Actively
-//          boosted profiles are surfaced first.
+// @desc    Discovery feed. Runs the modular recommendation pipeline (see
+//          backend/services/recommendation) — safety & eligibility, hard
+//          filters (reciprocal age/gender, already-swiped), rule-based
+//          weighted ranking, and a freshness penalty against recent
+//          impressions. See backend/services/recommendation/index.js for
+//          the full pipeline description.
 // @route   GET /api/profile/allprofiles?page=&limit=
 // @access  Private
 export const getAllProfiles = async (req, res) => {
@@ -93,63 +115,10 @@ export const getAllProfiles = async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
   const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, parseInt(req.query.limit, 10) || DEFAULT_PAGE_SIZE));
 
-  const myProfile = await Profile.findOne({ user: loggedInUserId }).select("blockedUsers").lean();
-  const blockedByMe = (myProfile?.blockedUsers || []).map((id) => new mongoose.Types.ObjectId(id));
+  const { profiles, algorithmVersion } = await getDiscoveryFeed(loggedInUserId, { page, limit });
 
-  const now = new Date();
-  const loggedInObjectId = new mongoose.Types.ObjectId(loggedInUserId);
-
-  const matchStage = {
-    user: { $ne: loggedInObjectId, $nin: blockedByMe },
-    incognito: { $ne: true },
-    blockedUsers: { $ne: loggedInObjectId },
-  };
-
-  const profiles = await Profile.aggregate([
-    { $match: matchStage },
-    // Only an *active* boost should rank a profile first — an expired one
-    // shouldn't permanently outrank profiles that never boosted.
-    {
-      $addFields: {
-        boostRank: { $cond: [{ $gt: ["$boostedUntil", now] }, "$boostedUntil", null] },
-      },
-    },
-    { $sort: { boostRank: -1, _id: 1 } },
-    { $skip: (page - 1) * limit },
-    { $limit: limit },
-    {
-      $lookup: {
-        from: "users",
-        localField: "user",
-        foreignField: "_id",
-        as: "userDoc",
-        pipeline: [{ $project: { username: 1 } }],
-      },
-    },
-    { $unwind: { path: "$userDoc", preserveNullAndEmptyArrays: true } },
-  ]);
-
-  const users = profiles.map((p) => ({
-    id: p._id,
-    userId: p.user,
-    name: p.name || p.userDoc?.username,
-    age: p.age,
-    profileImage: p.profileImage,
-    photos: p.photos,
-    profession: p.profession,
-    location: p.location,
-    aboutMe: p.aboutMe,
-    gender: p.gender,
-    interestedIn: p.interestedIn,
-    hobbies: p.hobbies,
-    education: p.education,
-    relationshipGoals: p.relationshipGoals,
-    isVerified: p.verified,
-    prompts: p.prompts,
-    isBoosted: !!p.boostRank,
-  }));
-
-  res.status(200).json(users);
+  res.set("X-Algorithm-Version", algorithmVersion);
+  res.status(200).json(profiles);
 };
 
 // @desc    Toggle incognito mode: hides your profile from discovery for new

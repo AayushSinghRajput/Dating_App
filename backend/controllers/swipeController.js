@@ -1,5 +1,6 @@
 import Profile from "../models/profileModel.js";
 import { sendNotification } from "../utils/notify.js";
+import { logEvent } from "../services/recommendation/eventLogger.js";
 import {
   isUserPremium,
   resetIfNewDay,
@@ -10,6 +11,8 @@ import {
 
 // Shared by likeProfile/superLikeProfile: adds the mutual-match check,
 // records it on lastSwipe (for rewind), and fires the right notification.
+// Returns the target profile too, so callers can log behavioral events
+// against the target's *user* id without a second lookup.
 async function finalizeLike(req, currentProfile, targetProfileId, notificationType) {
   const targetProfile = await Profile.findById(targetProfileId);
   let isMatch = false;
@@ -30,13 +33,15 @@ async function finalizeLike(req, currentProfile, targetProfileId, notificationTy
       await Promise.all([
         sendNotification(io, { userId: targetProfile.user, type: "match", fromUserId: currentUserId }),
         sendNotification(io, { userId: currentUserId, type: "match", fromUserId: targetProfile.user }),
+        logEvent(currentUserId, targetProfile.user, "MATCH"),
+        logEvent(targetProfile.user, currentUserId, "MATCH"),
       ]);
     } else {
       await sendNotification(io, { userId: targetProfile.user, type: notificationType, fromUserId: currentUserId });
     }
   }
 
-  return isMatch;
+  return { isMatch, targetProfile };
 }
 
 /**
@@ -75,7 +80,8 @@ export const likeProfile = async (req, res) => {
   };
   await currentProfile.save();
 
-  const isMatch = await finalizeLike(req, currentProfile, targetProfileId, "like");
+  const { isMatch, targetProfile } = await finalizeLike(req, currentProfile, targetProfileId, "like");
+  if (targetProfile) logEvent(currentUserId, targetProfile.user, "LIKE");
 
   res.status(200).json({
     message: isMatch ? "It's a Match! 🎉" : "Profile liked",
@@ -123,7 +129,8 @@ export const superLikeProfile = async (req, res) => {
   };
   await currentProfile.save();
 
-  const isMatch = await finalizeLike(req, currentProfile, targetProfileId, "super_like");
+  const { isMatch, targetProfile } = await finalizeLike(req, currentProfile, targetProfileId, "super_like");
+  if (targetProfile) logEvent(currentUserId, targetProfile.user, "SUPER_LIKE");
 
   res.status(200).json({
     message: isMatch ? "It's a Match! 🎉" : "Super Like sent ⭐",
@@ -154,6 +161,9 @@ export const passProfile = async (req, res) => {
     swipedAt: new Date(),
   };
   await currentProfile.save();
+
+  const targetProfile = await Profile.findById(targetProfileId).select("user");
+  if (targetProfile) logEvent(currentUserId, targetProfile.user, "PASS");
 
   res.status(200).json({ message: "Profile passed successfully" });
 };

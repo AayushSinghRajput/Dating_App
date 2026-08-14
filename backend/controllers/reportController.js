@@ -1,5 +1,6 @@
 import Report from "../models/reportModel.js";
 import { performBlock } from "../utils/block.js";
+import { logEvent } from "../services/recommendation/eventLogger.js";
 
 const VALID_REASONS = ["inappropriate_content", "fake_profile", "harassment", "spam", "other"];
 
@@ -32,6 +33,8 @@ export const reportUser = async (req, res) => {
   } catch (blockError) {
     console.error("Error auto-blocking after report:", blockError);
   }
+
+  logEvent(reporterId, targetUserId, "REPORT", { reason });
 
   res.status(201).json({ message: "Report submitted", reportId: report._id });
 };

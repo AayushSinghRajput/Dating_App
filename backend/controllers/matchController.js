@@ -1,6 +1,7 @@
 import Profile from "../models/profileModel.js";
 import Chat from "../models/chatModel.js";
 import Message from "../models/messageModel.js";
+import { logEvent } from "../services/recommendation/eventLogger.js";
 
 /**
  * Unmatch a user
@@ -52,6 +53,8 @@ export const unmatchProfile = async (req, res) => {
     byUserId: currentUserId,
     chatId: chat?._id,
   });
+
+  logEvent(currentUserId, targetUserId, "UNMATCH");
 
   res.status(200).json({ message: "Unmatched successfully" });
 };

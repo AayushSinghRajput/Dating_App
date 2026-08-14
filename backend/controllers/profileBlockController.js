@@ -1,5 +1,6 @@
 import Profile from "../models/profileModel.js";
 import { performBlock } from "../utils/block.js";
+import { logEvent } from "../services/recommendation/eventLogger.js";
 
 // @desc Block a user: hides each other from discovery, breaks any existing
 // match/like, and deletes their chat history. Blocking is silent (no notification).
@@ -14,6 +15,7 @@ export const blockUser = async (req, res) => {
   }
 
   const blockedUsers = await performBlock(loggedInUserId, targetUserId);
+  logEvent(loggedInUserId, targetUserId, "BLOCK");
   res.status(200).json({ message: "User blocked", blockedUsers });
 };
 

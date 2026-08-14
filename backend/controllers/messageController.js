@@ -3,6 +3,7 @@ import Message from "../models/messageModel.js";
 import Profile from "../models/profileModel.js";
 import { isBlockedEitherWay } from "../utils/block.js";
 import { containsBannedContent } from "../utils/moderation.js";
+import { logEvent } from "../services/recommendation/eventLogger.js";
 
 const DEFAULT_MESSAGE_LIMIT = 100;
 const MAX_MESSAGE_LIMIT = 200;
@@ -55,6 +56,7 @@ async function finalizeAndBroadcast(req, newMessage, senderId, extraFields = {})
       preview: previewForMessage(extraFields),
       createdAt: newMessage.createdAt,
     });
+    logEvent(senderId, receiverId, "MESSAGE_SENT");
   }
 
   return messageWithProfile;

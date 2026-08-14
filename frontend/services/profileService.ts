@@ -32,6 +32,7 @@ export interface Profile {
   incognito?: boolean;
   verified?: boolean;
   prompts?: ProfilePrompt[];
+  preferences?: { minAge: number; maxAge: number };
 }
 
 export interface ProfileResponse {
@@ -72,6 +73,10 @@ export const createOrUpdateProfile = async (
         // before the request is even sent ("Network request failed").
         // Serialize as JSON; the backend parses it back out.
         formData.append("prompts", JSON.stringify(value));
+      } else if (key === "preferences" && typeof value === "object") {
+        // Same nested-object issue as prompts above — {minAge, maxAge}
+        // isn't a string/file, so it needs the same JSON-string treatment.
+        formData.append("preferences", JSON.stringify(value));
       } else if (Array.isArray(value)) {
         value.forEach((v) => formData.append(`${key}[]`, v));
       } else {

@@ -62,6 +62,8 @@ export default function ProfileEdit() {
   const [gender, setGender] = useState("");
   const [interestedIn, setInterestedIn] = useState("");
   const [prompts, setPrompts] = useState<ProfilePrompt[]>([]);
+  const [minAge, setMinAge] = useState("18");
+  const [maxAge, setMaxAge] = useState("99");
 
   const [photos, setPhotos] = useState<string[]>([]);
   const [newPhotos, setNewPhotos] = useState<string[]>([]);
@@ -81,6 +83,8 @@ export default function ProfileEdit() {
         setGender(profile.gender || "");
         setInterestedIn(profile.interestedIn || "");
         setPrompts(profile.prompts || []);
+        setMinAge(String(profile.preferences?.minAge ?? 18));
+        setMaxAge(String(profile.preferences?.maxAge ?? 99));
         setPhotos((profile as any).photos || []);
       } catch (error: any) {
         Toast.show({ type: "error", text1: "Failed to load profile", text2: error.message });
@@ -191,6 +195,16 @@ export default function ProfileEdit() {
       return;
     }
 
+    const minAgeNum = Number(minAge);
+    const maxAgeNum = Number(maxAge);
+    if (
+      isNaN(minAgeNum) || isNaN(maxAgeNum) ||
+      minAgeNum < 18 || maxAgeNum < 18 || minAgeNum > maxAgeNum
+    ) {
+      Alert.alert("Error", "Please enter a valid age preference range (18+, min ≤ max)");
+      return;
+    }
+
     const filledPrompts = prompts.filter((p) => p.answer.trim().length > 0);
 
     setIsSaving(true);
@@ -210,6 +224,7 @@ export default function ProfileEdit() {
           .map((h) => h.trim())
           .filter(Boolean),
         prompts: filledPrompts.map((p) => ({ question: p.question, answer: p.answer.trim() })),
+        preferences: { minAge: minAgeNum, maxAge: maxAgeNum },
         photos:
           newPhotos.length > 0
             ? newPhotos.map((uri, i) => ({ uri, name: `photo-${i}.jpg`, type: "image/jpeg" }))
@@ -468,6 +483,36 @@ export default function ProfileEdit() {
           </View>
         </View>
 
+        {/* Discovery Preferences */}
+        <View style={[styles.formSection, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.sectionLabel, { color: colors.text }]}>Discovery Preferences</Text>
+          <Text style={[styles.imageHint, { color: colors.textSecondary, marginBottom: 12 }]}>
+            Only people in this age range will see you, and you&apos;ll only see people in this range.
+          </Text>
+          <View style={styles.ageRangeRow}>
+            <View style={styles.ageRangeInput}>
+              <Text style={[styles.label, { color: colors.text }]}>Min Age</Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
+                value={minAge}
+                onChangeText={setMinAge}
+                keyboardType="numeric"
+                maxLength={3}
+              />
+            </View>
+            <View style={styles.ageRangeInput}>
+              <Text style={[styles.label, { color: colors.text }]}>Max Age</Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
+                value={maxAge}
+                onChangeText={setMaxAge}
+                keyboardType="numeric"
+                maxLength={3}
+              />
+            </View>
+          </View>
+        </View>
+
         {/* Prompts Section */}
         <View style={[styles.formSection, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionLabel, { color: colors.text }]}>Prompts</Text>
@@ -685,6 +730,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
+  },
+  ageRangeRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  ageRangeInput: {
+    flex: 1,
   },
   chip: {
     paddingHorizontal: 16,
