@@ -32,7 +32,18 @@ export interface Profile {
   incognito?: boolean;
   verified?: boolean;
   prompts?: ProfilePrompt[];
-  preferences?: { minAge: number; maxAge: number };
+  preferences?: { minAge: number; maxAge: number; dealbreakers?: string[]; maxDistanceKm?: number | null };
+  lifestyle?: {
+    smoking?: string;
+    drinking?: string;
+    pets?: string;
+    wantsChildren?: string;
+  };
+  // GeoJSON Point as stored/returned by the backend when reading a profile.
+  // When *sending* an update, pass { lng, lat } instead (cast as needed) —
+  // the backend converts it (see createOrUpateProfile). Not the same shape
+  // on read vs. write, same as `photos` above.
+  coordinates?: { type: "Point"; coordinates: [number, number] };
 }
 
 export interface ProfileResponse {
@@ -73,10 +84,13 @@ export const createOrUpdateProfile = async (
         // before the request is even sent ("Network request failed").
         // Serialize as JSON; the backend parses it back out.
         formData.append("prompts", JSON.stringify(value));
-      } else if (key === "preferences" && typeof value === "object") {
-        // Same nested-object issue as prompts above — {minAge, maxAge}
-        // isn't a string/file, so it needs the same JSON-string treatment.
-        formData.append("preferences", JSON.stringify(value));
+      } else if (
+        (key === "preferences" || key === "lifestyle" || key === "coordinates") &&
+        typeof value === "object"
+      ) {
+        // Same nested-object issue as prompts above — a plain object isn't a
+        // string/file, so it needs the same JSON-string treatment.
+        formData.append(key, JSON.stringify(value));
       } else if (Array.isArray(value)) {
         value.forEach((v) => formData.append(`${key}[]`, v));
       } else {
@@ -334,6 +348,22 @@ export interface BlockedUser {
   age?: number;
   location?: string;
 }
+
+// Fire-and-forget: records a PROFILE_VIEW behavioral event server-side.
+// Never surfaces an error to the caller — a failed view-log shouldn't
+// interrupt someone looking at a profile.
+export const recordProfileView = async (targetUserId: string): Promise<void> => {
+  try {
+    const authToken = await AsyncStorage.getItem("token");
+    if (!authToken) return;
+    await fetch(`${BASE_URL}/api/profile/${targetUserId}/view`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+  } catch {
+    // Swallow — non-critical.
+  }
+};
 
 export const blockUserApi = async (targetUserId: string): Promise<void> => {
   const authToken = await AsyncStorage.getItem("token");

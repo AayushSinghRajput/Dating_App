@@ -14,6 +14,7 @@ export async function logImpressions(viewerUserId, rankedPage) {
     position: index,
     score: entry.finalScore,
     algorithmVersion: ALGORITHM_VERSION,
+    features: { ...entry.features, reciprocalScore: entry.reciprocalScore },
   }));
 
   try {

@@ -1,7 +1,13 @@
 import mongoose from "mongoose";
 import Profile from "../../models/profileModel.js";
 import { buildProfileSafetyMatch, excludeBannedUsersMatch } from "./safetyFilter.js";
-import { buildAgeRangeStages, buildAlreadySwipedMatch, passesGenderReciprocal } from "./hardFilter.js";
+import {
+  buildAgeRangeStages,
+  buildAlreadySwipedMatch,
+  buildDealbreakerMatch,
+  buildDistanceMatch,
+  passesGenderReciprocal,
+} from "./hardFilter.js";
 
 // How many eligible profiles to pull before scoring/ranking. At this app's
 // current scale a full rank-then-slice over a few hundred candidates is
@@ -26,6 +32,8 @@ export async function generateCandidates(viewerProfile, viewerUserId) {
       $match: {
         ...buildProfileSafetyMatch(viewerUserId, blockedByMe),
         ...buildAlreadySwipedMatch(viewerProfile),
+        ...buildDealbreakerMatch(viewerProfile),
+        ...buildDistanceMatch(viewerProfile),
       },
     },
     // Age is optional on a profile (onboarding doesn't always guarantee it

@@ -4,6 +4,7 @@ import { generateCandidates } from "./candidateGenerator.js";
 import { computeFreshnessPenalties } from "./freshnessEngine.js";
 import { buildTasteProfile } from "./behaviorModel.js";
 import { computeReciprocalScores } from "./reciprocalScorer.js";
+import { computePopularityPenalties } from "./popularityControl.js";
 import { scoreCandidates, rankByScore } from "./rankingEngine.js";
 import { applyExploration } from "./explorationEngine.js";
 import { applyDiversity } from "./diversityReRanker.js";
@@ -32,11 +33,19 @@ export async function getDiscoveryFeed(viewerUserId, { page = 1, limit = 20 } = 
     buildTasteProfile(viewerUserId),
   ]);
 
-  const [freshnessPenalties, reciprocalScores] = await Promise.all([
+  const [freshnessPenalties, reciprocalScores, popularityPenalties] = await Promise.all([
     computeFreshnessPenalties(viewerUserId, candidates),
     computeReciprocalScores(viewerProfile, viewerUser?.lastActiveAt, candidates, tasteProfile),
+    computePopularityPenalties(candidates),
   ]);
-  const scored = scoreCandidates(viewerProfile, candidates, freshnessPenalties, tasteProfile, reciprocalScores);
+  const scored = scoreCandidates(
+    viewerProfile,
+    candidates,
+    freshnessPenalties,
+    tasteProfile,
+    reciprocalScores,
+    popularityPenalties
+  );
   const ranked = rankByScore(scored);
 
   // Exploration/diversity re-ranking operate on "the next page to show" and

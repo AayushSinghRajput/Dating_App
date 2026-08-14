@@ -2,6 +2,12 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const ACTIVITY_HALF_LIFE_DAYS = 7; // score halves roughly every week of inactivity
 const MAX_PHOTOS = 6;
 const MIN_BIO_LENGTH_FOR_FULL_CREDIT = 60;
+const EARTH_RADIUS_KM = 6371;
+// When the viewer hasn't set an explicit max-distance preference, this is
+// the reference distance at which distanceScore bottoms out at 0 — closer
+// than this still nudges ranking, it just isn't a hard cutoff (that's
+// hardFilter.js's job, and only applies when maxDistanceKm *is* set).
+const DEFAULT_DISTANCE_SCALE_KM = 50;
 
 // Every score below is normalized to roughly [0, 1] so rankingEngine's
 // configurable weights mean the same thing regardless of which features are
@@ -54,6 +60,49 @@ function boostScore(candidate) {
   return candidate.boostedUntil && new Date(candidate.boostedUntil) > new Date() ? 1 : 0;
 }
 
+function haversineDistanceKm([lng1, lat1], [lng2, lat2]) {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Section 9.6 — distance as a *soft* ranking signal (closer scores higher),
+// separate from the hard cutoff in hardFilter.js. Neutral when either side
+// hasn't shared their location — this never punishes someone for not
+// granting location access, it just can't reward proximity it doesn't know.
+function distanceScore(viewerProfile, candidate) {
+  const viewerCoords = viewerProfile.coordinates?.coordinates;
+  const candidateCoords = candidate.coordinates?.coordinates;
+  if (!viewerCoords || !candidateCoords) return 0.5;
+
+  const distanceKm = haversineDistanceKm(viewerCoords, candidateCoords);
+  const scale = viewerProfile.preferences?.maxDistanceKm || DEFAULT_DISTANCE_SCALE_KM;
+  return Math.max(0, 1 - distanceKm / scale);
+}
+
+// Section 9.4 — lifestyle compatibility. Each dimension is independent (a
+// smoking mismatch shouldn't be masked by pet compatibility), voluntary,
+// and neutral when either side hasn't stated a value — this only ever
+// scores what two people *chose to share*, matching Section 30's guidance
+// not to infer or penalize based on unstated sensitive attributes. Any
+// dimension the viewer has marked as a dealbreaker (Section 6) never
+// reaches this function at all — it's already a hard filter by then.
+function lifestyleDimensionScore(viewerValue, candidateValue) {
+  if (!viewerValue || !candidateValue) return 0.5;
+  return viewerValue === candidateValue ? 1 : 0.4;
+}
+
+function lifestyleScore(viewerLifestyle, candidateLifestyle) {
+  const dimensions = ["smoking", "drinking", "pets", "wantsChildren"];
+  const scores = dimensions.map((d) =>
+    lifestyleDimensionScore(viewerLifestyle?.[d], candidateLifestyle?.[d])
+  );
+  return scores.reduce((sum, s) => sum + s, 0) / scores.length;
+}
+
 const MAX_AGE_AFFINITY_SPREAD = 15;
 
 // Section 10/11/17 — "who does this user actually engage with?" instead of
@@ -64,19 +113,25 @@ const MAX_AGE_AFFINITY_SPREAD = 15;
 // grows in influence as a user generates more data, without rankingEngine
 // needing any per-user weight logic of its own.
 function behavioralScore(candidate, tasteProfile) {
-  if (!tasteProfile) return 0.5; // no like history yet — neutral, not penalized
+  if (!tasteProfile) return 0.5; // no interaction history yet — neutral, not penalized
 
-  const { preferredHobbies, preferredAvgAge, preferredRelationshipGoal, confidence } = tasteProfile;
+  const { hobbyWeights, preferredAvgAge, preferredRelationshipGoal, avoidedRelationshipGoal, confidence } =
+    tasteProfile;
 
+  // hobbyWeights is signed (Section 29) — positive entries came from likes,
+  // negative from passes/blocks/reports, so a candidate whose hobbies match
+  // an avoided pattern pulls this below neutral rather than merely failing
+  // to score above it.
   let hobbyAffinity = 0.5;
   const candidateHobbies = (candidate.hobbies || []).map((h) => h.toLowerCase().trim());
-  if (candidateHobbies.length > 0 && preferredHobbies.size > 0) {
-    const maxWeight = Math.max(...preferredHobbies.values());
+  if (candidateHobbies.length > 0 && hobbyWeights.size > 0) {
+    const maxAbsWeight = Math.max(1, ...[...hobbyWeights.values()].map(Math.abs));
     const matchedWeight = candidateHobbies.reduce(
-      (sum, hobby) => sum + (preferredHobbies.get(hobby) || 0),
+      (sum, hobby) => sum + (hobbyWeights.get(hobby) || 0),
       0
     );
-    hobbyAffinity = Math.min(1, matchedWeight / (maxWeight * candidateHobbies.length));
+    const normalized = matchedWeight / (maxAbsWeight * candidateHobbies.length);
+    hobbyAffinity = Math.max(0, Math.min(1, 0.5 + normalized * 0.5));
   }
 
   let ageAffinity = 0.5;
@@ -86,8 +141,11 @@ function behavioralScore(candidate, tasteProfile) {
   }
 
   let goalAffinity = 0.5;
-  if (preferredRelationshipGoal && candidate.relationshipGoals) {
-    goalAffinity = candidate.relationshipGoals.toLowerCase().trim() === preferredRelationshipGoal ? 1 : 0.3;
+  const candidateGoal = candidate.relationshipGoals?.toLowerCase().trim();
+  if (candidateGoal && avoidedRelationshipGoal && candidateGoal === avoidedRelationshipGoal) {
+    goalAffinity = 0; // strong negative signal (block/report pattern) — not a mild penalty
+  } else if (preferredRelationshipGoal && candidateGoal) {
+    goalAffinity = candidateGoal === preferredRelationshipGoal ? 1 : 0.3;
   }
 
   const rawScore = (hobbyAffinity + ageAffinity + goalAffinity) / 3;
@@ -105,5 +163,7 @@ export function extractFeatures(viewerProfile, candidate, tasteProfile) {
     completenessScore: profileCompletenessScore(candidate),
     boostScore: boostScore(candidate),
     behavioralScore: behavioralScore(candidate, tasteProfile),
+    lifestyleScore: lifestyleScore(viewerProfile.lifestyle, candidate.lifestyle),
+    distanceScore: distanceScore(viewerProfile, candidate),
   };
 }

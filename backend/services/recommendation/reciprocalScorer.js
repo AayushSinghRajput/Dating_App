@@ -6,11 +6,13 @@ import { buildTasteProfilesForUsers } from "./behaviorModel.js";
 // thing as being liked) and any freshness/exposure penalty (those are
 // delivery mechanics, not attraction signals).
 const ATTRACTION_FEATURE_WEIGHTS = {
-  interestScore: 0.25,
-  relationshipScore: 0.2,
-  activityScore: 0.2,
-  completenessScore: 0.15,
-  behavioralScore: 0.2,
+  interestScore: 0.18,
+  relationshipScore: 0.13,
+  activityScore: 0.13,
+  completenessScore: 0.09,
+  behavioralScore: 0.18,
+  lifestyleScore: 0.17,
+  distanceScore: 0.12,
 };
 
 function combineAttractionFeatures(features) {
@@ -43,6 +45,8 @@ export async function computeReciprocalScores(viewerProfile, viewerLastActiveAt,
     photos: viewerProfile.photos,
     aboutMe: viewerProfile.aboutMe,
     prompts: viewerProfile.prompts,
+    lifestyle: viewerProfile.lifestyle,
+    coordinates: viewerProfile.coordinates,
     userDoc: { lastActiveAt: viewerLastActiveAt },
   };
 
@@ -51,7 +55,12 @@ export async function computeReciprocalScores(viewerProfile, viewerLastActiveAt,
       extractFeatures(viewerProfile, candidate, viewerTasteProfile)
     );
 
-    const candidateAsViewer = { hobbies: candidate.hobbies, relationshipGoals: candidate.relationshipGoals };
+    const candidateAsViewer = {
+      hobbies: candidate.hobbies,
+      relationshipGoals: candidate.relationshipGoals,
+      lifestyle: candidate.lifestyle,
+      coordinates: candidate.coordinates,
+    };
     const candidateTaste = candidateTasteProfiles.get(candidate.user.toString()) || null;
     const pCandidateLikesViewer = combineAttractionFeatures(
       extractFeatures(candidateAsViewer, viewerAsCandidate, candidateTaste)

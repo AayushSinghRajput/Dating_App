@@ -1,10 +1,12 @@
 import Profile from "../models/profileModel.js";
 import { containsBannedContent } from "../utils/moderation.js";
 import { getDiscoveryFeed } from "../services/recommendation/index.js";
+import { logEvent } from "../services/recommendation/eventLogger.js";
 
 const MAX_PHOTOS = 6;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 50;
+export const DEALBREAKER_KEYS = ["relationshipGoals", "smoking", "drinking", "pets", "wantsChildren"];
 
 // @desc    Create or update the logged-in user's profile
 // @route   POST /api/profile/create
@@ -30,6 +32,20 @@ export const createOrUpateProfile = async (req, res) => {
       return res.status(400).json({ message: "Invalid preferences data." });
     }
   }
+  if (typeof profileData.lifestyle === "string") {
+    try {
+      profileData.lifestyle = JSON.parse(profileData.lifestyle);
+    } catch {
+      return res.status(400).json({ message: "Invalid lifestyle data." });
+    }
+  }
+  if (typeof profileData.coordinates === "string") {
+    try {
+      profileData.coordinates = JSON.parse(profileData.coordinates);
+    } catch {
+      return res.status(400).json({ message: "Invalid coordinates data." });
+    }
+  }
 
   // Enforce minimum age server-side (the onboarding UI also checks this,
   // but that's trivially bypassable by calling the API directly).
@@ -51,7 +67,37 @@ export const createOrUpateProfile = async (req, res) => {
     ) {
       return res.status(400).json({ message: "Invalid age preference range." });
     }
-    profileData.preferences = { minAge, maxAge };
+
+    // Section 6 — dealbreakers may only name a signal that actually supports
+    // being promoted to a hard filter (see hardFilter.js's dealbreaker
+    // handling); anything else is silently dropped rather than rejected, so
+    // stale client versions can't wedge a user's preferences.
+    const rawDealbreakers = Array.isArray(profileData.preferences.dealbreakers)
+      ? profileData.preferences.dealbreakers
+      : [];
+    const dealbreakers = rawDealbreakers.filter((key) => DEALBREAKER_KEYS.includes(key));
+
+    let maxDistanceKm = null;
+    if (profileData.preferences.maxDistanceKm !== null && profileData.preferences.maxDistanceKm !== undefined) {
+      const parsed = Number(profileData.preferences.maxDistanceKm);
+      if (Number.isNaN(parsed) || parsed < 1) {
+        return res.status(400).json({ message: "Invalid max distance." });
+      }
+      maxDistanceKm = parsed;
+    }
+
+    profileData.preferences = { minAge, maxAge, dealbreakers, maxDistanceKm };
+  }
+
+  // Frontend sends {lng, lat} (simplest shape to build from expo-location);
+  // convert to the GeoJSON Point shape the schema/geo index expect.
+  if (profileData.coordinates) {
+    const lng = Number(profileData.coordinates.lng);
+    const lat = Number(profileData.coordinates.lat);
+    if (Number.isNaN(lng) || Number.isNaN(lat) || lng < -180 || lng > 180 || lat < -90 || lat > 90) {
+      return res.status(400).json({ message: "Invalid coordinates." });
+    }
+    profileData.coordinates = { type: "Point", coordinates: [lng, lat] };
   }
 
   const promptTextFlagged = Array.isArray(profileData.prompts)
@@ -134,4 +180,22 @@ export const setIncognitoMode = async (req, res) => {
   );
   if (!profile) return res.status(404).json({ message: "Profile not found" });
   res.status(200).json({ incognito: profile.incognito });
+};
+
+// @desc    Record that the logged-in user viewed another user's full profile
+//          (Section 20's PROFILE_VIEW event) — feeds behaviorModel.js the
+//          same way LIKE/PASS do, just a weaker signal (no weight in
+//          summarizeInteractions yet, but the raw event is captured for
+//          when that's worth adding).
+// @route   POST /api/profile/:targetUserId/view
+// @access  Private
+export const recordProfileView = async (req, res) => {
+  const viewerId = req.user.id;
+  const { targetUserId } = req.params;
+
+  if (viewerId !== targetUserId) {
+    logEvent(viewerId, targetUserId, "PROFILE_VIEW");
+  }
+
+  res.status(204).send();
 };

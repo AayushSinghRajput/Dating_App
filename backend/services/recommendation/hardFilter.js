@@ -46,6 +46,63 @@ export function buildAgeRangeStages(viewerAge, viewerMinAge, viewerMaxAge) {
   ];
 }
 
+const DEALBREAKER_FIELD_PATHS = {
+  relationshipGoals: "relationshipGoals",
+  smoking: "lifestyle.smoking",
+  drinking: "lifestyle.drinking",
+  pets: "lifestyle.pets",
+  wantsChildren: "lifestyle.wantsChildren",
+};
+
+function getViewerDealbreakerValue(viewerProfile, key) {
+  if (key === "relationshipGoals") return viewerProfile.relationshipGoals;
+  return viewerProfile.lifestyle?.[key];
+}
+
+// Section 6 — dealbreakers: a user can promote a normally-soft compatibility
+// signal (relationshipGoals, or a lifestyle attribute) into a hard filter
+// via preferences.dealbreakers (see profileController.js's DEALBREAKER_KEYS
+// for the allowed set). Only enforced when the viewer has both opted in AND
+// actually stated a value for that field themselves — there's nothing
+// meaningful to hard-filter against an unset preference.
+export function buildDealbreakerMatch(viewerProfile) {
+  const dealbreakers = viewerProfile.preferences?.dealbreakers || [];
+  const match = {};
+
+  for (const key of dealbreakers) {
+    const fieldPath = DEALBREAKER_FIELD_PATHS[key];
+    const viewerValue = getViewerDealbreakerValue(viewerProfile, key);
+    if (fieldPath && viewerValue) {
+      match[fieldPath] = viewerValue;
+    }
+  }
+
+  return match;
+}
+
+const EARTH_RADIUS_KM = 6371;
+
+// Section 6/9.6 — distance hard filter. Only enforced when the viewer has
+// both set a max distance AND saved their own coordinates — someone who
+// hasn't opted into location sharing gets no distance filtering rather than
+// being excluded from discovery entirely. Uses $geoWithin/$centerSphere
+// (not $geoNear) specifically so this can live as an ordinary $match stage
+// — $geoNear is required to be the pipeline's first stage, which would
+// force restructuring the safety/hard-filter ordering elsewhere.
+export function buildDistanceMatch(viewerProfile) {
+  const maxDistanceKm = viewerProfile.preferences?.maxDistanceKm;
+  const viewerCoords = viewerProfile.coordinates?.coordinates;
+  if (!maxDistanceKm || !viewerCoords || viewerCoords.length !== 2) return {};
+
+  return {
+    coordinates: {
+      $geoWithin: {
+        $centerSphere: [viewerCoords, maxDistanceKm / EARTH_RADIUS_KM],
+      },
+    },
+  };
+}
+
 // Already-swiped candidates (liked, passed, super-liked, or matched) are
 // excluded outright for now. Re-surfacing old passes after a cooldown is a
 // real product idea (per spec Section 6) but is a configuration decision
