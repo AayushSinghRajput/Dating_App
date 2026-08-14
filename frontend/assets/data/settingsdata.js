@@ -1,6 +1,5 @@
 // assets/data/settingsdata.js
 const settings = [
-  { id: "1", title: "Edit Profile", icon: "person-circle-outline" },
   { id: "2", title: "Account Privacy", icon: "lock-closed-outline" },
   { id: "10", title: "Change Password", icon: "key-outline" },
   { id: "11", title: "Email & Verification", icon: "mail-outline" },

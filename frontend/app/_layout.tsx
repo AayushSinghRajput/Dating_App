@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { StatusBar } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { initToken } from "../services/apiClient";
+import { initToken, onAuthChange } from "../services/apiClient";
 import Toast from "react-native-toast-message";
 import { CallProvider } from "../contexts/CallContext";
 import { NotificationProvider } from "../contexts/NotificationContext";
+import { ChatNotificationProvider } from "../contexts/ChatNotificationContext";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import IncomingCallModal from "../src/components/calling/IncomingCallModal";
 import InCallScreen from "../src/components/calling/InCallScreen";
@@ -56,6 +57,13 @@ export default function RootLayout() {
       setIsLoggedIn(!!token);
     };
     checkLogin();
+
+    // Keep isLoggedIn in sync with every saveToken()/clearToken() call
+    // (login, logout, ban-triggered logout, etc.), not just the cold-start
+    // check above — otherwise this state can go stale while the app
+    // navigates around it.
+    onAuthChange(setIsLoggedIn);
+    return () => onAuthChange(null);
   }, []);
 
   if (isLoggedIn === null) {
@@ -65,17 +73,15 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        {isLoggedIn ? (
-          <NotificationProvider>
+        <NotificationProvider>
+          <ChatNotificationProvider>
             <CallProvider>
               <AppShell isLoggedIn={isLoggedIn} />
               <IncomingCallModal />
               <InCallScreen />
             </CallProvider>
-          </NotificationProvider>
-        ) : (
-          <AppShell isLoggedIn={isLoggedIn} />
-        )}
+          </ChatNotificationProvider>
+        </NotificationProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

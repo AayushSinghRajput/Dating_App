@@ -22,8 +22,26 @@ import {
   removePhotoApi,
   setPrimaryPhotoApi,
 } from "@/services/profileService";
+import { showActionSheet } from "@/src/components/GlobalActionSheet";
+import { PROMPT_QUESTIONS, MAX_PROMPTS, ProfilePrompt } from "@/src/constants/prompts";
+import { spacing } from "@/src/theme/spacing";
+import { radius } from "@/src/theme/radius";
+import { typography } from "@/src/theme/typography";
 
 const MAX_PHOTOS = 6;
+
+const GENDER_OPTIONS = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "non-binary", label: "Non-binary" },
+  { value: "other", label: "Other" },
+];
+
+const INTERESTED_IN_OPTIONS = [
+  { value: "male", label: "Men" },
+  { value: "women", label: "Women" },
+  { value: "everyone", label: "Everyone" },
+];
 
 export default function ProfileEdit() {
   const router = useRouter();
@@ -38,7 +56,12 @@ export default function ProfileEdit() {
   const [location, setLocation] = useState("");
   const [bio, setBio] = useState("");
   const [profession, setProfession] = useState("");
+  const [education, setEducation] = useState("");
+  const [relationshipGoals, setRelationshipGoals] = useState("");
   const [hobbies, setHobbies] = useState("");
+  const [gender, setGender] = useState("");
+  const [interestedIn, setInterestedIn] = useState("");
+  const [prompts, setPrompts] = useState<ProfilePrompt[]>([]);
 
   const [photos, setPhotos] = useState<string[]>([]);
   const [newPhotos, setNewPhotos] = useState<string[]>([]);
@@ -47,12 +70,17 @@ export default function ProfileEdit() {
     const load = async () => {
       try {
         const profile = await getProfile();
-        setName(profile.name || "");
+        setName(profile.name || profile.user?.username || "");
         setAge(profile.age ? String(profile.age) : "");
         setLocation(profile.location || "");
         setBio(profile.aboutMe || "");
         setProfession(profile.profession || "");
+        setEducation(profile.education || "");
+        setRelationshipGoals(profile.relationshipGoals || "");
         setHobbies((profile.hobbies || []).join(", "));
+        setGender(profile.gender || "");
+        setInterestedIn(profile.interestedIn || "");
+        setPrompts(profile.prompts || []);
         setPhotos((profile as any).photos || []);
       } catch (error: any) {
         Toast.show({ type: "error", text1: "Failed to load profile", text2: error.message });
@@ -75,13 +103,21 @@ export default function ProfileEdit() {
       Alert.alert("Permission Denied", "You need to allow photo access.");
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-    if (!result.canceled) {
-      setNewPhotos((prev) => [...prev, result.assets[0].uri]);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled) {
+        setNewPhotos((prev) => [...prev, result.assets[0].uri]);
+      }
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Couldn't open photo picker",
+        text2: "Your device or emulator doesn't have a photo picker app installed.",
+      });
     }
   };
 
@@ -122,6 +158,28 @@ export default function ProfileEdit() {
     setNewPhotos((prev) => prev.filter((p) => p !== uri));
   };
 
+  const handleAddPrompt = () => {
+    const usedQuestions = new Set(prompts.map((p) => p.question));
+    const available = PROMPT_QUESTIONS.filter((q) => !usedQuestions.has(q));
+    if (available.length === 0) return;
+
+    showActionSheet({
+      title: "Choose a prompt",
+      options: available.map((question) => ({
+        label: question,
+        onPress: () => setPrompts((prev) => [...prev, { question, answer: "" }]),
+      })),
+    });
+  };
+
+  const handleRemovePrompt = (question: string) => {
+    setPrompts((prev) => prev.filter((p) => p.question !== question));
+  };
+
+  const handlePromptAnswerChange = (question: string, answer: string) => {
+    setPrompts((prev) => prev.map((p) => (p.question === question ? { ...p, answer } : p)));
+  };
+
   const saveProfile = async () => {
     if (!name.trim() || !age.trim() || !location.trim()) {
       Alert.alert("Error", "Please fill in all required fields");
@@ -133,6 +191,8 @@ export default function ProfileEdit() {
       return;
     }
 
+    const filledPrompts = prompts.filter((p) => p.answer.trim().length > 0);
+
     setIsSaving(true);
     try {
       await createOrUpdateProfile({
@@ -141,10 +201,15 @@ export default function ProfileEdit() {
         location: location.trim(),
         aboutMe: bio.trim(),
         profession: profession.trim(),
+        education: education.trim(),
+        relationshipGoals: relationshipGoals.trim(),
+        gender: gender || undefined,
+        interestedIn: interestedIn || undefined,
         hobbies: hobbies
           .split(",")
           .map((h) => h.trim())
           .filter(Boolean),
+        prompts: filledPrompts.map((p) => ({ question: p.question, answer: p.answer.trim() })),
         photos:
           newPhotos.length > 0
             ? newPhotos.map((uri, i) => ({ uri, name: `photo-${i}.jpg`, type: "image/jpeg" }))
@@ -172,14 +237,14 @@ export default function ProfileEdit() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, shadowColor: colors.shadow }]}>
-        <Pressable style={styles.backButton} onPress={handleBack}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <Pressable style={styles.headerButton} onPress={handleBack} hitSlop={8}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Edit Profile</Text>
-        <View style={styles.headerPlaceholder} />
+        <Text style={[typography.h3, { color: colors.text }]}>Edit Profile</Text>
+        <View style={styles.headerButton} />
       </View>
 
       <ScrollView
@@ -290,6 +355,56 @@ export default function ProfileEdit() {
             />
           </View>
 
+          {/* Gender */}
+          <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: colors.text }]}>Gender</Text>
+            <View style={styles.chipRow}>
+              {GENDER_OPTIONS.map((option) => {
+                const isActive = gender === option.value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    style={[
+                      styles.chip,
+                      { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+                      isActive && { backgroundColor: colors.accent, borderColor: colors.accent },
+                    ]}
+                    onPress={() => setGender(isActive ? "" : option.value)}
+                  >
+                    <Text style={[styles.chipText, { color: isActive ? "#fff" : colors.textSecondary }]}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Interested In */}
+          <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: colors.text }]}>Interested In</Text>
+            <View style={styles.chipRow}>
+              {INTERESTED_IN_OPTIONS.map((option) => {
+                const isActive = interestedIn === option.value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    style={[
+                      styles.chip,
+                      { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+                      isActive && { backgroundColor: colors.accent, borderColor: colors.accent },
+                    ]}
+                    onPress={() => setInterestedIn(isActive ? "" : option.value)}
+                  >
+                    <Text style={[styles.chipText, { color: isActive ? "#fff" : colors.textSecondary }]}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
           {/* Bio */}
           <View style={styles.inputWrapper}>
             <Text style={[styles.label, { color: colors.text }]}>Bio</Text>
@@ -320,6 +435,28 @@ export default function ProfileEdit() {
           </View>
 
           <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: colors.text }]}>Education</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
+              value={education}
+              onChangeText={setEducation}
+              placeholder="Where did you study?"
+              placeholderTextColor={colors.textTertiary}
+            />
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: colors.text }]}>Relationship Goals</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
+              value={relationshipGoals}
+              onChangeText={setRelationshipGoals}
+              placeholder="e.g. Long-term relationship, casual dating..."
+              placeholderTextColor={colors.textTertiary}
+            />
+          </View>
+
+          <View style={styles.inputWrapper}>
             <Text style={[styles.label, { color: colors.text }]}>Interests</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
@@ -329,6 +466,49 @@ export default function ProfileEdit() {
               placeholderTextColor={colors.textTertiary}
             />
           </View>
+        </View>
+
+        {/* Prompts Section */}
+        <View style={[styles.formSection, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.sectionLabel, { color: colors.text }]}>Prompts</Text>
+          <Text style={[styles.imageHint, { color: colors.textSecondary, marginBottom: 12 }]}>
+            Give matches something specific to reply to. Up to {MAX_PROMPTS}.
+          </Text>
+
+          {prompts.map((prompt) => (
+            <View
+              key={prompt.question}
+              style={[styles.promptCard, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}
+            >
+              <View style={styles.promptCardHeader}>
+                <Text style={[styles.promptQuestion, { color: colors.accent }]} numberOfLines={2}>
+                  {prompt.question}
+                </Text>
+                <Pressable onPress={() => handleRemovePrompt(prompt.question)} hitSlop={8}>
+                  <Ionicons name="close-circle" size={20} color={colors.textTertiary} />
+                </Pressable>
+              </View>
+              <TextInput
+                style={[styles.input, styles.promptInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
+                value={prompt.answer}
+                onChangeText={(text) => handlePromptAnswerChange(prompt.question, text)}
+                placeholder="Your answer..."
+                placeholderTextColor={colors.textTertiary}
+                multiline
+                maxLength={300}
+              />
+            </View>
+          ))}
+
+          {prompts.length < MAX_PROMPTS && (
+            <Pressable
+              style={[styles.addPromptButton, { borderColor: colors.border, backgroundColor: colors.surfaceAlt }]}
+              onPress={handleAddPrompt}
+            >
+              <Ionicons name="add-circle-outline" size={20} color={colors.accent} />
+              <Text style={[styles.addPromptText, { color: colors.accent }]}>Add a prompt</Text>
+            </Pressable>
+          )}
         </View>
 
         {/* Action Buttons */}
@@ -380,26 +560,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 4,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  backButton: {
-    padding: 8,
-    marginLeft: -4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  headerPlaceholder: {
-    width: 40,
+  headerButton: {
+    width: 32,
+    padding: spacing.xs,
   },
   photosSection: {
     paddingHorizontal: 20,
@@ -513,6 +680,57 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "right",
     marginTop: 4,
+  },
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: radius.full,
+    borderWidth: 1,
+  },
+  chipText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  promptCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+    marginBottom: 12,
+  },
+  promptCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 8,
+    marginBottom: 10,
+  },
+  promptQuestion: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  promptInput: {
+    minHeight: 60,
+    textAlignVertical: "top",
+  },
+  addPromptButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderStyle: "dashed",
+  },
+  addPromptText: {
+    fontSize: 15,
+    fontWeight: "700",
   },
   actionsSection: {
     paddingHorizontal: 20,

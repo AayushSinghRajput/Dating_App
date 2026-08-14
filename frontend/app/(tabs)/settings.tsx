@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { Alert, StyleSheet, ScrollView, View } from "react-native";
 import settings from "../../assets/data/settingsdata";
 import ScreenHeader from "../../src/components/ui/ScreenHeader";
+import ProfileCard from "../../src/components/settings/ProfileCard";
 import SettingsSection from "../../src/components/settings/SettingsSection";
 import AppearanceSection from "../../src/components/settings/AppearanceSection";
 import SettingsFooter from "../../src/components/settings/SettingsFooter";
@@ -23,9 +24,6 @@ export default function Settings() {
     if (!item) return;
 
     switch (item.title) {
-      case "Edit Profile":
-        router.push("/screen/ProfileEdit");
-        break;
       case "Account Privacy":
         router.push("/screen/Privacy");
         break;
@@ -89,7 +87,7 @@ export default function Settings() {
 
   // Group settings into logical sections
   const accountSettings = settings.filter((item) =>
-    ["Edit Profile", "Account Privacy", "Change Password", "Email & Verification", "Photo Verification", "Notifications"].includes(item.title)
+    ["Account Privacy", "Change Password", "Email & Verification", "Photo Verification", "Notifications"].includes(item.title)
   );
 
   const safetySettings = settings.filter((item) => ["Safety Center"].includes(item.title));
@@ -115,6 +113,8 @@ export default function Settings() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <ProfileCard />
+
         <AppearanceSection />
 
         <SettingsSection

@@ -13,6 +13,17 @@ export const createOrUpateProfile = async (req, res) => {
   const userId = req.user.id;
   const profileData = req.body;
 
+  // multipart/form-data can't carry nested objects, so the client sends
+  // prompts as a JSON string in a single field — parse it back into an
+  // array here before validation/save.
+  if (typeof profileData.prompts === "string") {
+    try {
+      profileData.prompts = JSON.parse(profileData.prompts);
+    } catch {
+      return res.status(400).json({ message: "Invalid prompts data." });
+    }
+  }
+
   // Enforce minimum age server-side (the onboarding UI also checks this,
   // but that's trivially bypassable by calling the API directly).
   if (profileData.age !== undefined && profileData.age !== "") {
@@ -24,7 +35,15 @@ export const createOrUpateProfile = async (req, res) => {
     }
   }
 
-  if (containsBannedContent(profileData.name) || containsBannedContent(profileData.aboutMe)) {
+  const promptTextFlagged = Array.isArray(profileData.prompts)
+    ? profileData.prompts.some((p) => containsBannedContent(p?.answer))
+    : false;
+
+  if (
+    containsBannedContent(profileData.name) ||
+    containsBannedContent(profileData.aboutMe) ||
+    promptTextFlagged
+  ) {
     return res.status(400).json({
       message: "Your profile contains language that isn't allowed. Please revise it.",
     });
@@ -126,6 +145,8 @@ export const getAllProfiles = async (req, res) => {
     education: p.education,
     relationshipGoals: p.relationshipGoals,
     isVerified: p.verified,
+    prompts: p.prompts,
+    isBoosted: !!p.boostRank,
   }));
 
   res.status(200).json(users);

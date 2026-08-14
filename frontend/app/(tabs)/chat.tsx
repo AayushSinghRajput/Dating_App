@@ -21,6 +21,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
 import { socket, connectSocket } from "@/utils/socket";
+import { useChatNotifications } from "@/contexts/ChatNotificationContext";
 
 if (
   Platform.OS === "android" &&
@@ -57,12 +58,12 @@ export default function Chats() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<TextInput>(null);
+  const { unreadChatsCount } = useChatNotifications();
 
   useEffect(() => {
     const fetchChats = async () => {
       try {
         const data = await getAllChats();
-        console.log("Fetched chats from API:", data);
 
         if (Array.isArray(data) && data.length > 0) {
           // Map backend _id to id if necessary
@@ -72,7 +73,6 @@ export default function Chats() {
           }));
           setChats(mappedChats);
         } else {
-          console.log("No chats found for this user");
           setChats([]);
         }
       } catch (error: any) {
@@ -87,8 +87,13 @@ export default function Chats() {
       }
     };
 
+    // Re-fetches whenever the global unread-chats count changes (a new
+    // message arrived, or a chat got marked read) — this screen can stay
+    // mounted across tab switches with an expo-router Tabs navigator, so a
+    // mount-only fetch would otherwise leave stale "last message" previews
+    // showing indefinitely.
     fetchChats();
-  }, []);
+  }, [unreadChatsCount]);
 
   // Live-remove a chat if the other person unmatches while we're not in that screen
   useEffect(() => {

@@ -1,9 +1,11 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useChatNotifications } from "@/contexts/ChatNotificationContext";
 
 export default function TabsLayout() {
   const { colors } = useTheme();
+  const { unreadChatsCount } = useChatNotifications();
 
   return (
     <Tabs
@@ -27,20 +29,21 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="chat"
+        name="likes"
         options={{
-          title: "Chat",
+          title: "Likes",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubbles" size={size} color={color} />
+            <Ionicons name="heart" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="chat"
         options={{
-          title: "Profile",
+          title: "Chat",
+          tabBarBadge: unreadChatsCount > 0 ? unreadChatsCount : undefined,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+            <Ionicons name="chatbubbles" size={size} color={color} />
           ),
         }}
       />

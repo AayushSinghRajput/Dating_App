@@ -25,6 +25,7 @@ import {
   sendVoiceMessageApi,
   sendMediaMessageApi,
   deleteMessageApi,
+  markChatRead,
 } from "@/services/chatService";
 import { getCurrentUserId } from "@/services/apiClient";
 import { unmatchUser } from "@/services/matchService";
@@ -33,9 +34,11 @@ import { reportUserApi } from "@/services/reportService";
 import { showReportReasonPicker } from "@/src/utils/reportFlow";
 import { showActionSheet } from "@/src/components/GlobalActionSheet";
 import { shareMyLocation } from "@/src/utils/safety";
+import { setActiveChatId } from "@/src/utils/activeChat";
 import { socket, connectSocket, joinRoom, emitTyping, emitStopTyping } from "@/utils/socket";
 import { useCall } from "@/contexts/CallContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useChatNotifications } from "@/contexts/ChatNotificationContext";
 import { buildListData, formatClockTime } from "../../../src/components/chat/chatListHelpers";
 import MessageBubble from "../../../src/components/chat/MessageBubble";
 import CallLogRow from "../../../src/components/chat/CallLogRow";
@@ -45,22 +48,31 @@ import { useVoiceRecorder } from "../../../src/hooks/useVoiceRecorder";
 export default function ChatDetail() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { chatId, name, avatar, otherUserId } = params as {
+  const { chatId, name, avatar, otherUserId, prefill } = params as {
     chatId: string;
     name: string;
     avatar: string;
     otherUserId: string;
+    prefill?: string;
   };
   const { startCall } = useCall();
   const { colors } = useTheme();
+  const { refresh: refreshUnreadChats } = useChatNotifications();
 
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(prefill || "");
   const [loading, setLoading] = useState(true);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isOtherTyping, setIsOtherTyping] = useState(false);
   const currentUserIdRef = useRef<string | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // While this screen is open, the global chat-notification listener skips
+  // toasting for messages that belong to this exact conversation.
+  useEffect(() => {
+    setActiveChatId(chatId);
+    return () => setActiveChatId(null);
+  }, [chatId]);
 
   // Fetch messages (backend returns oldest-first; reverse to newest-first for the inverted list)
   useEffect(() => {
@@ -77,9 +89,13 @@ export default function ChatDetail() {
       } finally {
         setLoading(false);
       }
+
+      markChatRead(chatId)
+        .then(refreshUnreadChats)
+        .catch((err) => console.error("Failed to mark chat read:", err));
     };
     fetchMessages();
-  }, [chatId]);
+  }, [chatId, refreshUnreadChats]);
 
   // Socket setup
   useEffect(() => {
@@ -533,16 +549,24 @@ export default function ChatDetail() {
       Alert.alert("Permission Denied", "You need to allow photo & video access.");
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images", "videos"],
-      quality: 0.8,
-    });
-    if (result.canceled || !result.assets?.[0]) return;
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images", "videos"],
+        quality: 0.8,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
 
-    const asset = result.assets[0];
-    const mediaType: "image" | "video" = asset.type === "video" ? "video" : "image";
-    const mimeType = asset.mimeType || (mediaType === "video" ? "video/mp4" : "image/jpeg");
-    handleMediaSelected(asset.uri, mediaType, mimeType);
+      const asset = result.assets[0];
+      const mediaType: "image" | "video" = asset.type === "video" ? "video" : "image";
+      const mimeType = asset.mimeType || (mediaType === "video" ? "video/mp4" : "image/jpeg");
+      handleMediaSelected(asset.uri, mediaType, mimeType);
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Couldn't open photo picker",
+        text2: "Your device or emulator doesn't have a photo picker app installed.",
+      });
+    }
   };
 
   const { isRecording, isCancelling, durationMillis, micResponderHandlers } =
@@ -647,65 +671,57 @@ export default function ChatDetail() {
           showsVerticalScrollIndicator={false}
         />
 
-        {/* Input + Emoji */}
-        <View style={[styles.inputRow, { borderColor: colors.border }]}>
+        {/* Input bar — WhatsApp style: rounded pill (emoji + text + attach)
+            with a separate circular mic/send button floating outside it. */}
+        <View style={styles.inputRow}>
           {isRecording ? (
-            <View style={styles.recordingBar}>
-              <View style={styles.recordingDot} />
-              <Text style={[styles.recordingDuration, { color: colors.text }]}>
-                {formatClockTime(durationMillis / 1000)}
-              </Text>
-              <Text
-                style={[
-                  styles.recordingHint,
-                  { color: isCancelling ? "#e05252" : colors.textTertiary },
-                ]}
-              >
-                {isCancelling ? "Release to cancel" : "‹ Slide to cancel"}
-              </Text>
+            <View style={[styles.pill, { backgroundColor: colors.surfaceAlt }]}>
+              <View style={styles.recordingBar}>
+                <View style={styles.recordingDot} />
+                <Text style={[styles.recordingDuration, { color: colors.text }]}>
+                  {formatClockTime(durationMillis / 1000)}
+                </Text>
+                <Text
+                  style={[
+                    styles.recordingHint,
+                    { color: isCancelling ? "#e05252" : colors.textTertiary },
+                  ]}
+                >
+                  {isCancelling ? "Release to cancel" : "‹ Slide to cancel"}
+                </Text>
+              </View>
             </View>
           ) : (
-            <>
-              <Pressable onPress={toggleEmojiPicker} style={styles.emojiButton}>
-                <Ionicons
-                  name="happy-outline"
-                  size={28}
-                  color={colors.textSecondary}
-                />
-              </Pressable>
-              <Pressable onPress={handlePickMedia} style={styles.emojiButton}>
-                <Ionicons
-                  name="image-outline"
-                  size={26}
-                  color={colors.textSecondary}
-                />
+            <View style={[styles.pill, { backgroundColor: colors.surfaceAlt }]}>
+              <Pressable onPress={toggleEmojiPicker} style={styles.pillIconButton} hitSlop={6}>
+                <Ionicons name="happy" size={24} color={colors.textSecondary} />
               </Pressable>
               <TextInput
-                style={[
-                  styles.input,
-                  { backgroundColor: colors.surfaceAlt, color: colors.text },
-                ]}
-                placeholder="Type a message..."
+                style={[styles.pillInput, { color: colors.text }]}
+                placeholder="Message"
                 placeholderTextColor={colors.textTertiary}
                 value={input}
                 onChangeText={handleInputChange}
                 multiline
               />
-            </>
+              <Pressable onPress={handlePickMedia} style={styles.pillIconButton} hitSlop={6}>
+                <Ionicons name="image-outline" size={22} color={colors.textSecondary} />
+              </Pressable>
+            </View>
           )}
 
           {input.trim() ? (
             <Pressable
-              style={[styles.sendButton, { backgroundColor: colors.accent }]}
+              style={[styles.circleButton, { backgroundColor: colors.accent }]}
               onPress={sendMessage}
             >
-              <Ionicons name="send" size={20} color="#fff" />
+              <Ionicons name="send" size={19} color="#fff" />
             </Pressable>
           ) : (
             <View
               {...micResponderHandlers}
               style={[
-                styles.sendButton,
+                styles.circleButton,
                 {
                   backgroundColor: isCancelling
                     ? "#e05252"
@@ -756,9 +772,26 @@ const styles = StyleSheet.create({
   messagesContainer: { paddingHorizontal: 12, paddingBottom: 10 },
   inputRow: {
     flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+  },
+  pill: {
+    flex: 1,
+    flexDirection: "row",
     alignItems: "center",
-    padding: 8,
-    borderTopWidth: 1,
+    borderRadius: 24,
+    paddingHorizontal: 6,
+    minHeight: 44,
+  },
+  pillIconButton: { padding: 6 },
+  pillInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingHorizontal: 6,
+    paddingVertical: 8,
+    maxHeight: 100,
   },
   recordingBar: {
     flex: 1,
@@ -783,17 +816,11 @@ const styles = StyleSheet.create({
     textAlign: "right",
     fontSize: 13,
   },
-  emojiButton: { padding: 4, marginRight: 4 },
-  input: {
-    flex: 1,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 16,
-  },
-  sendButton: {
-    marginLeft: 6,
-    borderRadius: 20,
-    padding: 10,
+  circleButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

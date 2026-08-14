@@ -48,6 +48,22 @@ const profileSchema = new mongoose.Schema(
     relationshipGoals: {
       type: String,
     },
+    // Icebreaker prompts (Hinge-style): a short question + the user's answer,
+    // shown on their profile/discovery card so matches have something
+    // specific to reply to instead of a cold "hi".
+    prompts: {
+      type: [
+        {
+          question: { type: String, required: true },
+          answer: { type: String, required: true, maxlength: 300 },
+        },
+      ],
+      default: [],
+      validate: {
+        validator: (arr) => arr.length <= 3,
+        message: "You can add up to 3 prompts.",
+      },
+    },
     favorites:[
       {
         type:mongoose.Schema.Types.ObjectId,

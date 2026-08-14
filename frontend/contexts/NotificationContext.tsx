@@ -138,10 +138,26 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   );
 }
 
+const noop = async () => {};
+
+// Badge counts/notifications are non-critical — if this is ever read outside
+// NotificationProvider (or before it has mounted), degrade to empty state
+// instead of crashing the screen that renders it.
+const fallback: NotificationContextValue = {
+  notifications: [],
+  unreadCount: 0,
+  refresh: noop,
+  markRead: noop,
+  markAllRead: noop,
+};
+
 export function useNotifications() {
   const ctx = useContext(NotificationContext);
   if (!ctx) {
-    throw new Error("useNotifications must be used within a NotificationProvider");
+    if (__DEV__) {
+      console.warn("useNotifications called outside NotificationProvider — returning empty state");
+    }
+    return fallback;
   }
   return ctx;
 }

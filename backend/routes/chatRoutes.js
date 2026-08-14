@@ -1,5 +1,5 @@
 import express from "express";
-import { getUserChats, createOrGetChat } from "../controllers/chatController.js";
+import { getUserChats, createOrGetChat, markChatRead, getUnreadChatsCount } from "../controllers/chatController.js";
 import {
   sendMessage,
   sendVoiceMessage,
@@ -14,6 +14,8 @@ const router = express.Router();
 
 router.get("/", protect, getUserChats);
 router.post("/", protect, createOrGetChat);
+router.get("/unread-count", protect, getUnreadChatsCount);
+router.patch("/:chatId/read", protect, markChatRead);
 
 router.post("/message", protect, sendMessage);
 router.post("/message/audio", protect, uploadAudio.single("audio"), sendVoiceMessage);

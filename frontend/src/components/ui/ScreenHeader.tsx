@@ -20,11 +20,13 @@ interface ScreenHeaderProps {
   /** Replaces the title/subtitle block entirely (e.g. a logo lockup). */
   left?: React.ReactNode;
   actions?: ScreenHeaderAction[];
+  /** Extra trailing content that isn't a simple icon button (e.g. an avatar). Renders after actions. */
+  right?: React.ReactNode;
 }
 
 // Flat, borderless header used across top-level tab screens — a hairline
 // bottom border replaces the old shadow/gradient "card" look.
-export default function ScreenHeader({ title, subtitle, left, actions }: ScreenHeaderProps) {
+export default function ScreenHeader({ title, subtitle, left, actions, right }: ScreenHeaderProps) {
   const { colors } = useTheme();
 
   return (
@@ -44,9 +46,9 @@ export default function ScreenHeader({ title, subtitle, left, actions }: ScreenH
           )}
         </View>
 
-        {actions && actions.length > 0 && (
+        {((actions && actions.length > 0) || right) && (
           <View style={styles.actions}>
-            {actions.map((action) => (
+            {actions?.map((action) => (
               <Pressable
                 key={action.accessibilityLabel}
                 onPress={action.onPress}
@@ -67,6 +69,7 @@ export default function ScreenHeader({ title, subtitle, left, actions }: ScreenH
                 )}
               </Pressable>
             ))}
+            {right}
           </View>
         )}
       </View>

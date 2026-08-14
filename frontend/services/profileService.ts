@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 import * as FileSystem from "expo-file-system/legacy";
 import { BASE_URL, token, initToken } from "./apiClient";
+import { ProfilePrompt } from "@/src/constants/prompts";
 
 export interface PhotoAsset {
   uri: string;
@@ -30,6 +31,7 @@ export interface Profile {
   profilePic?: string;
   incognito?: boolean;
   verified?: boolean;
+  prompts?: ProfilePrompt[];
 }
 
 export interface ProfileResponse {
@@ -64,6 +66,12 @@ export const createOrUpdateProfile = async (
             } as any);
           }
         });
+      } else if (key === "prompts" && Array.isArray(value)) {
+        // Array of {question, answer} objects — FormData.append only accepts
+        // strings/files, so a raw object here breaks RN's multipart encoder
+        // before the request is even sent ("Network request failed").
+        // Serialize as JSON; the backend parses it back out.
+        formData.append("prompts", JSON.stringify(value));
       } else if (Array.isArray(value)) {
         value.forEach((v) => formData.append(`${key}[]`, v));
       } else {
@@ -135,6 +143,8 @@ export interface DiscoveryProfile {
   education?: string;
   relationshipGoals?: string;
   isVerified?: boolean;
+  prompts?: ProfilePrompt[];
+  isBoosted?: boolean;
 }
 
 //Get all profiles

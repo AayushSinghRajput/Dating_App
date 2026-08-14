@@ -97,14 +97,18 @@ export default function DetailFirst() {
       return;
     }
 
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
 
-    if (!result.canceled) {
-      setPhotos((prev) => [...prev, result.assets[0].uri]);
+      if (!result.canceled) {
+        setPhotos((prev) => [...prev, result.assets[0].uri]);
+      }
+    } catch (error) {
+      Alert.alert("Couldn't open camera", "Your device or emulator doesn't have a camera app available.");
     }
   };
 
@@ -115,14 +119,18 @@ export default function DetailFirst() {
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
 
-    if (!result.canceled) {
-      setPhotos((prev) => [...prev, result.assets[0].uri]);
+      if (!result.canceled) {
+        setPhotos((prev) => [...prev, result.assets[0].uri]);
+      }
+    } catch (error) {
+      Alert.alert("Couldn't open photo picker", "Your device or emulator doesn't have a photo picker app installed.");
     }
   };
 

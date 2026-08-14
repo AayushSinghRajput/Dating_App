@@ -7,6 +7,13 @@ import { containsBannedContent } from "../utils/moderation.js";
 const DEFAULT_MESSAGE_LIMIT = 100;
 const MAX_MESSAGE_LIMIT = 200;
 
+function previewForMessage(extraFields) {
+  if (extraFields.type === "audio") return "🎤 Voice message";
+  if (extraFields.type === "image") return "📷 Photo";
+  if (extraFields.type === "video") return "🎥 Video";
+  return extraFields.text || "New message";
+}
+
 // Populates sender info, updates the chat's last message, and broadcasts the
 // saved message over the socket. Shared by text, voice, and media sends.
 async function finalizeAndBroadcast(req, newMessage, senderId, extraFields = {}) {
@@ -25,12 +32,30 @@ async function finalizeAndBroadcast(req, newMessage, senderId, extraFields = {})
     ...extraFields,
   };
 
-  await Chat.findByIdAndUpdate(newMessage.chat, {
-    lastMessage: newMessage._id,
-    updatedAt: new Date(),
-  });
+  const chat = await Chat.findByIdAndUpdate(
+    newMessage.chat,
+    { lastMessage: newMessage._id, updatedAt: new Date() },
+    { new: true }
+  ).select("participants");
 
-  req.app.get("io")?.to(newMessage.chat.toString()).emit("newMessage", messageWithProfile);
+  const io = req.app.get("io");
+  io?.to(newMessage.chat.toString()).emit("newMessage", messageWithProfile);
+
+  // Also notify the OTHER participant's personal room directly — the room
+  // above only reaches sockets currently joined to this specific chat
+  // screen, so someone elsewhere in the app (or just connected, not viewing
+  // this chat) would otherwise get no live signal at all.
+  const receiverId = chat?.participants.find((p) => p.toString() !== senderId.toString());
+  if (receiverId) {
+    io?.to(receiverId.toString()).emit("newMessagePreview", {
+      chatId: newMessage.chat,
+      senderId,
+      senderName: newMessage.sender.username,
+      senderAvatar: profile?.profileImage || "",
+      preview: previewForMessage(extraFields),
+      createdAt: newMessage.createdAt,
+    });
+  }
 
   return messageWithProfile;
 }

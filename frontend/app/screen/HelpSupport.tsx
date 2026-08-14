@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet, ScrollView, Pressable, Linking, Alert } from "react-native";
 import { useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/contexts/ThemeContext";
+import DetailHeader from "@/src/components/ui/DetailHeader";
 
 interface FAQItem {
   id: string;
@@ -106,14 +106,6 @@ export default function HelpSupport() {
       icon: "people",
       action: () => router.push('/screen/CommunityGuidelines'),
       color: "#2196F3"
-    },
-    {
-      id: "4",
-      title: "Privacy Policy",
-      description: "Learn about data protection",
-      icon: "shield-checkmark",
-      action: () => router.push('/screen/PrivacyPolicy'),
-      color: "#9C27B0"
     }
   ];
 
@@ -167,15 +159,8 @@ export default function HelpSupport() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, shadowColor: colors.shadow }]}>
-        <Pressable style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Help & Support</Text>
-        <View style={styles.headerPlaceholder} />
-      </View>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <DetailHeader title="Help & Support" onBack={handleBack} />
 
       <ScrollView
         style={styles.scrollView}
@@ -271,7 +256,7 @@ export default function HelpSupport() {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -285,31 +270,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 30,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  headerPlaceholder: {
-    width: 40,
   },
   welcomeSection: {
     alignItems: "center",

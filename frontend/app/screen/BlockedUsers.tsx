@@ -1,11 +1,11 @@
 import { View, Text, StyleSheet, ScrollView, Pressable, Image, Alert, ActivityIndicator } from "react-native";
 import { useEffect, useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
 import { BlockedUser, getBlockedUsersApi, unblockUserApi } from "@/services/profileService";
+import DetailHeader from "@/src/components/ui/DetailHeader";
 
 export default function BlockedUsers() {
   const router = useRouter();
@@ -122,17 +122,18 @@ export default function BlockedUsers() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, shadowColor: colors.shadow }]}>
-        <Pressable style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Blocked Users</Text>
-        <Pressable style={styles.clearButton} onPress={clearAllBlocked}>
-          <Text style={[styles.clearButtonText, { color: colors.accent }]}>Clear All</Text>
-        </Pressable>
-      </View>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <DetailHeader
+        title="Blocked Users"
+        onBack={handleBack}
+        right={
+          blockedUsers.length > 0 ? (
+            <Pressable onPress={clearAllBlocked} hitSlop={8}>
+              <Text style={[styles.clearButtonText, { color: colors.accent }]}>Clear All</Text>
+            </Pressable>
+          ) : undefined
+        }
+      />
 
       <ScrollView
         style={styles.scrollView}
@@ -212,7 +213,7 @@ export default function BlockedUsers() {
           </Pressable>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -226,31 +227,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 30,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  clearButton: {
-    padding: 8,
   },
   clearButtonText: {
     fontSize: 14,

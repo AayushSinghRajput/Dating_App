@@ -40,14 +40,18 @@ export default function PhotoVerification() {
       Toast.show({ type: "error", text1: "Camera permission is required to verify your photo" });
       return;
     }
-    const result = await ImagePicker.launchCameraAsync({
-      cameraType: ImagePicker.CameraType.front,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-    if (!result.canceled && result.assets?.[0]) {
-      setPhotoUri(result.assets[0].uri);
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        cameraType: ImagePicker.CameraType.front,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets?.[0]) {
+        setPhotoUri(result.assets[0].uri);
+      }
+    } catch (error) {
+      Toast.show({ type: "error", text1: "Couldn't open camera", text2: "No camera app is available on this device." });
     }
   };
 

@@ -91,6 +91,24 @@ export default function UserDetail() {
     }
   };
 
+  const handleReplyToPrompt = async (question: string, answer: string) => {
+    try {
+      const chat = await createOrGetChat(user.userId || user.id);
+      router.push({
+        pathname: "/screen/ChatDetail/[chatId]",
+        params: {
+          chatId: chat._id,
+          name: user.name,
+          avatar: user.profileImage,
+          otherUserId: user.userId || user.id,
+          prefill: `"${question}"\n"${answer}"\n\n`,
+        },
+      });
+    } catch (error: any) {
+      Toast.show({ type: "error", text1: "Failed to open chat", text2: error.message });
+    }
+  };
+
   const handleBlock = () => {
     Alert.alert(
       "Block User",
@@ -254,6 +272,40 @@ export default function UserDetail() {
             <Text style={[typography.body, styles.sectionContent, { color: colors.textSecondary }]}>
               {user.aboutMe}
             </Text>
+          </View>
+        )}
+
+        {/* Prompts — reply directly to one instead of a cold "hi" */}
+        {user.prompts && user.prompts.length > 0 && (
+          <View style={[styles.section, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="chatbubbles-outline" size={20} color={colors.accent} />
+              <Text style={[typography.h3, { color: colors.text }]}>Prompts</Text>
+            </View>
+            {user.prompts.map((prompt, index) => (
+              <View
+                key={prompt.question}
+                style={[
+                  styles.promptCard,
+                  { backgroundColor: colors.accentSoft },
+                  index > 0 && { marginTop: spacing.md },
+                ]}
+              >
+                <Text style={[typography.label, { color: colors.accent }]}>{prompt.question}</Text>
+                <Text style={[typography.body, styles.promptAnswer, { color: colors.text }]}>
+                  {prompt.answer}
+                </Text>
+                <Pressable
+                  style={[styles.replyButton, { backgroundColor: colors.accent }]}
+                  onPress={() => handleReplyToPrompt(prompt.question, prompt.answer)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Reply to ${user.name || "this user"}'s prompt`}
+                >
+                  <Ionicons name="arrow-undo" size={14} color="#fff" />
+                  <Text style={styles.replyButtonText}>Reply</Text>
+                </Pressable>
+              </View>
+            ))}
           </View>
         )}
 
@@ -460,4 +512,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   hobbyText: { fontWeight: "600" },
+  promptCard: {
+    borderRadius: radius.md,
+    padding: spacing.lg,
+  },
+  promptAnswer: { marginTop: spacing.xs, marginBottom: spacing.md },
+  replyButton: {
+    flexDirection: "row",
+    alignSelf: "flex-start",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+  },
+  replyButtonText: { color: "#fff", fontSize: 13, fontWeight: "700" },
 });

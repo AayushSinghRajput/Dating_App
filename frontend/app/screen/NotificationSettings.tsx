@@ -1,6 +1,5 @@
-import { View, Text, Switch, StyleSheet, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Switch, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { useEffect, useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
@@ -10,6 +9,7 @@ import {
   updateNotificationPreferences,
   NotificationPreferences,
 } from "@/services/notificationService";
+import DetailHeader from "@/src/components/ui/DetailHeader";
 
 const DEFAULT_PREFERENCES: NotificationPreferences = {
   like: true,
@@ -86,14 +86,8 @@ export default function NotificationSettings() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, shadowColor: colors.shadow }]}>
-        <Pressable style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Notifications</Text>
-        <View style={styles.headerPlaceholder} />
-      </View>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <DetailHeader title="Notifications" onBack={handleBack} />
 
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -138,7 +132,7 @@ export default function NotificationSettings() {
           </View>
         </ScrollView>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -157,31 +151,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  headerPlaceholder: {
-    width: 40,
   },
   section: {
     marginHorizontal: 16,

@@ -12,6 +12,16 @@ export const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 // app restarts.
 export let token: string | null = null;
 
+// Module-level pub-sub (same pattern as Toast/GlobalActionSheet) so the root
+// layout's isLoggedIn state stays in sync with the token instead of only
+// being checked once on cold start — login/logout/expiry all flow through
+// saveToken/clearToken, so subscribing here catches every case.
+type AuthListener = (loggedIn: boolean) => void;
+let authListener: AuthListener | null = null;
+export const onAuthChange = (listener: AuthListener | null) => {
+  authListener = listener;
+};
+
 export const initToken = async (): Promise<void> => {
   const storedToken = await AsyncStorage.getItem("token");
   if (storedToken) token = storedToken;
@@ -20,11 +30,13 @@ export const initToken = async (): Promise<void> => {
 export const saveToken = async (newToken: string): Promise<void> => {
   token = newToken;
   await AsyncStorage.setItem("token", newToken);
+  authListener?.(true);
 };
 
 export const clearToken = async (): Promise<void> => {
   token = null;
   await AsyncStorage.removeItem("token");
+  authListener?.(false);
 };
 
 export const getCurrentUserId = async (): Promise<string | null> => {

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import { View, Text, Image, StyleSheet, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useNotifications } from "@/contexts/NotificationContext";
-import { getLikedByMe } from "@/services/matchService";
+import { getProfile } from "@/services/profileService";
 import { usePremiumActions } from "@/src/hooks/usePremiumActions";
 import { showActionSheet } from "@/src/components/GlobalActionSheet";
 import ScreenHeader, { ScreenHeaderAction } from "@/src/components/ui/ScreenHeader";
+import Avatar from "@/src/components/ui/Avatar";
 import { spacing } from "@/src/theme/spacing";
 import { typography } from "@/src/theme/typography";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -16,12 +17,12 @@ export default function HomeHeader() {
   const router = useRouter();
   const { colors } = useTheme();
   const { unreadCount } = useNotifications();
-  const [likedByCount, setLikedByCount] = useState(0);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { status, handleRewind, handleBoost } = usePremiumActions();
 
   useEffect(() => {
-    getLikedByMe()
-      .then((profiles) => setLikedByCount(profiles.length))
+    getProfile()
+      .then((profile) => setAvatarUrl(profile.profileImage || null))
       .catch(() => {});
   }, []);
 
@@ -43,12 +44,6 @@ export default function HomeHeader() {
       accessibilityLabel: "Boost or rewind",
     },
     {
-      icon: "heart-outline",
-      badge: likedByCount,
-      onPress: () => router.push("/screen/LikedYou"),
-      accessibilityLabel: "Who liked you",
-    },
-    {
       icon: "notifications-outline",
       badge: unreadCount,
       onPress: () => router.push("/screen/Notification"),
@@ -65,6 +60,16 @@ export default function HomeHeader() {
         </View>
       }
       actions={actions}
+      right={
+        <Pressable
+          onPress={() => router.push("/screen/MyProfile")}
+          accessibilityRole="button"
+          accessibilityLabel="Your profile"
+          hitSlop={8}
+        >
+          <Avatar uri={avatarUrl} size="sm" accessibilityLabel="Your profile" />
+        </Pressable>
+      }
     />
   );
 }

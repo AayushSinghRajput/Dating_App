@@ -1,23 +1,13 @@
 import { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Image,
-  Pressable,
-  ActivityIndicator,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, Text, StyleSheet, FlatList, Image, Pressable, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getLikedByMe, likeProfile, passProfile, LikedByProfile } from "@/services/matchService";
 import { showMatchCelebration } from "@/src/components/GlobalMatchCelebration";
+import ScreenHeader from "@/src/components/ui/ScreenHeader";
 
-export default function LikedYou() {
-  const router = useRouter();
+export default function Likes() {
   const { colors } = useTheme();
   const [profiles, setProfiles] = useState<LikedByProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,17 +59,9 @@ export default function LikedYou() {
     }
   };
 
-  const handleBack = () => router.back();
-
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Pressable style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Who Liked You</Text>
-        <View style={{ width: 32 }} />
-      </View>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScreenHeader title="Likes" subtitle={profiles.length > 0 ? `${profiles.length} people liked you` : undefined} />
 
       {loading ? (
         <View style={styles.center}>
@@ -147,22 +129,12 @@ export default function LikedYou() {
           )}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  backButton: { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: "700" },
   center: {
     flex: 1,
     alignItems: "center",

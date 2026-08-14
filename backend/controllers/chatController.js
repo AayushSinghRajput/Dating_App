@@ -1,4 +1,6 @@
+import mongoose from "mongoose";
 import Chat from "../models/chatModel.js";
+import Message from "../models/messageModel.js";
 import Profile from "../models/profileModel.js";
 import { isBlockedEitherWay } from "../utils/block.js";
 
@@ -35,6 +37,18 @@ export const getUserChats = async (req, res) => {
     .lean();
   const profileByUserId = new Map(profiles.map((p) => [p.user.toString(), p]));
 
+  // Batch-fetch unread counts (messages sent by the other participant that
+  // this user hasn't read yet), one aggregation instead of one query per chat.
+  // Aggregation pipelines skip Mongoose's automatic string->ObjectId casting
+  // (unlike .find()/.updateMany()), so userId must be cast explicitly here.
+  const chatIds = chats.map((c) => c._id);
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+  const unreadCounts = await Message.aggregate([
+    { $match: { chat: { $in: chatIds }, sender: { $ne: userObjectId }, read: false, deletedFor: { $ne: userObjectId } } },
+    { $group: { _id: "$chat", count: { $sum: 1 } } },
+  ]);
+  const unreadByChat = new Map(unreadCounts.map((u) => [u._id.toString(), u.count]));
+
   const chatList = chats
     .map((chat) => {
       const otherUser = otherUserByChat.get(chat._id.toString());
@@ -49,12 +63,55 @@ export const getUserChats = async (req, res) => {
         avatar: profile?.profileImage || "https://placehold.co/100x100",
         lastMessage: previewForMessage(chat.lastMessage),
         time: chat.lastMessage?.createdAt || chat.updatedAt,
-        unread: 0,
+        unread: unreadByChat.get(chat._id.toString()) || 0,
       };
     })
     .filter(Boolean);
 
   res.status(200).json(chatList);
+};
+
+// @desc    Mark every unread message in a chat (from the other participant)
+//          as read, and tell them live so read receipts can update.
+// @route   PATCH /api/chats/:chatId/read
+// @access  Private
+export const markChatRead = async (req, res) => {
+  const { chatId } = req.params;
+  const userId = req.user.id;
+
+  const chat = await Chat.findById(chatId);
+  if (!chat || !chat.participants.some((p) => p.toString() === userId)) {
+    return res.status(404).json({ message: "Chat not found" });
+  }
+
+  await Message.updateMany(
+    { chat: chatId, sender: { $ne: userId }, read: false },
+    { read: true }
+  );
+
+  req.app.get("io")?.to(chatId).emit("messagesRead", { chatId, userId });
+
+  res.status(200).json({ success: true });
+};
+
+// @desc    Total unread messages across all of the logged-in user's chats —
+//          powers the Chat tab badge.
+// @route   GET /api/chats/unread-count
+// @access  Private
+export const getUnreadChatsCount = async (req, res) => {
+  const userId = req.user.id;
+
+  const myChats = await Chat.find({ participants: userId }).select("_id").lean();
+  const chatIds = myChats.map((c) => c._id);
+
+  const count = await Message.countDocuments({
+    chat: { $in: chatIds },
+    sender: { $ne: userId },
+    read: false,
+    deletedFor: { $ne: userId },
+  });
+
+  res.status(200).json({ count });
 };
 
 export const createOrGetChat = async (req, res) => {

@@ -83,6 +83,28 @@ export const getAllChats = async () => {
   }
 };
 
+// Marks every unread message in a chat (from the other participant) as read.
+export const markChatRead = async (chatId: string): Promise<void> => {
+  const token = await AsyncStorage.getItem("token");
+  if (!token) throw new Error("User not authenticated");
+  await fetch(`${BASE_URL}/api/chats/${chatId}/read`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+// Total unread messages across all chats — powers the Chat tab badge.
+export const getUnreadChatsCount = async (): Promise<number> => {
+  const token = await AsyncStorage.getItem("token");
+  if (!token) throw new Error("User not authenticated");
+  const res = await fetch(`${BASE_URL}/api/chats/unread-count`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Failed to fetch unread count");
+  const data = await res.json();
+  return data.count;
+};
+
 //Create a chat with another user, or get the existing one
 export const createOrGetChat = async (
   receiverId: string
