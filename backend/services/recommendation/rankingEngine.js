@@ -11,7 +11,8 @@ export function scoreCandidates(
   candidates,
   freshnessPenaltyByCandidateId,
   tasteProfile,
-  reciprocalScoreByCandidateId
+  reciprocalScoreByCandidateId,
+  popularityPenaltyByCandidateId
 ) {
   return candidates.map((candidate) => {
     const features = extractFeatures(viewerProfile, candidate, tasteProfile);
@@ -24,10 +25,13 @@ export function scoreCandidates(
       features.completenessScore * RANKING_WEIGHTS.completenessScore +
       features.boostScore * RANKING_WEIGHTS.boostScore +
       features.behavioralScore * RANKING_WEIGHTS.behavioralScore +
+      features.lifestyleScore * RANKING_WEIGHTS.lifestyleScore +
+      features.distanceScore * RANKING_WEIGHTS.distanceScore +
       reciprocalScore * RANKING_WEIGHTS.reciprocalScore;
 
     const freshnessPenalty = freshnessPenaltyByCandidateId.get(candidate._id.toString()) || 0;
-    const finalScore = Math.max(0, rawScore - freshnessPenalty);
+    const popularityPenalty = popularityPenaltyByCandidateId?.get(candidate._id.toString()) || 0;
+    const finalScore = Math.max(0, rawScore - freshnessPenalty - popularityPenalty);
 
     return { candidate, features, reciprocalScore, finalScore };
   });

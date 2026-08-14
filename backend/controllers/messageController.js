@@ -7,12 +7,40 @@ import { logEvent } from "../services/recommendation/eventLogger.js";
 
 const DEFAULT_MESSAGE_LIMIT = 100;
 const MAX_MESSAGE_LIMIT = 200;
+// "Sustained conversation" (Section 20/28) — a rough proxy for real
+// back-and-forth rather than a one-off exchange. Fires once per chat, the
+// first time it's crossed with messages from both sides (not just one
+// person sending several in a row).
+const SUSTAINED_CONVERSATION_THRESHOLD = 6;
 
 function previewForMessage(extraFields) {
   if (extraFields.type === "audio") return "🎤 Voice message";
   if (extraFields.type === "image") return "📷 Photo";
   if (extraFields.type === "video") return "🎥 Video";
   return extraFields.text || "New message";
+}
+
+// Section 20/28 — deeper funnel signals than a raw MESSAGE_SENT: did this
+// message actually reply to the other person, and has the conversation
+// sustained itself past a first exchange? Both are stronger evidence of a
+// good recommendation than a like/match alone (Section 28).
+async function logConversationEvents(chatId, senderId, receiverId, newMessageId) {
+  const [priorMessage] = await Message.find({ chat: chatId, _id: { $ne: newMessageId } })
+    .sort({ createdAt: -1 })
+    .limit(1)
+    .select("sender");
+  if (priorMessage && priorMessage.sender.toString() === receiverId.toString()) {
+    logEvent(senderId, receiverId, "MESSAGE_REPLIED");
+  }
+
+  const messageCount = await Message.countDocuments({ chat: chatId });
+  if (messageCount === SUSTAINED_CONVERSATION_THRESHOLD) {
+    const distinctSenders = await Message.distinct("sender", { chat: chatId });
+    if (distinctSenders.length >= 2) {
+      logEvent(senderId, receiverId, "SUSTAINED_CONVERSATION");
+      logEvent(receiverId, senderId, "SUSTAINED_CONVERSATION");
+    }
+  }
 }
 
 // Populates sender info, updates the chat's last message, and broadcasts the
@@ -57,6 +85,7 @@ async function finalizeAndBroadcast(req, newMessage, senderId, extraFields = {})
       createdAt: newMessage.createdAt,
     });
     logEvent(senderId, receiverId, "MESSAGE_SENT");
+    logConversationEvents(newMessage.chat, senderId, receiverId, newMessage._id);
   }
 
   return messageWithProfile;

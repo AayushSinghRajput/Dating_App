@@ -10,13 +10,13 @@ import {
   NativeScrollEvent,
 } from "react-native";
 import { Image } from "expo-image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import Toast from "react-native-toast-message";
 import { createOrGetChat } from "@/services/chatService";
-import { blockUserApi, DiscoveryProfile } from "@/services/profileService";
+import { blockUserApi, recordProfileView, DiscoveryProfile } from "@/services/profileService";
 import { reportUserApi } from "@/services/reportService";
 import { likeProfile } from "@/services/matchService";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -37,6 +37,11 @@ export default function UserDetail() {
   const { colors } = useTheme();
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [liked, setLiked] = useState(false);
+
+  useEffect(() => {
+    const targetUserId = user?.userId || user?.id;
+    if (targetUserId) recordProfileView(targetUserId);
+  }, [user?.userId, user?.id]);
 
   const photos =
     user?.photos && user.photos.length > 0

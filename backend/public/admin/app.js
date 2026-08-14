@@ -73,6 +73,18 @@ async function loadAnalytics() {
           ${d.signupsByDay.map((s) => `<tr><td>${esc(s.date)}</td><td>${s.count}</td></tr>`).join("") || "<tr><td colspan=2>No data yet</td></tr>"}
         </table>
       </div>
+      <div class="card">
+        <h3>Recommendation Exposure (last 30 days)</h3>
+        <div class="stats">
+          <div class="stat"><div class="value">${d.shownUserCount}</div><div class="label">Users Shown</div></div>
+          <div class="stat"><div class="value">${d.avgExposurePerShownUser === null ? "—" : d.avgExposurePerShownUser}</div><div class="label">Avg Impressions/User</div></div>
+          <div class="stat"><div class="value">${d.exposureConcentrationTop10Pct === null ? "—" : d.exposureConcentrationTop10Pct + "%"}</div><div class="label">Top 10% Users' Share</div></div>
+        </div>
+        <table>
+          <tr><th>User</th><th>Impressions (30d)</th></tr>
+          ${d.topExposedUsers.map((u) => `<tr><td>${esc(u.username)}</td><td>${u.impressions}</td></tr>`).join("") || "<tr><td colspan=2>No data yet</td></tr>"}
+        </table>
+      </div>
     `;
   } catch (err) {
     el.innerHTML = "<p class='muted'>" + esc(err.message) + "</p>";

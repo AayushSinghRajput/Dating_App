@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
@@ -43,6 +44,39 @@ const INTERESTED_IN_OPTIONS = [
   { value: "everyone", label: "Everyone" },
 ];
 
+const SMOKING_OPTIONS = [
+  { value: "no", label: "No" },
+  { value: "occasionally", label: "Occasionally" },
+  { value: "yes", label: "Yes" },
+];
+
+const DRINKING_OPTIONS = [
+  { value: "no", label: "No" },
+  { value: "socially", label: "Socially" },
+  { value: "yes", label: "Yes" },
+];
+
+const PETS_OPTIONS = [
+  { value: "no pets", label: "No pets" },
+  { value: "have pets", label: "Have pets" },
+  { value: "want pets", label: "Want pets" },
+];
+
+const WANTS_CHILDREN_OPTIONS = [
+  { value: "no", label: "No" },
+  { value: "yes", label: "Yes" },
+  { value: "someday", label: "Someday" },
+  { value: "not sure", label: "Not sure" },
+];
+
+const DEALBREAKER_OPTIONS = [
+  { value: "relationshipGoals", label: "Relationship Goals" },
+  { value: "smoking", label: "Smoking" },
+  { value: "drinking", label: "Drinking" },
+  { value: "pets", label: "Pets" },
+  { value: "wantsChildren", label: "Wants Children" },
+];
+
 export default function ProfileEdit() {
   const router = useRouter();
   const { colors } = useTheme();
@@ -64,6 +98,14 @@ export default function ProfileEdit() {
   const [prompts, setPrompts] = useState<ProfilePrompt[]>([]);
   const [minAge, setMinAge] = useState("18");
   const [maxAge, setMaxAge] = useState("99");
+  const [dealbreakers, setDealbreakers] = useState<string[]>([]);
+  const [smoking, setSmoking] = useState("");
+  const [drinking, setDrinking] = useState("");
+  const [pets, setPets] = useState("");
+  const [wantsChildren, setWantsChildren] = useState("");
+  const [maxDistanceKm, setMaxDistanceKm] = useState("");
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [locatingMe, setLocatingMe] = useState(false);
 
   const [photos, setPhotos] = useState<string[]>([]);
   const [newPhotos, setNewPhotos] = useState<string[]>([]);
@@ -85,6 +127,16 @@ export default function ProfileEdit() {
         setPrompts(profile.prompts || []);
         setMinAge(String(profile.preferences?.minAge ?? 18));
         setMaxAge(String(profile.preferences?.maxAge ?? 99));
+        setDealbreakers(profile.preferences?.dealbreakers || []);
+        setSmoking(profile.lifestyle?.smoking || "");
+        setDrinking(profile.lifestyle?.drinking || "");
+        setPets(profile.lifestyle?.pets || "");
+        setWantsChildren(profile.lifestyle?.wantsChildren || "");
+        setMaxDistanceKm(profile.preferences?.maxDistanceKm ? String(profile.preferences.maxDistanceKm) : "");
+        const savedCoords = profile.coordinates?.coordinates;
+        if (savedCoords?.length === 2) {
+          setCoordinates({ lng: savedCoords[0], lat: savedCoords[1] });
+        }
         setPhotos((profile as any).photos || []);
       } catch (error: any) {
         Toast.show({ type: "error", text1: "Failed to load profile", text2: error.message });
@@ -162,6 +214,64 @@ export default function ProfileEdit() {
     setNewPhotos((prev) => prev.filter((p) => p !== uri));
   };
 
+  const toggleDealbreaker = (key: string) => {
+    setDealbreakers((prev) => (prev.includes(key) ? prev.filter((d) => d !== key) : [...prev, key]));
+  };
+
+  const handleUpdateLocation = async () => {
+    setLocatingMe(true);
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert("Permission Denied", "Location access is needed to enable distance-based matching.");
+        return;
+      }
+
+      const servicesEnabled = await Location.hasServicesEnabledAsync();
+      if (!servicesEnabled) {
+        Alert.alert(
+          "Location Services Off",
+          "Turn on Location in your device settings, then try again."
+        );
+        return;
+      }
+
+      // Balanced accuracy resolves faster and more reliably than High —
+      // both on emulators (which often only simulate a coarse fix) and on
+      // real devices with a weak GPS signal (e.g. indoors) — a dating app's
+      // distance filter doesn't need street-level precision anyway.
+      let position;
+      let freshFixError: any = null;
+      try {
+        position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      } catch (err) {
+        // Fresh fix failed/timed out — expected on emulators, whose fused
+        // provider often can't produce a live fix even with a mock point
+        // injected (that only seeds the cache getLastKnownPositionAsync
+        // reads below), so this isn't logged as an error.
+        freshFixError = err;
+        console.warn("getCurrentPositionAsync failed, falling back to last known position:", err);
+        position = await Location.getLastKnownPositionAsync({});
+      }
+
+      if (!position) {
+        throw new Error(
+          freshFixError?.message
+            ? `No location fix available: ${freshFixError.message}`
+            : "No location fix available yet. On an emulator, set a mock location in Extended Controls."
+        );
+      }
+
+      setCoordinates({ lat: position.coords.latitude, lng: position.coords.longitude });
+      Toast.show({ type: "success", text1: "Location updated" });
+    } catch (error: any) {
+      console.error("handleUpdateLocation failed:", error);
+      Toast.show({ type: "error", text1: "Couldn't get your location", text2: error.message });
+    } finally {
+      setLocatingMe(false);
+    }
+  };
+
   const handleAddPrompt = () => {
     const usedQuestions = new Set(prompts.map((p) => p.question));
     const available = PROMPT_QUESTIONS.filter((q) => !usedQuestions.has(q));
@@ -205,6 +315,11 @@ export default function ProfileEdit() {
       return;
     }
 
+    if (maxDistanceKm.trim() && (isNaN(Number(maxDistanceKm)) || Number(maxDistanceKm) < 1)) {
+      Alert.alert("Error", "Please enter a valid max distance, or leave it blank for no limit");
+      return;
+    }
+
     const filledPrompts = prompts.filter((p) => p.answer.trim().length > 0);
 
     setIsSaving(true);
@@ -224,7 +339,19 @@ export default function ProfileEdit() {
           .map((h) => h.trim())
           .filter(Boolean),
         prompts: filledPrompts.map((p) => ({ question: p.question, answer: p.answer.trim() })),
-        preferences: { minAge: minAgeNum, maxAge: maxAgeNum },
+        preferences: {
+          minAge: minAgeNum,
+          maxAge: maxAgeNum,
+          dealbreakers,
+          maxDistanceKm: maxDistanceKm.trim() ? Number(maxDistanceKm) : null,
+        },
+        lifestyle: {
+          smoking: smoking || undefined,
+          drinking: drinking || undefined,
+          pets: pets || undefined,
+          wantsChildren: wantsChildren || undefined,
+        },
+        coordinates: coordinates ? ({ lng: coordinates.lng, lat: coordinates.lat } as any) : undefined,
         photos:
           newPhotos.length > 0
             ? newPhotos.map((uri, i) => ({ uri, name: `photo-${i}.jpg`, type: "image/jpeg" }))
@@ -511,6 +638,174 @@ export default function ProfileEdit() {
               />
             </View>
           </View>
+
+          <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: colors.text }]}>Max Distance (km)</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
+              value={maxDistanceKm}
+              onChangeText={setMaxDistanceKm}
+              keyboardType="numeric"
+              placeholder="No limit"
+              placeholderTextColor={colors.textTertiary}
+              maxLength={4}
+            />
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: colors.text }]}>My Location</Text>
+            <Pressable
+              style={[styles.locationButton, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}
+              onPress={handleUpdateLocation}
+              disabled={locatingMe}
+            >
+              {locatingMe ? (
+                <ActivityIndicator size="small" color={colors.accent} />
+              ) : (
+                <Ionicons name="location-outline" size={18} color={colors.accent} />
+              )}
+              <Text style={[styles.locationButtonText, { color: colors.text }]}>
+                {locatingMe ? "Getting location..." : coordinates ? "Update my location" : "Set my location"}
+              </Text>
+              {coordinates && <Ionicons name="checkmark-circle" size={18} color={colors.success} />}
+            </Pressable>
+            <Text style={[styles.imageHint, { color: colors.textTertiary, marginTop: 6 }]}>
+              Only used to filter/rank by distance — never shown to other users.
+            </Text>
+          </View>
+        </View>
+
+        {/* Lifestyle */}
+        <View style={[styles.formSection, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.sectionLabel, { color: colors.text }]}>Lifestyle</Text>
+          <Text style={[styles.imageHint, { color: colors.textSecondary, marginBottom: 12 }]}>
+            Optional — used for compatibility, never held against you.
+          </Text>
+
+          <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: colors.text }]}>Smoking</Text>
+            <View style={styles.chipRow}>
+              {SMOKING_OPTIONS.map((option) => {
+                const isActive = smoking === option.value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    style={[
+                      styles.chip,
+                      { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+                      isActive && { backgroundColor: colors.accent, borderColor: colors.accent },
+                    ]}
+                    onPress={() => setSmoking(isActive ? "" : option.value)}
+                  >
+                    <Text style={[styles.chipText, { color: isActive ? "#fff" : colors.textSecondary }]}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: colors.text }]}>Drinking</Text>
+            <View style={styles.chipRow}>
+              {DRINKING_OPTIONS.map((option) => {
+                const isActive = drinking === option.value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    style={[
+                      styles.chip,
+                      { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+                      isActive && { backgroundColor: colors.accent, borderColor: colors.accent },
+                    ]}
+                    onPress={() => setDrinking(isActive ? "" : option.value)}
+                  >
+                    <Text style={[styles.chipText, { color: isActive ? "#fff" : colors.textSecondary }]}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: colors.text }]}>Pets</Text>
+            <View style={styles.chipRow}>
+              {PETS_OPTIONS.map((option) => {
+                const isActive = pets === option.value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    style={[
+                      styles.chip,
+                      { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+                      isActive && { backgroundColor: colors.accent, borderColor: colors.accent },
+                    ]}
+                    onPress={() => setPets(isActive ? "" : option.value)}
+                  >
+                    <Text style={[styles.chipText, { color: isActive ? "#fff" : colors.textSecondary }]}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: colors.text }]}>Wants Children</Text>
+            <View style={styles.chipRow}>
+              {WANTS_CHILDREN_OPTIONS.map((option) => {
+                const isActive = wantsChildren === option.value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    style={[
+                      styles.chip,
+                      { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+                      isActive && { backgroundColor: colors.accent, borderColor: colors.accent },
+                    ]}
+                    onPress={() => setWantsChildren(isActive ? "" : option.value)}
+                  >
+                    <Text style={[styles.chipText, { color: isActive ? "#fff" : colors.textSecondary }]}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+
+        {/* Dealbreakers */}
+        <View style={[styles.formSection, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.sectionLabel, { color: colors.text }]}>Dealbreakers</Text>
+          <Text style={[styles.imageHint, { color: colors.textSecondary, marginBottom: 12 }]}>
+            Mark anything you won&apos;t compromise on — matching profiles will require an exact match
+            instead of just ranking higher. Only applies to fields you&apos;ve set above.
+          </Text>
+          <View style={styles.chipRow}>
+            {DEALBREAKER_OPTIONS.map((option) => {
+              const isActive = dealbreakers.includes(option.value);
+              return (
+                <Pressable
+                  key={option.value}
+                  style={[
+                    styles.chip,
+                    { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+                    isActive && { backgroundColor: colors.accent, borderColor: colors.accent },
+                  ]}
+                  onPress={() => toggleDealbreaker(option.value)}
+                >
+                  <Text style={[styles.chipText, { color: isActive ? "#fff" : colors.textSecondary }]}>
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
         {/* Prompts Section */}
@@ -737,6 +1032,20 @@ const styles = StyleSheet.create({
   },
   ageRangeInput: {
     flex: 1,
+  },
+  locationButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+  },
+  locationButtonText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "600",
   },
   chip: {
     paddingHorizontal: 16,

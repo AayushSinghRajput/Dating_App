@@ -1,5 +1,11 @@
 import express from "express";
-import { createOrUpateProfile, getProfile, getAllProfiles, setIncognitoMode } from "../controllers/profileController.js";
+import {
+  createOrUpateProfile,
+  getProfile,
+  getAllProfiles,
+  setIncognitoMode,
+  recordProfileView,
+} from "../controllers/profileController.js";
 import { toggleFavorite, getFavorites } from "../controllers/profileFavoriteController.js";
 import { blockUser, unblockUser, getBlockedUsers } from "../controllers/profileBlockController.js";
 import { removePhoto, setPrimaryPhoto, verifyProfilePhoto } from "../controllers/profilePhotoController.js";
@@ -14,6 +20,7 @@ router.post("/create", protect, upload.array("photos", MAX_PHOTOS), createOrUpat
 router.get("/me", protect, getProfile);
 router.get("/allprofiles", protect, getAllProfiles);
 router.patch("/incognito", protect, setIncognitoMode);
+router.post("/:targetUserId/view", protect, recordProfileView);
 
 router.get("/favorites", protect, getFavorites);
 router.post("/:targetUserId/favorite", protect, toggleFavorite);
