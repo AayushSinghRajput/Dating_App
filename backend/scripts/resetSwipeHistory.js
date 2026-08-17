@@ -1,7 +1,8 @@
 // One-off dev utility: fully reset swipe/match history between two test
 // accounts so they become eligible for each other in discovery again.
-// Clears likes/passes/superLikes/matches on both sides (buildAlreadySwipedMatch
-// excludes on all four, not just matches) and deletes any chat/messages
+// Clears likes/passes/superLikes/matches on both sides (buildPermanentSwipedMatch
+// excludes likes/superLikes/matches; passes are separately time-boxed via
+// candidateGenerator.js's PASS_COOLDOWN_DAYS) and deletes any chat/messages
 // between them, mirroring matchController.js's unmatchProfile but also
 // covering likes/passes which that endpoint intentionally leaves alone.
 // Usage: node scripts/resetSwipeHistory.js userA@example.com [userB@example.com]

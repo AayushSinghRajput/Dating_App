@@ -2,6 +2,7 @@ import Profile from "../models/profileModel.js";
 import { containsBannedContent } from "../utils/moderation.js";
 import { getDiscoveryFeed } from "../services/recommendation/index.js";
 import { logEvent } from "../services/recommendation/eventLogger.js";
+import { explainRecommendation } from "../services/recommendation/explainer.js";
 
 const MAX_PHOTOS = 6;
 const DEFAULT_PAGE_SIZE = 20;
@@ -198,4 +199,18 @@ export const recordProfileView = async (req, res) => {
   }
 
   res.status(204).send();
+};
+
+// @desc    Why was this candidate recommended? Plain-language reasons
+//          derived from their most recent discovery-feed impression (see
+//          services/recommendation/explainer.js). Empty reasons[] if this
+//          candidate hasn't actually been shown to the viewer yet.
+// @route   GET /api/profile/:targetUserId/explain
+// @access  Private
+export const explainProfileRecommendation = async (req, res) => {
+  const viewerId = req.user.id;
+  const { targetUserId } = req.params;
+
+  const explanation = await explainRecommendation(viewerId, targetUserId);
+  res.status(200).json(explanation);
 };

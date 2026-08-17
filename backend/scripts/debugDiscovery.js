@@ -6,14 +6,16 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import User from "../models/userModel.js";
 import Profile from "../models/profileModel.js";
+import RecommendationEvent from "../models/recommendationEventModel.js";
 import {
   buildAgeRangeStages,
-  buildAlreadySwipedMatch,
+  buildPermanentSwipedMatch,
   buildDealbreakerMatch,
   buildDistanceMatch,
   passesGenderReciprocal,
 } from "../services/recommendation/hardFilter.js";
 import { buildProfileSafetyMatch, excludeBannedUsersMatch } from "../services/recommendation/safetyFilter.js";
+import { PASS_COOLDOWN_DAYS } from "../services/recommendation/candidateGenerator.js";
 
 dotenv.config();
 
@@ -49,13 +51,24 @@ async function main() {
   const viewerAge = viewerProfile.age;
 
   const safetyMatch = buildProfileSafetyMatch(viewerUser._id, blockedByMe);
-  const swipedMatch = buildAlreadySwipedMatch(viewerProfile);
+  const swipedMatch = buildPermanentSwipedMatch(viewerProfile);
   const dealbreakerMatch = buildDealbreakerMatch(viewerProfile);
   const distanceMatch = buildDistanceMatch(viewerProfile);
 
+  const passCooldownSince = new Date(Date.now() - PASS_COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
+  const activelyPassedEvents = await RecommendationEvent.find({
+    user: viewerUser._id,
+    type: "PASS",
+    createdAt: { $gte: passCooldownSince },
+  })
+    .select("targetUser")
+    .lean();
+  const activelyPassedUserIds = new Set(activelyPassedEvents.map((e) => e.targetUser.toString()));
+
   console.log("\n=== Filter definitions derived from viewer ===");
   console.log("safetyMatch:", JSON.stringify(safetyMatch));
-  console.log("swipedMatch:", JSON.stringify(swipedMatch));
+  console.log("permanentSwipedMatch (likes/superLikes/matches):", JSON.stringify(swipedMatch));
+  console.log(`activelyPassedUserIds (within ${PASS_COOLDOWN_DAYS}-day cooldown):`, [...activelyPassedUserIds]);
   console.log("dealbreakerMatch:", JSON.stringify(dealbreakerMatch));
   console.log("distanceMatch:", JSON.stringify(distanceMatch));
   console.log("viewerAge:", viewerAge, "viewerMinAge:", viewerMinAge, "viewerMaxAge:", viewerMaxAge);
@@ -67,7 +80,8 @@ async function main() {
     console.log("  passes safetyMatch:", !!matchesSafety);
 
     const matchesSwiped = await Profile.exists({ _id: candidate._id, ...swipedMatch });
-    console.log("  passes swipedMatch:", !!matchesSwiped);
+    console.log("  passes permanentSwipedMatch:", !!matchesSwiped);
+    console.log("  in pass cooldown:", activelyPassedUserIds.has(candidate.user.toString()));
 
     const matchesDealbreaker = await Profile.exists({ _id: candidate._id, ...dealbreakerMatch });
     console.log("  passes dealbreakerMatch:", !!matchesDealbreaker);

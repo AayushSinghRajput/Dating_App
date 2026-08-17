@@ -152,10 +152,23 @@ function behavioralScore(candidate, tasteProfile) {
   return 0.5 + (rawScore - 0.5) * confidence;
 }
 
+// Section 14 — collaborative-filtering signal (see collaborativeFilter.js).
+// `collaborativeSignal` is a single Map for the whole viewer (looked up per
+// candidate here), same shape/usage pattern as `tasteProfile`'s
+// hobbyWeights — neutral (0.5) both for a cold-start viewer (signal is
+// null) and for any candidate no similar neighbor happened to like, since
+// this signal is vote-only (no negative/avoidance side yet, unlike
+// behavioralScore) — absence of a vote just means no evidence either way.
+function collaborativeScore(candidate, collaborativeSignal) {
+  if (!collaborativeSignal) return 0.5;
+  const vote = collaborativeSignal.get(candidate._id.toString());
+  return vote === undefined ? 0.5 : 0.5 + vote * 0.5;
+}
+
 // Computes every feature for one viewer/candidate pair. Kept as plain
 // functions (not classes) so any single feature can be swapped or replaced
 // by a learned model later without touching the others (Section 36).
-export function extractFeatures(viewerProfile, candidate, tasteProfile) {
+export function extractFeatures(viewerProfile, candidate, tasteProfile, collaborativeSignal) {
   return {
     interestScore: interestScore(viewerProfile.hobbies, candidate.hobbies),
     relationshipScore: relationshipGoalScore(viewerProfile.relationshipGoals, candidate.relationshipGoals),
@@ -165,5 +178,6 @@ export function extractFeatures(viewerProfile, candidate, tasteProfile) {
     behavioralScore: behavioralScore(candidate, tasteProfile),
     lifestyleScore: lifestyleScore(viewerProfile.lifestyle, candidate.lifestyle),
     distanceScore: distanceScore(viewerProfile, candidate),
+    collaborativeScore: collaborativeScore(candidate, collaborativeSignal),
   };
 }

@@ -19,6 +19,12 @@ const recommendationImpressionSchema = new mongoose.Schema(
     position: { type: Number, required: true },
     score: { type: Number, required: true },
     algorithmVersion: { type: String, required: true },
+    // Section 33/34 — which named ranking-weight configuration produced this
+    // score (see rankingWeights.js's RANKING_WEIGHT_VARIANTS). Optional so
+    // impressions logged before this field existed don't need a migration;
+    // absent on those older docs rather than defaulted, so it's never
+    // mistaken for an actual "control" assignment.
+    experimentVariant: { type: String },
     // Per-feature breakdown behind `score` (Section 35 — explainability).
     // Kept loose/Mixed rather than a strict sub-schema since the feature set
     // is expected to change as later phases add/replace signals.

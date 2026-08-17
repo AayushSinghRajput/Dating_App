@@ -5,6 +5,7 @@ import {
   getAllProfiles,
   setIncognitoMode,
   recordProfileView,
+  explainProfileRecommendation,
 } from "../controllers/profileController.js";
 import { toggleFavorite, getFavorites } from "../controllers/profileFavoriteController.js";
 import { blockUser, unblockUser, getBlockedUsers } from "../controllers/profileBlockController.js";
@@ -21,6 +22,7 @@ router.get("/me", protect, getProfile);
 router.get("/allprofiles", protect, getAllProfiles);
 router.patch("/incognito", protect, setIncognitoMode);
 router.post("/:targetUserId/view", protect, recordProfileView);
+router.get("/:targetUserId/explain", protect, explainProfileRecommendation);
 
 router.get("/favorites", protect, getFavorites);
 router.post("/:targetUserId/favorite", protect, toggleFavorite);

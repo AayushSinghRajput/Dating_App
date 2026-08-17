@@ -3,9 +3,10 @@ import { ALGORITHM_VERSION } from "./rankingWeights.js";
 
 // Records one impression per candidate actually returned in a feed page —
 // the foundation for freshness (freshnessEngine.js), future exposure/
-// popularity monitoring (Section 27), and offline evaluation (Section 32).
-// Logging failures must never break the discovery feed itself.
-export async function logImpressions(viewerUserId, rankedPage) {
+// popularity monitoring (Section 27), offline evaluation (Section 32), and
+// A/B comparison by experimentVariant (Section 33/34). Logging failures
+// must never break the discovery feed itself.
+export async function logImpressions(viewerUserId, rankedPage, experimentVariant) {
   if (rankedPage.length === 0) return;
 
   const docs = rankedPage.map((entry, index) => ({
@@ -14,6 +15,7 @@ export async function logImpressions(viewerUserId, rankedPage) {
     position: index,
     score: entry.finalScore,
     algorithmVersion: ALGORITHM_VERSION,
+    experimentVariant,
     features: { ...entry.features, reciprocalScore: entry.reciprocalScore },
   }));
 
