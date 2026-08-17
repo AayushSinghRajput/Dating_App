@@ -5,20 +5,22 @@ import { computeFreshnessPenalties } from "./freshnessEngine.js";
 import { buildTasteProfile } from "./behaviorModel.js";
 import { computeReciprocalScores } from "./reciprocalScorer.js";
 import { computePopularityPenalties } from "./popularityControl.js";
+import { buildCollaborativeSignal } from "./collaborativeFilter.js";
 import { scoreCandidates, rankByScore } from "./rankingEngine.js";
 import { applyExploration } from "./explorationEngine.js";
 import { applyDiversity } from "./diversityReRanker.js";
 import { logImpressions } from "./recommendationLogger.js";
-import { ALGORITHM_VERSION } from "./rankingWeights.js";
+import { ALGORITHM_VERSION, RANKING_WEIGHT_VARIANTS, getVariantForUser } from "./rankingWeights.js";
 
-// Orchestrates the full Phase 1 + 2 + 3 discovery pipeline (Section 4):
+// Orchestrates the full Phase 1-4 discovery pipeline (Section 4):
 //   Safety & eligibility -> Hard filters -> Candidate generation
-//   -> Feature engineering (incl. behavioral) -> Reciprocal scoring
-//   -> Ranking -> Exploration -> Diversity -> Final feed -> Impression logging
+//   -> Feature engineering (incl. behavioral + collaborative) -> Reciprocal
+//   scoring -> Ranking -> Exploration -> Diversity -> Final feed ->
+//   Impression logging
 // Each stage is an independently swappable module (Section 36) — this file
 // only wires them together, it doesn't contain filtering/scoring logic
-// itself, so later phases (collaborative filtering, ML ranking) can replace
-// individual stages without touching this contract.
+// itself, so later phases (ML ranking) can replace individual stages
+// without touching this contract.
 export async function getDiscoveryFeed(viewerUserId, { page = 1, limit = 20 } = {}) {
   const [viewerProfile, viewerUser] = await Promise.all([
     Profile.findOne({ user: viewerUserId }).lean(),
@@ -28,9 +30,10 @@ export async function getDiscoveryFeed(viewerUserId, { page = 1, limit = 20 } = 
     return { profiles: [], algorithmVersion: ALGORITHM_VERSION };
   }
 
-  const [candidates, tasteProfile] = await Promise.all([
+  const [candidates, tasteProfile, collaborativeSignal] = await Promise.all([
     generateCandidates(viewerProfile, viewerUserId),
     buildTasteProfile(viewerUserId),
+    buildCollaborativeSignal(viewerProfile),
   ]);
 
   const [freshnessPenalties, reciprocalScores, popularityPenalties] = await Promise.all([
@@ -38,13 +41,23 @@ export async function getDiscoveryFeed(viewerUserId, { page = 1, limit = 20 } = 
     computeReciprocalScores(viewerProfile, viewerUser?.lastActiveAt, candidates, tasteProfile),
     computePopularityPenalties(candidates),
   ]);
+
+  // Section 33/34 — deterministic per-viewer A/B bucketing across the named
+  // weight configurations in rankingWeights.js. Resolved once per request
+  // and threaded through both scoring and impression logging so a variant
+  // can be evaluated end-to-end from RecommendationImpression.experimentVariant.
+  const experimentVariant = getVariantForUser(viewerUserId);
+  const weights = RANKING_WEIGHT_VARIANTS[experimentVariant];
+
   const scored = scoreCandidates(
     viewerProfile,
     candidates,
     freshnessPenalties,
     tasteProfile,
     reciprocalScores,
-    popularityPenalties
+    popularityPenalties,
+    weights,
+    collaborativeSignal
   );
   const ranked = rankByScore(scored);
 
@@ -62,7 +75,7 @@ export async function getDiscoveryFeed(viewerUserId, { page = 1, limit = 20 } = 
     pageEntries = ranked.slice(start, start + limit);
   }
 
-  await logImpressions(viewerUserId, pageEntries);
+  await logImpressions(viewerUserId, pageEntries, experimentVariant);
 
   const profiles = pageEntries.map(({ candidate }) => ({
     id: candidate._id,

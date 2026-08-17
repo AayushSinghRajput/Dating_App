@@ -103,14 +103,13 @@ export function buildDistanceMatch(viewerProfile) {
   };
 }
 
-// Already-swiped candidates (liked, passed, super-liked, or matched) are
-// excluded outright for now. Re-surfacing old passes after a cooldown is a
-// real product idea (per spec Section 6) but is a configuration decision
-// deferred to a later pass, not a Phase 1 requirement.
-export function buildAlreadySwipedMatch(viewerProfile) {
+// Liked, super-liked, and matched candidates are excluded permanently —
+// unlike a pass (see candidateGenerator.js's cooldown handling), there's no
+// product reason to ever resurface someone the viewer already committed to
+// or is already matched with.
+export function buildPermanentSwipedMatch(viewerProfile) {
   const swipedIds = [
     ...viewerProfile.likes,
-    ...viewerProfile.passes,
     ...viewerProfile.superLikes,
     ...viewerProfile.matches,
   ];

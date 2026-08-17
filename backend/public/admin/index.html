@@ -1,43 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Soulmate Admin</title>
-<link rel="stylesheet" href="/admin/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Soulmate Admin</title>
+  <link rel="stylesheet" href="/admin/style.css" />
 </head>
-<body>
 
-<div id="loginView">
-  <h2>Soulmate Admin</h2>
-  <div class="card">
-    <label>Email</label>
-    <input type="email" id="loginEmail" />
-    <label>Password</label>
-    <input type="password" id="loginPassword" />
-    <button id="loginBtn">Sign In</button>
-    <p class="muted" id="loginError"></p>
-  </div>
-</div>
+<body class="bg-gray-50 text-gray-900 antialiased">
 
-<div id="appView" style="display:none">
-  <header>
-    <h1>Soulmate Admin</h1>
-    <button id="logoutBtn">Log out</button>
-  </header>
-  <main>
-    <div class="tabs">
-      <div class="tab active" data-tab="analytics">Analytics</div>
-      <div class="tab" data-tab="reports">Reports</div>
-      <div class="tab" data-tab="users">Users</div>
+  <div id="loginView" class="min-h-screen flex items-center justify-center px-4">
+    <div class="w-full max-w-sm">
+      <div class="text-center mb-8">
+        <div
+          class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500 text-white text-xl font-bold shadow-lg shadow-brand-500/30">
+          S</div>
+        <h2 class="mt-4 text-xl font-bold text-gray-900">Soulmate Admin</h2>
+        <p class="text-sm text-gray-500">Sign in to manage the platform</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm ring-1 ring-gray-200 p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Email</label>
+          <input type="email" id="loginEmail"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Password</label>
+          <div class="relative">
+            <input type="password" id="loginPassword"
+              class="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
+            <button type="button" id="togglePasswordBtn" aria-label="Show password"
+              class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600">
+              <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <button id="loginBtn"
+          class="w-full rounded-lg bg-brand-500 text-white text-sm font-semibold py-2.5 hover:bg-brand-600 transition-colors">Sign
+          In</button>
+        <p id="loginError" class="text-sm text-red-600 min-h-[1.25rem]"></p>
+      </div>
     </div>
+  </div>
 
-    <div id="analyticsTab"></div>
-    <div id="reportsTab" style="display:none"></div>
-    <div id="usersTab" style="display:none"></div>
-  </main>
-</div>
+  <div id="appView" style="display:none">
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="h-8 w-8 rounded-lg bg-brand-500 text-white flex items-center justify-center text-sm font-bold">
+            S</div>
+          <span class="font-bold text-gray-900">Soulmate Admin</span>
+        </div>
+        <button id="logoutBtn"
+          class="text-sm font-medium text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">Log
+          out</button>
+      </div>
+    </header>
+    <main class="max-w-6xl mx-auto px-6 py-8">
+      <div class="flex gap-1.5 mb-6 border-b border-gray-200">
+        <div class="tab cursor-pointer px-4 py-2.5 text-sm font-semibold border-b-2 text-brand-600 border-brand-600"
+          data-tab="analytics">Analytics</div>
+        <div class="tab cursor-pointer px-4 py-2.5 text-sm font-semibold border-b-2 text-gray-500 border-transparent"
+          data-tab="reports">Reports</div>
+        <div class="tab cursor-pointer px-4 py-2.5 text-sm font-semibold border-b-2 text-gray-500 border-transparent"
+          data-tab="users">Users</div>
+      </div>
 
-<script src="/admin/app.js" defer></script>
+      <div id="analyticsTab" class="space-y-5"></div>
+      <div id="reportsTab" class="space-y-5" style="display:none"></div>
+      <div id="usersTab" class="space-y-5" style="display:none"></div>
+    </main>
+  </div>
+
+  <script type="module" src="/admin/app.js"></script>
 </body>
+
 </html>

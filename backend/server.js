@@ -39,7 +39,20 @@ if (process.env.TRUST_PROXY === "true") {
 }
 
 // Security & performance middleware
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        // Default img-src ('self' data:) blocks every user photo — they're
+        // all hosted on Cloudinary (see config/cloudinary.js), not served
+        // from this origin. Scoped to that one host rather than loosening
+        // to a blanket `https:`.
+        "img-src": ["'self'", "data:", "https://res.cloudinary.com"],
+      },
+    },
+  }),
+);
 app.use(compression());
 app.use(
   cors({

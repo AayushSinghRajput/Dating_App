@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import Profile from "../../models/profileModel.js";
+import RecommendationEvent from "../../models/recommendationEventModel.js";
 import { buildProfileSafetyMatch, excludeBannedUsersMatch } from "./safetyFilter.js";
 import {
   buildAgeRangeStages,
-  buildAlreadySwipedMatch,
+  buildPermanentSwipedMatch,
   buildDealbreakerMatch,
   buildDistanceMatch,
   passesGenderReciprocal,
@@ -14,6 +15,30 @@ import {
 // plenty fast — no need for a fancier retrieval strategy (geo bucketing,
 // ANN index, etc.) until real usage numbers justify it.
 const CANDIDATE_POOL_SIZE = 300;
+
+// Section 6 — "exact behavior should be configurable, some systems may
+// reintroduce previously rejected candidates after sufficient time". A pass
+// is a much weaker signal than a like/match (buildPermanentSwipedMatch) or a
+// block/report (safetyFilter.js, always permanent) — starting value, not a
+// tuned one, same convention as rankingWeights.js.
+export const PASS_COOLDOWN_DAYS = 30;
+
+// Driven by RecommendationEvent's timestamped PASS log rather than
+// viewerProfile.passes (a plain untimestamped id array) — this is the only
+// place recency for a pass is available without a schema migration. Returns
+// target *user* ids (not Profile ids) since that's what the event records,
+// and Profile documents carry their own `user` field to match against.
+async function getActivelyPassedUserIds(viewerUserId) {
+  const since = new Date(Date.now() - PASS_COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
+  const events = await RecommendationEvent.find({
+    user: viewerUserId,
+    type: "PASS",
+    createdAt: { $gte: since },
+  })
+    .select("targetUser")
+    .lean();
+  return events.map((e) => e.targetUser);
+}
 
 // Stages 1+2 of the pipeline (safety + hard filters), producing a bounded,
 // fully-eligible candidate pool for the ranking stage to score. Every
@@ -27,11 +52,14 @@ export async function generateCandidates(viewerProfile, viewerUserId) {
   const viewerMaxAge = viewerProfile.preferences?.maxAge ?? 99;
   const viewerAge = viewerProfile.age;
 
+  const activelyPassedUserIds = await getActivelyPassedUserIds(viewerUserId);
+
   const pipeline = [
     {
       $match: {
         ...buildProfileSafetyMatch(viewerUserId, blockedByMe),
-        ...buildAlreadySwipedMatch(viewerProfile),
+        ...buildPermanentSwipedMatch(viewerProfile),
+        ...(activelyPassedUserIds.length > 0 ? { user: { $nin: activelyPassedUserIds } } : {}),
         ...buildDealbreakerMatch(viewerProfile),
         ...buildDistanceMatch(viewerProfile),
       },
