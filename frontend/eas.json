@@ -17,13 +17,15 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://soulmate-backend-f1xn.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://soulmate-backend-f1xn.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "978818867934-fmik9nl81vuk21k89a7gr69cepffnjhv.apps.googleusercontent.com"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://soulmate-backend-f1xn.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://soulmate-backend-f1xn.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "978818867934-fmik9nl81vuk21k89a7gr69cepffnjhv.apps.googleusercontent.com"
       }
     }
   },
