@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Soulmate",
-    "slug": "Datingapp",
+    "slug": "soulmate",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
@@ -79,8 +79,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "f546341d-730d-4083-9f04-29161937fbac"
+        "projectId": "a395958e-a2b7-4c9f-9120-3dea92edccc5"
       }
-    }
+    },
+    "owner": "aayushsingrajputs-team"
   }
 }
