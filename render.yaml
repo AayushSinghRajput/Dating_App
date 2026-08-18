@@ -44,13 +44,13 @@ services:
         sync: false
 
       # --- Networking / security ---
-      # Fixed service name above means this URL is known upfront — update
-      # both of these (and frontend/eas.json's EXPO_PUBLIC_API_URL) together
-      # if the service is ever renamed.
+      # "soulmate-backend" was already taken on Render, so it assigned this
+      # "-f1xn" suffixed URL instead — update both of these (and
+      # frontend/eas.json's EXPO_PUBLIC_API_URL) together if that ever changes.
       - key: BACKEND_PUBLIC_URL
-        value: https://soulmate-backend.onrender.com
+        value: https://soulmate-backend-f1xn.onrender.com
       - key: ALLOWED_ORIGINS
-        value: https://soulmate-backend.onrender.com
+        value: https://soulmate-backend-f1xn.onrender.com
 
       # --- Referral / deep linking ---
       - key: APP_DEEP_LINK_SCHEME

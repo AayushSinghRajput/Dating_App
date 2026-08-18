@@ -17,13 +17,13 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://soulmate-backend.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://soulmate-backend-f1xn.onrender.com"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://soulmate-backend.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://soulmate-backend-f1xn.onrender.com"
       }
     }
   },
