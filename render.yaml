@@ -1,0 +1,82 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# This is a monorepo (backend/ + frontend/), so the service's commands `cd
+# backend` explicitly rather than relying on a rootDir.
+#
+# To deploy: push this repo to GitHub, then in Render: New -> Blueprint ->
+# connect this repo -> Apply. You'll be prompted to fill in every env var
+# marked `sync: false` below (same values as backend/.env, but consider a
+# fresh JWT_SECRET rather than reusing the local dev one).
+services:
+  - type: web
+    name: soulmate-backend
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    healthCheckPath: /health
+    envVars:
+      # --- Core ---
+      - key: NODE_ENV
+        value: production
+      # Render sits behind a reverse proxy — needed for rate limiting and
+      # req.ip to see the real client IP (see backend/config/env.js and
+      # backend/middleware/rateLimiters.js).
+      - key: TRUST_PROXY
+        value: "true"
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+
+      # --- Cloudinary (photo/media storage) ---
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+      # --- Gmail SMTP (password reset / email verification codes) ---
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
+
+      # --- Networking / security ---
+      # Fixed service name above means this URL is known upfront — update
+      # both of these (and frontend/eas.json's EXPO_PUBLIC_API_URL) together
+      # if the service is ever renamed.
+      - key: BACKEND_PUBLIC_URL
+        value: https://soulmate-backend.onrender.com
+      - key: ALLOWED_ORIGINS
+        value: https://soulmate-backend.onrender.com
+
+      # --- Referral / deep linking ---
+      - key: APP_DEEP_LINK_SCHEME
+        value: datingapp
+
+      # --- Premium subscription ---
+      - key: PREMIUM_PLAN_PRICE_NPR
+        value: "500"
+
+      # --- eSewa payment gateway (sandbox defaults — safe to leave as-is
+      # until real merchant credentials are registered, see .env.example) ---
+      - key: ESEWA_MERCHANT_CODE
+        value: EPAYTEST
+      - key: ESEWA_SECRET_KEY
+        value: "8gBm/:&EnhH.1/q"
+      - key: ESEWA_GATEWAY_URL
+        value: https://rc-epay.esewa.com.np/api/epay/main/v2/form
+      - key: ESEWA_STATUS_CHECK_URL
+        value: https://rc.esewa.com.np/api/epay/transaction/status/
+
+      # --- Khalti payment gateway ---
+      - key: KHALTI_SECRET_KEY
+        sync: false
+      - key: KHALTI_BASE_URL
+        value: https://dev.khalti.com/api/v2
+
+      # --- Google Sign-In ---
+      - key: GOOGLE_CLIENT_ID
+        sync: false
