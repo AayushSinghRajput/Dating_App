@@ -9,8 +9,10 @@ export default function IncomingCallModal() {
 
   const visible = callStatus === "incoming-ringing" && !!remoteUser;
 
+  if (!visible) return null;
+
   return (
-    <Modal visible={visible} animationType="fade" transparent statusBarTranslucent>
+    <Modal visible={visible} animationType="fade" statusBarTranslucent>
       <View style={styles.overlay}>
         <View style={styles.content}>
           <Image
