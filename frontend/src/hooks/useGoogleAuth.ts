@@ -13,6 +13,10 @@ export function useGoogleAuth(acceptedTerms?: boolean) {
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+    androidClientId:
+      process.env.EXPO_PUBLIC_ANDROID_GOOGLE_CLIENT_ID ||
+      process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
   });
 
   const [result, setResult] = useState<{

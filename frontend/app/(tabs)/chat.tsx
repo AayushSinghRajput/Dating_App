@@ -76,12 +76,14 @@ export default function Chats() {
           setChats([]);
         }
       } catch (error: any) {
-        console.error("Error fetching chats:", error.message);
-        Toast.show({
-          type: 'error',
-          text1: error.message,
-          text2: 'Failed to fetch chats',
-        })
+        if (error.message !== "User not authenticated") {
+          console.error("Error fetching chats:", error.message);
+          Toast.show({
+            type: "error",
+            text1: error.message,
+            text2: "Failed to fetch chats",
+          });
+        }
       } finally {
         setLoading(false);
       }

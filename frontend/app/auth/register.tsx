@@ -20,7 +20,7 @@ import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useGoogleAuth } from "@/src/hooks/useGoogleAuth";
 
-const { width, height } = Dimensions.get("window");
+const { height } = Dimensions.get("window");
 
 export default function RegisterScreen() {
   const { colors } = useTheme();
@@ -56,7 +56,7 @@ export default function RegisterScreen() {
         Toast.show({ type: "error", text1: "Google sign-in failed", text2: googleResult.error.message });
       }
     }
-  }, [googleResult]);
+  }, [googleResult, router]);
 
   useEffect(() => {
     Animated.parallel([
@@ -71,7 +71,7 @@ export default function RegisterScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, slideAnim]);
 
   const handleRegister = async () => {
     if (!username.trim() || !email.trim() || !password || !confirmPassword) {
@@ -182,13 +182,7 @@ export default function RegisterScreen() {
                 { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
               ]}
             >
-              {/* Logo & Title */}
-              <View style={styles.logoSection}>
-                <View style={styles.heartContainer}>
-                  <Ionicons name="heart" size={60} color="#fff" />
-                  <View style={styles.mountainAccent} />
-                </View>
-              </View>
+              {/* Title Section */}
               <View style={styles.titleSection}>
                 <Text style={styles.title}>Soulmate</Text>
                 <View style={styles.titleUnderline} />
@@ -360,9 +354,9 @@ export default function RegisterScreen() {
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.googleBtn, !acceptedTerms && styles.googleBtnDisabled]}
+                  style={styles.googleBtn}
                   onPress={() => promptGoogle()}
-                  disabled={!googleReady || !acceptedTerms || googleLoading}
+                  disabled={!googleReady || googleLoading}
                 >
                   <Ionicons name="logo-google" size={20} color="#DB4437" />
                   <Text style={styles.googleBtnText}>

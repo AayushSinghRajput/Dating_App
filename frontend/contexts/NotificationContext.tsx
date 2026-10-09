@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { socket, connectSocket } from "@/utils/socket";
@@ -35,6 +36,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const refresh = useCallback(async () => {
     try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        setNotifications([]);
+        setUnreadCount(0);
+        return;
+      }
       const [list, count] = await Promise.all([
         getNotifications(),
         getUnreadNotificationCount(),

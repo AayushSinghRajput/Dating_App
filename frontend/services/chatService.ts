@@ -54,12 +54,11 @@ export interface Chat {
 
 //Get all chats
 export const getAllChats = async () => {
-  try {
-    // 1. Get token from AsyncStorage
-    const token = await AsyncStorage.getItem("token");
-    if (!token) throw new Error("User not authenticated");
+  const token = await AsyncStorage.getItem("token");
+  if (!token) throw new Error("User not authenticated");
 
-    // 2. Call the API
+  try {
+    // Call the API
     const response = await fetch(`${BASE_URL}/api/chats`, {
       method: "GET",
       headers: {
@@ -68,17 +67,19 @@ export const getAllChats = async () => {
       },
     });
 
-    // 3. Check for server errors
+    // Check for server errors
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || "Failed to fetch chats");
     }
 
-    // 4. Parse and return JSON data
+    // Parse and return JSON data
     const chats = await response.json();
     return chats;
-  } catch (error:any) {
-    console.error("Error fetching chats:", error.message);
+  } catch (error: any) {
+    if (error.message !== "User not authenticated") {
+      console.error("Error fetching chats:", error.message);
+    }
     throw error; // Re-throw error so calling code can handle it
   }
 };

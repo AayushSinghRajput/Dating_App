@@ -47,9 +47,11 @@ const SettingsCard: React.FC<SettingsCardProps> = ({
 
   return (
     <Pressable
+      // No backgroundColor here: on Android, a view with android_ripple
+      // doesn't repaint a changed background (theme switch) until re-laid
+      // out, so the surface color comes from the parent container instead.
       style={({ pressed }) => [
         styles.card,
-        { backgroundColor: colors.surface },
         isLogout && [styles.logoutCard, { borderColor: colors.accentSoft }],
         pressed && styles.pressedCard,
         style,

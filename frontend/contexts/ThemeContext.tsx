@@ -1,5 +1,6 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -34,17 +35,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const setMode = (next: ThemeMode) => {
+  const setMode = useCallback((next: ThemeMode) => {
     setModeState(next);
     AsyncStorage.setItem(STORAGE_KEY, next);
-  };
+  }, []);
 
   const isDark = mode === "system" ? systemScheme === "dark" : mode === "dark";
   const colors = isDark ? darkColors : lightColors;
 
   const value = useMemo(
     () => ({ mode, isDark, colors, setMode }),
-    [mode, isDark, colors]
+    [mode, isDark, colors, setMode]
   );
 
   return (

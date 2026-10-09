@@ -82,12 +82,12 @@ export default function AuthScreen() {
     }
 
     try {
-      const data = await login(email.trim(), password);
+      const data = await login(email.trim().toLowerCase(), password);
       if (data?.token) {
         Toast.show({
           type: "success",
           text1: "Success",
-          text2: "Login successful !",
+          text2: "Login successful!",
           position: "top",
           visibilityTime: 3000,
         });
@@ -109,7 +109,6 @@ export default function AuthScreen() {
         position: "top",
         visibilityTime: 3000,
       });
-      router.push('/auth/register');
     }
   };
 
@@ -140,14 +139,6 @@ export default function AuthScreen() {
                 { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
               ]}
             >
-              {/* Logo Section */}
-              <View style={styles.logoSection}>
-                <View style={styles.heartContainer}>
-                  <Ionicons name="heart" size={60} color="#fff" />
-                  <View style={styles.mountainAccent} />
-                </View>
-              </View>
-
               {/* Title Section */}
               <View style={styles.titleSection}>
                 <Text style={styles.title}>Soulmate</Text>

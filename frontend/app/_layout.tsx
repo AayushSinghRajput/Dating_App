@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
 import { StatusBar } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -16,6 +16,18 @@ import GlobalMatchCelebration from "../src/components/GlobalMatchCelebration";
 
 function AppShell({ isLoggedIn }: { isLoggedIn: boolean }) {
   const { colors } = useTheme();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    const inAuthGroup = segments[0] === "auth";
+
+    if (!isLoggedIn && !inAuthGroup) {
+      router.replace("/auth/login");
+    } else if (isLoggedIn && inAuthGroup) {
+      router.replace("/(tabs)");
+    }
+  }, [isLoggedIn, segments, router]);
 
   return (
     <>
@@ -29,12 +41,8 @@ function AppShell({ isLoggedIn }: { isLoggedIn: boolean }) {
           contentStyle: { backgroundColor: colors.background },
         }}
       >
-        {isLoggedIn ? (
-          <Stack.Screen name="(tabs)" />
-        ) : (
-          <Stack.Screen name="auth/login" />
-        )}
-
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="auth/login" />
         <Stack.Screen
           name="screen/Notification"
           options={{ presentation: "modal" }}

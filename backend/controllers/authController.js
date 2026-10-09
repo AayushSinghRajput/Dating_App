@@ -15,7 +15,8 @@ export const registerUser = async (req, res) => {
       message: "You must confirm you are 18+ and accept the Terms of Service.",
     });
 
-  const userExists = await User.findOne({ email });
+  const normalizedEmail = email.trim().toLowerCase();
+  const userExists = await User.findOne({ email: { $regex: new RegExp(`^${normalizedEmail}$`, "i") } });
   if (userExists) return res.status(400).json({ message: "User already exists" });
 
   let referrer = null;
@@ -25,7 +26,7 @@ export const registerUser = async (req, res) => {
 
   const user = await User.create({
     username,
-    email,
+    email: normalizedEmail,
     password,
     termsAcceptedAt: new Date(),
     referralCode: await generateUniqueReferralCode(),
@@ -49,7 +50,12 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await User.findOne({ email: { $regex: new RegExp(`^${normalizedEmail}$`, "i") } });
   if (user && !user.password) {
     return res.status(401).json({
       message: "This account signs in with Google. Please use 'Continue with Google'.",
