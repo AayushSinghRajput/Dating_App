@@ -18,6 +18,7 @@
       "bitcode": false
     },
     "android": {
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#fdeced",
         "foregroundImage": "./assets/images/logo.png"

@@ -168,10 +168,10 @@ export interface DiscoveryProfile {
 
 //Get all profiles
 export const getAllProfiles = async (): Promise<DiscoveryProfile[]> => {
-  try {
-    const token = await AsyncStorage.getItem("token");
-    if (!token)  throw new Error("User not authenticated.");
+  const token = await AsyncStorage.getItem("token");
+  if (!token) throw new Error("User not authenticated.");
 
+  try {
     const response = await fetch(`${BASE_URL}/api/profile/allprofiles`, {
       method: "GET",
       headers: {
@@ -182,14 +182,16 @@ export const getAllProfiles = async (): Promise<DiscoveryProfile[]> => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Backend returned:", errorText);
-      throw new Error("Failed to fetch profiles. check backend logs.");
+      throw new Error("Failed to fetch profiles. Check backend logs.");
     }
     const data = await response.json();
     return data;
   } catch (error: any) {
-    console.error("Error fetching profiles:", error.message);
     if (error.name === "TypeError") {
-      throw new Error("Network error.Check your connection");
+      throw new Error("Network error. Check your connection.");
+    }
+    if (error.message !== "User not authenticated.") {
+      console.error("Error fetching profiles:", error.message);
     }
     throw new Error(error.message);
   }

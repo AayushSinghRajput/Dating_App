@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { socket, connectSocket } from "@/utils/socket";
@@ -18,6 +19,11 @@ export function ChatNotificationProvider({ children }: { children: React.ReactNo
 
   const refresh = useCallback(async () => {
     try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        setUnreadChatsCount(0);
+        return;
+      }
       const count = await getUnreadChatsCount();
       setUnreadChatsCount(count);
     } catch (err) {

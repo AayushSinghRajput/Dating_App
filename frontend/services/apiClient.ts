@@ -5,7 +5,30 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // lifecycle, default headers) so each service stays focused on its own
 // domain's endpoints.
 
-export const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.1.74:5000";
+
+export const fetchWithTimeout = async (
+  url: string,
+  options: RequestInit = {},
+  timeoutMs: number = 6000
+): Promise<Response> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return res;
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      throw new Error(`Connection timed out (${timeoutMs / 1000}s). Server at ${BASE_URL} is unreachable.`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};
 
 // Token kept in memory for synchronous access (e.g. building auth headers
 // without an extra await); AsyncStorage remains the source of truth across

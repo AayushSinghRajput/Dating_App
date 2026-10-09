@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { BASE_URL, getHeaders, saveToken, clearToken } from "./apiClient";
+import { BASE_URL, fetchWithTimeout, getHeaders, saveToken, clearToken } from "./apiClient";
 
 export interface UserProfile {
   _id: string;
@@ -21,11 +21,11 @@ export const login = async (
   password: string
 ): Promise<AuthResponse> => {
   try {
-    const res = await fetch(`${BASE_URL}/api/auth/login`, {
+    const res = await fetchWithTimeout(`${BASE_URL}/api/auth/login`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify({ email, password }),
-    });
+    }, 60000); // Render's free tier can take ~30-60s to wake from sleep
 
     const data: AuthResponse = await res.json();
     if (!res.ok) throw new Error(data.message || "Login failed.");
@@ -33,9 +33,26 @@ export const login = async (
     if (data.token) await saveToken(data.token);
     return data;
   } catch (error: any) {
-    if (error.name === "TypeError")
-      throw new Error("Network error. Check your connection.");
-    throw new Error(error.message);
+    // Surface the real error message regardless of error type
+    const msg = error?.message || String(error);
+    if (
+      error.name === "AbortError" ||
+      msg.toLowerCase().includes("timed out")
+    ) {
+      throw new Error(
+        BASE_URL.startsWith("https://")
+          ? `Server at ${BASE_URL} is not responding. Please try again in a moment.`
+          : `Server unreachable at ${BASE_URL}. Check if backend is running and phone is on the same WiFi.`
+      );
+    }
+    if (
+      error.name === "TypeError" ||
+      msg.toLowerCase().includes("network") ||
+      msg.toLowerCase().includes("failed to fetch")
+    ) {
+      throw new Error(`Cannot connect to ${BASE_URL}. Ensure phone and laptop are on same WiFi network.`);
+    }
+    throw new Error(msg);
   }
 };
 
