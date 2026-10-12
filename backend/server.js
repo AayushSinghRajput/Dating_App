@@ -26,6 +26,7 @@ import referralRoutes from "./routes/referralRoutes.js";
 import premiumRoutes from "./routes/premiumRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import callRoutes from "./routes/callRoutes.js";
 
 dotenv.config();
 validateEnv();
@@ -89,6 +90,7 @@ app.use("/api/referrals", referralRoutes);
 app.use("/api/premium", premiumRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/calls", callRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend is running...");

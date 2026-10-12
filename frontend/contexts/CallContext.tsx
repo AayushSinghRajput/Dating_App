@@ -17,6 +17,7 @@ import {
 import InCallManager from "react-native-incall-manager";
 import Toast from "react-native-toast-message";
 import { socket, connectSocket } from "@/utils/socket";
+import { getIceServers, DEFAULT_ICE_SERVERS } from "@/services/callService";
 
 export type CallType = "audio" | "video";
 export type CallStatus =
@@ -55,25 +56,6 @@ interface CallContextValue {
   toggleSpeaker: () => void;
   flipCamera: () => void;
 }
-
-const ICE_SERVERS = [
-  { urls: "stun:stun.l.google.com:19302" },
-  {
-    urls: "turn:openrelay.metered.ca:80",
-    username: "openrelayproject",
-    credential: "openrelayproject",
-  },
-  {
-    urls: "turn:openrelay.metered.ca:443",
-    username: "openrelayproject",
-    credential: "openrelayproject",
-  },
-  {
-    urls: "turn:openrelay.metered.ca:443?transport=tcp",
-    username: "openrelayproject",
-    credential: "openrelayproject",
-  },
-];
 
 const CallContext = createContext<CallContextValue | null>(null);
 
@@ -129,8 +111,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     setCallStatus("idle");
   }, []);
 
-  const createPeerConnection = useCallback((toUserId: string) => {
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+  const createPeerConnection = useCallback((toUserId: string, iceServers: any = DEFAULT_ICE_SERVERS) => {
+    const pc = new RTCPeerConnection({ iceServers });
 
     pc.onicecandidate = (event: any) => {
       if (event.candidate) {
@@ -161,6 +143,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     connectSocket();
+    // Warm ICE/TURN servers cache in background for quick call negotiation
+    getIceServers().catch(() => {});
 
     const handleIncomingCall = ({
       fromUserId,
@@ -277,7 +261,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         setRemoteUser(remote);
         setCallType(type);
 
-        const pc = createPeerConnection(toUserId);
+        const iceServers = await getIceServers();
+        const pc = createPeerConnection(toUserId, iceServers);
         (stream as any)
           .getTracks()
           .forEach((track: any) => pc.addTrack(track, stream as any));
@@ -333,7 +318,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       localStreamRef.current = stream as unknown as MediaStream;
       setLocalStream(stream as unknown as MediaStream);
 
-      const pc = createPeerConnection(remoteUserRef.current.userId);
+      const iceServers = await getIceServers();
+      const pc = createPeerConnection(remoteUserRef.current.userId, iceServers);
       (stream as any)
         .getTracks()
         .forEach((track: any) => pc.addTrack(track, stream as any));

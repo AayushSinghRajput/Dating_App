@@ -4,6 +4,7 @@ import Profile from "../models/profileModel.js";
 import { isBlockedEitherWay } from "../utils/block.js";
 import { containsBannedContent } from "../utils/moderation.js";
 import { logEvent } from "../services/recommendation/eventLogger.js";
+import { sendPushToUser } from "../services/pushNotificationService.js";
 
 const DEFAULT_MESSAGE_LIMIT = 100;
 const MAX_MESSAGE_LIMIT = 200;
@@ -86,6 +87,17 @@ async function finalizeAndBroadcast(req, newMessage, senderId, extraFields = {})
     });
     logEvent(senderId, receiverId, "MESSAGE_SENT");
     logConversationEvents(newMessage.chat, senderId, receiverId, newMessage._id);
+
+    // Send background push notification if recipient has closed the app or locked phone
+    sendPushToUser(receiverId, {
+      title: newMessage.sender.username || "New message",
+      body: previewForMessage(extraFields),
+      data: {
+        type: "chat",
+        chatId: newMessage.chat.toString(),
+        url: `/screen/ChatDetail/${newMessage.chat}`,
+      },
+    }).catch((err) => console.error("[Push Notifications] Error sending message push:", err));
   }
 
   return messageWithProfile;

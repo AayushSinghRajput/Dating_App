@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Notification from "../models/notificationModel.js";
 import Profile from "../models/profileModel.js";
 import User from "../models/userModel.js";
+import { sendPushToUser } from "../services/pushNotificationService.js";
 
 async function buildFromUserPayload(fromUserId) {
   const [fromUser, fromProfile] = await Promise.all([
@@ -52,6 +53,46 @@ export async function sendNotification(io, { userId, type, fromUserId, chat, cal
   };
 
   io?.to(userId.toString()).emit("newNotification", payload);
+
+  // Send background push notification when phone is locked or app closed
+  const actorName = fromUserPayload?.username || "Someone";
+  let title = "Soulmate";
+  let body = "You have a new notification";
+
+  switch (type) {
+    case "match":
+      title = "It's a Match! 🔥";
+      body = `${actorName} liked you back! Start a conversation.`;
+      break;
+    case "like":
+      title = "New Like! ❤️";
+      body = `${actorName} liked your profile.`;
+      break;
+    case "super_like":
+      title = "Super Like! ⭐";
+      body = `${actorName} super liked you!`;
+      break;
+    case "missed_call":
+      title = "Missed Call 📞";
+      body = `Missed ${callType || "audio"} call from ${actorName}.`;
+      break;
+    case "favorite":
+      title = "Added to Favorites ⭐";
+      body = `${actorName} added you to their favorites.`;
+      break;
+  }
+
+  sendPushToUser(userId, {
+    title,
+    body,
+    data: {
+      type,
+      chatId: chat ? chat.toString() : undefined,
+      notificationId: notificationId.toString(),
+      url: chat ? `/screen/ChatDetail/${chat}` : "/(tabs)/chat",
+    },
+  }).catch((err) => console.error("[Push Notifications] Error:", err));
+
   return payload;
 }
 

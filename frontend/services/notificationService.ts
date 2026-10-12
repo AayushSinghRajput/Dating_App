@@ -105,3 +105,37 @@ export const updateNotificationPreferences = async (
   if (!res.ok) throw new Error(data.message || "Failed to update preferences");
   return data.preferences;
 };
+
+export const registerPushTokenApi = async (pushToken: string): Promise<void> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) return;
+  try {
+    await fetch(`${BASE_URL}/api/notifications/push-token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ pushToken }),
+    });
+  } catch (err) {
+    console.error("Failed to register push token with backend:", err);
+  }
+};
+
+export const removePushTokenApi = async (pushToken: string): Promise<void> => {
+  const authToken = await AsyncStorage.getItem("token");
+  if (!authToken) return;
+  try {
+    await fetch(`${BASE_URL}/api/notifications/push-token`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ pushToken }),
+    });
+  } catch (err) {
+    console.error("Failed to remove push token from backend:", err);
+  }
+};
