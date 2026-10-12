@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
-import { BASE_URL, getCurrentUserId } from "./apiClient";
+import { BASE_URL, getCurrentUserId, handleAuthFailure } from "./apiClient";
 
 export interface CallLogInfo {
   callType: "audio" | "video";
@@ -97,13 +97,20 @@ export const markChatRead = async (chatId: string): Promise<void> => {
 // Total unread messages across all chats — powers the Chat tab badge.
 export const getUnreadChatsCount = async (): Promise<number> => {
   const token = await AsyncStorage.getItem("token");
-  if (!token) throw new Error("User not authenticated");
-  const res = await fetch(`${BASE_URL}/api/chats/unread-count`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new Error("Failed to fetch unread count");
-  const data = await res.json();
-  return data.count;
+  if (!token) return 0;
+  try {
+    const res = await fetch(`${BASE_URL}/api/chats/unread-count`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      await handleAuthFailure(res);
+      return 0;
+    }
+    const data = await res.json();
+    return data.count ?? 0;
+  } catch {
+    return 0;
+  }
 };
 
 //Create a chat with another user, or get the existing one

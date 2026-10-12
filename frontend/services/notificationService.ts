@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { BASE_URL } from "./apiClient";
+import { BASE_URL, handleAuthFailure } from "./apiClient";
 
 export interface AppNotification {
   _id: string;
@@ -18,23 +18,38 @@ export interface AppNotification {
 export const getNotifications = async (): Promise<AppNotification[]> => {
   const authToken = await AsyncStorage.getItem("token");
   if (!authToken) throw new Error("User not authenticated");
-  const res = await fetch(`${BASE_URL}/api/notifications`, {
-    headers: { Authorization: `Bearer ${authToken}` },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to fetch notifications");
-  return data;
+  try {
+    const res = await fetch(`${BASE_URL}/api/notifications`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      await handleAuthFailure(res);
+      throw new Error(data.message || "Failed to fetch notifications");
+    }
+    return data;
+  } catch (err: any) {
+    if (err.name === "TypeError") throw new Error("Network error");
+    throw err;
+  }
 };
 
 export const getUnreadNotificationCount = async (): Promise<number> => {
   const authToken = await AsyncStorage.getItem("token");
-  if (!authToken) throw new Error("User not authenticated");
-  const res = await fetch(`${BASE_URL}/api/notifications/unread-count`, {
-    headers: { Authorization: `Bearer ${authToken}` },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to fetch unread count");
-  return data.count;
+  if (!authToken) return 0;
+  try {
+    const res = await fetch(`${BASE_URL}/api/notifications/unread-count`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    if (!res.ok) {
+      await handleAuthFailure(res);
+      return 0;
+    }
+    const data = await res.json();
+    return data.count ?? 0;
+  } catch {
+    return 0;
+  }
 };
 
 export const markNotificationRead = async (id: string): Promise<void> => {

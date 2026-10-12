@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { BASE_URL } from "./apiClient";
+import { BASE_URL, handleAuthFailure } from "./apiClient";
 
 export const likeProfile = async (targetProfileId: string) => {
   try {
@@ -13,9 +13,12 @@ export const likeProfile = async (targetProfileId: string) => {
       },
       body: JSON.stringify({ targetProfileId }),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Failed to like profile");
-    return data;
+    if (!response.ok) {
+      await handleAuthFailure(response);
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.message || "Failed to like profile");
+    }
+    return await response.json();
   } catch (error: any) {
     console.error("Error liking profile:", error.message);
     throw new Error(error.message || "Failed to like profile");
