@@ -37,7 +37,13 @@ services:
       - key: CLOUDINARY_API_SECRET
         sync: false
 
-      # --- Gmail SMTP (password reset / email verification codes) ---
+      # --- Transactional Email (Resend) ---
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: Soulmate <onboarding@resend.dev>
+
+      # --- Gmail SMTP (optional legacy fallback) ---
       - key: GMAIL_USER
         sync: false
       - key: GMAIL_APP_PASSWORD

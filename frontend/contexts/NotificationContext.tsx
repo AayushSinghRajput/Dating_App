@@ -107,7 +107,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       socket.off("notificationRemoved", handleNotificationRemoved);
       socket.off("accountBanned", handleAccountBanned);
     };
-  }, []);
+  }, [router]);
 
   const markRead = useCallback(async (id: string) => {
     let wasUnread = false;

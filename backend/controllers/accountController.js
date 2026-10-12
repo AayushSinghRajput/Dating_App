@@ -3,6 +3,7 @@ import Profile from "../models/profileModel.js";
 import Chat from "../models/chatModel.js";
 import Message from "../models/messageModel.js";
 import Notification from "../models/notificationModel.js";
+import { destroyCloudinaryAssets } from "../utils/cloudinaryHelper.js";
 
 // @desc    Get the logged-in user's basic account info
 // @route   GET /api/auth/me
@@ -32,6 +33,25 @@ export const deleteAccount = async (req, res) => {
   }
 
   const profile = await Profile.findOne({ user: userId });
+
+  // Collect all user-associated Cloudinary media URLs for cleanup
+  const mediaUrlsToDelete = [];
+  if (profile) {
+    if (profile.profileImage) mediaUrlsToDelete.push(profile.profileImage);
+    if (Array.isArray(profile.photos)) mediaUrlsToDelete.push(...profile.photos);
+    if (profile.verificationPhoto) mediaUrlsToDelete.push(profile.verificationPhoto);
+  }
+
+  // Find any audio or media messages uploaded by this user
+  const userMediaMessages = await Message.find({
+    sender: userId,
+    $or: [{ "audio.url": { $exists: true } }, { "media.url": { $exists: true } }],
+  }).select("audio.url media.url").lean();
+
+  userMediaMessages.forEach((m) => {
+    if (m.audio?.url) mediaUrlsToDelete.push(m.audio.url);
+    if (m.media?.url) mediaUrlsToDelete.push(m.media.url);
+  });
 
   if (profile) {
     // Scrub this profile out of everyone else's likes/passes/matches/favorites.
@@ -69,6 +89,13 @@ export const deleteAccount = async (req, res) => {
   await Notification.deleteMany({ $or: [{ user: userId }, { fromUser: userId }] });
 
   await User.findByIdAndDelete(userId);
+
+  // Asynchronously destroy Cloudinary assets in the background to prevent orphaned storage
+  if (mediaUrlsToDelete.length > 0) {
+    destroyCloudinaryAssets(mediaUrlsToDelete).catch((err) => {
+      console.error("[Account Deletion] Background Cloudinary cleanup failed:", err);
+    });
+  }
 
   res.status(200).json({ message: "Account deleted successfully" });
 };

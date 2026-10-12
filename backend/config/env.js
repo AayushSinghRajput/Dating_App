@@ -10,4 +10,16 @@ export function validateEnv() {
     console.error("Check backend/.env — see .env.example for the full list.");
     process.exit(1);
   }
+
+  // Guard against insecure default or weak JWT_SECRET in production
+  if (process.env.NODE_ENV === "production") {
+    const secret = process.env.JWT_SECRET || "";
+    const weakDefaults = ["mysecretkey123", "secret", "jwtsecret", "password"];
+    if (secret.length < 32 || weakDefaults.includes(secret.toLowerCase())) {
+      console.error(
+        "FATAL: Insecure JWT_SECRET detected in production! JWT_SECRET must be a cryptographically random string of at least 32 characters. Run 'npm run generate-secret' to generate one."
+      );
+      process.exit(1);
+    }
+  }
 }
