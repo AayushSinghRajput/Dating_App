@@ -20,7 +20,7 @@ import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useGoogleAuth } from "@/src/hooks/useGoogleAuth";
 
-const { width, height } = Dimensions.get("window");
+const { height } = Dimensions.get("window");
 
 export default function AuthScreen() {
   const { colors } = useTheme();
@@ -51,7 +51,7 @@ export default function AuthScreen() {
         Toast.show({ type: "error", text1: "Google sign-in failed", text2: googleResult.error.message });
       }
     }
-  }, [googleResult]);
+  }, [googleResult, router]);
 
   // ---------------- ANIMATION ----------------
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function AuthScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, slideAnim]);
 
   // ---------------- BACKEND LOGIN ----------------
   const handleLogin = async () => {

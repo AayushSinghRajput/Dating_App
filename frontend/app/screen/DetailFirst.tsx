@@ -20,7 +20,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/contexts/ThemeContext";
 
-const { width, height } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 const MAX_PHOTOS = 6;
 
@@ -63,7 +63,7 @@ export default function DetailFirst() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, slideAnim]);
 
   const handlePickImage = async () => {
     if (photos.length >= MAX_PHOTOS) {
@@ -107,7 +107,7 @@ export default function DetailFirst() {
       if (!result.canceled) {
         setPhotos((prev) => [...prev, result.assets[0].uri]);
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Couldn't open camera", "Your device or emulator doesn't have a camera app available.");
     }
   };
@@ -129,7 +129,7 @@ export default function DetailFirst() {
       if (!result.canceled) {
         setPhotos((prev) => [...prev, result.assets[0].uri]);
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Couldn't open photo picker", "Your device or emulator doesn't have a photo picker app installed.");
     }
   };
