@@ -10,7 +10,7 @@ import { destroyCloudinaryAssets } from "../utils/cloudinaryHelper.js";
 // @access  Private
 export const getCurrentUser = async (req, res) => {
   const user = await User.findById(req.user.id).select(
-    "username email emailVerified isPremium premiumExpiresAt"
+    "username email emailVerified isPremium premiumExpiresAt authProvider"
   );
   if (!user) return res.status(404).json({ message: "User not found" });
   res.status(200).json(user);
@@ -23,13 +23,18 @@ export const deleteAccount = async (req, res) => {
   const userId = req.user.id;
   const { password } = req.body;
 
-  if (!password) {
-    return res.status(400).json({ message: "Password is required to delete your account" });
-  }
-
   const user = await User.findById(userId);
-  if (!user || !(await user.matchPassword(password))) {
-    return res.status(401).json({ message: "Incorrect password" });
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  const isGoogleUser = user.authProvider === "google" || (user.googleId && !user.password);
+
+  if (!isGoogleUser) {
+    if (!password) {
+      return res.status(400).json({ message: "Password is required to delete your account" });
+    }
+    if (!(await user.matchPassword(password))) {
+      return res.status(401).json({ message: "Incorrect password" });
+    }
   }
 
   const profile = await Profile.findOne({ user: userId });
