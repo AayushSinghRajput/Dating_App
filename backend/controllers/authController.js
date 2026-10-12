@@ -87,7 +87,14 @@ export const googleAuth = async (req, res) => {
   }
   const payload = await verifyRes.json();
 
-  if (process.env.GOOGLE_CLIENT_ID && payload.aud !== process.env.GOOGLE_CLIENT_ID) {
+  const allowedAudiences = [
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.ANDROID_GOOGLE_CLIENT_ID,
+  ]
+    .flatMap((id) => (id ? id.split(",").map((s) => s.trim()) : []))
+    .filter(Boolean);
+
+  if (allowedAudiences.length > 0 && !allowedAudiences.includes(payload.aud)) {
     return res.status(401).json({ message: "Invalid Google token audience" });
   }
   if (!payload.email) {

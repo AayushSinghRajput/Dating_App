@@ -152,6 +152,7 @@ export interface CurrentUserInfo {
   username: string;
   email: string;
   emailVerified: boolean;
+  authProvider?: "local" | "google";
 }
 
 export const getMe = async (): Promise<CurrentUserInfo> => {
@@ -210,7 +211,7 @@ export const changeEmail = async (
   return data;
 };
 
-export const deleteAccount = async (password: string): Promise<void> => {
+export const deleteAccount = async (password?: string): Promise<void> => {
   const authToken = await AsyncStorage.getItem("token");
   if (!authToken) throw new Error("User not authenticated");
   const res = await fetch(`${BASE_URL}/api/auth/account`, {
@@ -219,7 +220,7 @@ export const deleteAccount = async (password: string): Promise<void> => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${authToken}`,
     },
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ password: password || "" }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to delete account");

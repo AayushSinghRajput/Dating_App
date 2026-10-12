@@ -8,23 +8,46 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
-import { deleteAccount } from "@/services/authService";
+import { deleteAccount, getMe, CurrentUserInfo } from "@/services/authService";
 
 export default function DeleteAccount() {
   const router = useRouter();
   const { colors } = useTheme();
+  const [currentUser, setCurrentUser] = useState<CurrentUserInfo | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
   const [password, setPassword] = useState("");
   const [confirmText, setConfirmText] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = password.length > 0 && confirmText.trim().toUpperCase() === "DELETE";
+  useEffect(() => {
+    let mounted = true;
+    getMe()
+      .then((user) => {
+        if (mounted) {
+          setCurrentUser(user);
+          setLoadingUser(false);
+        }
+      })
+      .catch((err) => {
+        console.warn("[DeleteAccount] Failed to fetch user info:", err);
+        if (mounted) setLoadingUser(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const isGoogleUser = currentUser?.authProvider === "google";
+  const canSubmit =
+    (isGoogleUser || password.length > 0) &&
+    confirmText.trim().toUpperCase() === "DELETE";
 
   const handleBack = () => router.back();
 
@@ -32,7 +55,7 @@ export default function DeleteAccount() {
     if (!canSubmit || submitting) return;
     setSubmitting(true);
     try {
-      await deleteAccount(password);
+      await deleteAccount(isGoogleUser ? undefined : password);
       Toast.show({ type: "success", text1: "Account deleted" });
       router.replace("/auth/login");
     } catch (error: any) {
@@ -69,26 +92,49 @@ export default function DeleteAccount() {
             </Text>
           </View>
 
-          <Text style={[styles.label, { color: colors.textSecondary }]}>
-            Enter your password to confirm
-          </Text>
-          <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
-            <TextInput
-              placeholder="Password"
-              placeholderTextColor={colors.textTertiary}
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
-              style={[styles.input, { color: colors.text }]}
-            />
-            <Pressable onPress={() => setShowPassword((p) => !p)} hitSlop={8}>
-              <Ionicons
-                name={showPassword ? "eye" : "eye-off"}
-                size={20}
-                color={colors.textTertiary}
-              />
-            </Pressable>
-          </View>
+          {loadingUser ? (
+            <ActivityIndicator style={{ marginVertical: 20 }} color={colors.accent} />
+          ) : isGoogleUser ? (
+            <View
+              style={[
+                styles.oauthBadge,
+                { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+              ]}
+            >
+              <Ionicons name="logo-google" size={18} color="#EA4335" />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.oauthBadgeTitle, { color: colors.text }]}>
+                  Google Account Detected
+                </Text>
+                <Text style={[styles.oauthBadgeSubtitle, { color: colors.textSecondary }]}>
+                  No password required. Type DELETE below to confirm.
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>
+                Enter your password to confirm
+              </Text>
+              <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+                <TextInput
+                  placeholder="Password"
+                  placeholderTextColor={colors.textTertiary}
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                  style={[styles.input, { color: colors.text }]}
+                />
+                <Pressable onPress={() => setShowPassword((p) => !p)} hitSlop={8}>
+                  <Ionicons
+                    name={showPassword ? "eye" : "eye-off"}
+                    size={20}
+                    color={colors.textTertiary}
+                  />
+                </Pressable>
+              </View>
+            </>
+          )}
 
           <Text style={[styles.label, { color: colors.textSecondary }]}>
             Type <Text style={{ fontWeight: "700" }}>DELETE</Text> to confirm
@@ -170,5 +216,22 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "700",
     fontSize: 15,
+  },
+  oauthBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  oauthBadgeTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  oauthBadgeSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
   },
 });
