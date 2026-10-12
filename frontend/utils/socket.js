@@ -1,10 +1,11 @@
 import { io } from "socket.io-client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const SOCKET_URL = process.env.EXPO_PUBLIC_API_URL;
+import { BASE_URL } from "../services/apiClient";
 
-export const socket = io(SOCKET_URL, {
+export const socket = io(BASE_URL, {
   autoConnect: false,
+  transports: ["websocket", "polling"],
 });
 
 //optional helper functions

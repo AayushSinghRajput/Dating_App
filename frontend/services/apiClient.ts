@@ -6,7 +6,19 @@ import Toast from "react-native-toast-message";
 // lifecycle, default headers) so each service stays focused on its own
 // domain's endpoints.
 
-export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.1.74:5000";
+export const PRODUCTION_API_URL = "https://soulmate-backend-f1xn.onrender.com";
+export const LOCAL_API_URL = "http://192.168.1.74:5000";
+
+// When running locally in development (__DEV__ is true):
+// - Uses EXPO_PUBLIC_API_URL from .env if defined, otherwise defaults to LOCAL_API_URL.
+// When built into a standalone release APK (__DEV__ is false):
+// - Automatically routes to Render production backend (PRODUCTION_API_URL)
+//   unless EXPO_PUBLIC_API_URL explicitly provides an https URL.
+export const BASE_URL = __DEV__
+  ? (process.env.EXPO_PUBLIC_API_URL || LOCAL_API_URL)
+  : (process.env.EXPO_PUBLIC_API_URL && process.env.EXPO_PUBLIC_API_URL.startsWith("https://")
+      ? process.env.EXPO_PUBLIC_API_URL
+      : PRODUCTION_API_URL);
 
 let isHandlingAuthFailure = false;
 
@@ -53,7 +65,7 @@ export const handleAuthFailure = async (response: Response): Promise<boolean> =>
 export const fetchWithTimeout = async (
   url: string,
   options: RequestInit = {},
-  timeoutMs: number = 6000
+  timeoutMs: number = 15000
 ): Promise<Response> => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
