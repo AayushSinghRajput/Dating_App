@@ -111,6 +111,8 @@ const userSchema = new mongoose.Schema(
 // adminAnalyticsController.js); admin user search sorts by createdAt.
 userSchema.index({ lastActiveAt: 1 });
 userSchema.index({ createdAt: -1 });
+userSchema.index({ banned: 1 });
+userSchema.index({ isPremium: 1, premiumExpiresAt: 1 });
 
 // Hash password before saving
 userSchema.pre("save", async function (next) {

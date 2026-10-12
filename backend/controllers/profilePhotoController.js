@@ -1,4 +1,5 @@
 import Profile from "../models/profileModel.js";
+import { destroyCloudinaryAsset } from "../utils/cloudinaryHelper.js";
 
 // @desc    Remove a single photo from the logged-in user's profile
 // @route   DELETE /api/profile/photos
@@ -14,6 +15,11 @@ export const removePhoto = async (req, res) => {
   profile.photos = profile.photos.filter((p) => p !== url);
   profile.profileImage = profile.photos[0] || "";
   await profile.save();
+
+  // Asynchronously destroy the removed photo on Cloudinary to prevent orphaned storage
+  destroyCloudinaryAsset(url).catch((err) => {
+    console.error("[Profile Photo] Failed to destroy deleted photo on Cloudinary:", err);
+  });
 
   res.status(200).json({
     message: "Photo removed",

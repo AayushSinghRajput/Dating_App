@@ -1,0 +1,17 @@
+name: Keep Backend Alive
+
+on:
+  schedule:
+    # Runs every 10 minutes to prevent Render from idling after 15 minutes
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Ping Health Check Endpoint
+        run: |
+          echo "Pinging backend health check..."
+          curl -sS -f --max-time 30 https://soulmate-backend-f1xn.onrender.com/health || echo "Ping completed with status $?"

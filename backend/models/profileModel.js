@@ -190,6 +190,8 @@ const profileSchema = new mongoose.Schema(
 // filters out incognito profiles on every discovery-feed fetch.
 profileSchema.index({ likes: 1 });
 profileSchema.index({ incognito: 1 });
+profileSchema.index({ matches: 1 });
+profileSchema.index({ boostedUntil: -1 });
 // Supports the discovery hard-filter query (age range + gender/interestedIn).
 profileSchema.index({ age: 1, gender: 1, interestedIn: 1 });
 // Supports the distance hard filter / distance ranking score.

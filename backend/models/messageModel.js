@@ -49,9 +49,10 @@ const messageSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// getMessages filters by chat and sorts by createdAt on every chat open —
-// this compound index covers that access pattern directly.
-messageSchema.index({ chat: 1, createdAt: 1 });
+// Covers getMessages (filtering by chat and sorting newest or paginating before timestamp)
+messageSchema.index({ chat: 1, createdAt: -1 });
+// Covers unread counts aggregation across chats and batch mark-as-read queries
+messageSchema.index({ chat: 1, read: 1, sender: 1 });
 
 const Message = mongoose.model("Message", messageSchema);
 export default Message;
