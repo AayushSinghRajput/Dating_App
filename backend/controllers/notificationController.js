@@ -78,3 +78,35 @@ export const updateNotificationPreferences = async (req, res) => {
 
   res.status(200).json({ preferences: user.notificationPreferences });
 };
+
+// @desc    Register an Expo Push Token for the current user's device
+// @route   POST /api/notifications/push-token
+// @access  Private
+export const registerPushToken = async (req, res) => {
+  const { pushToken } = req.body;
+  if (!pushToken || typeof pushToken !== "string") {
+    return res.status(400).json({ message: "pushToken string is required" });
+  }
+
+  await User.findByIdAndUpdate(req.user.id, {
+    $addToSet: { pushTokens: pushToken.trim() },
+  });
+
+  res.status(200).json({ message: "Push token registered successfully" });
+};
+
+// @desc    Remove an Expo Push Token on device logout
+// @route   DELETE /api/notifications/push-token
+// @access  Private
+export const removePushToken = async (req, res) => {
+  const { pushToken } = req.body;
+  if (!pushToken) {
+    return res.status(400).json({ message: "pushToken is required" });
+  }
+
+  await User.findByIdAndUpdate(req.user.id, {
+    $pull: { pushTokens: pushToken },
+  });
+
+  res.status(200).json({ message: "Push token removed successfully" });
+};

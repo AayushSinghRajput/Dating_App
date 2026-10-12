@@ -86,3 +86,9 @@ services:
       # --- Google Sign-In ---
       - key: GOOGLE_CLIENT_ID
         sync: false
+
+      # --- WebRTC TURN / STUN (Audio/Video Calling) ---
+      - key: METERED_APP_NAME
+        sync: false
+      - key: METERED_API_KEY
+        sync: false

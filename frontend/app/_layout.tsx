@@ -13,11 +13,14 @@ import IncomingCallModal from "../src/components/calling/IncomingCallModal";
 import InCallScreen from "../src/components/calling/InCallScreen";
 import GlobalActionSheet from "../src/components/GlobalActionSheet";
 import GlobalMatchCelebration from "../src/components/GlobalMatchCelebration";
+import { usePushNotifications, unregisterPushNotificationsAsync } from "../src/hooks/usePushNotifications";
 
 function AppShell({ isLoggedIn }: { isLoggedIn: boolean }) {
   const { colors } = useTheme();
   const segments = useSegments();
   const router = useRouter();
+
+  usePushNotifications();
 
   useEffect(() => {
     const inAuthGroup = segments[0] === "auth";
@@ -70,7 +73,12 @@ export default function RootLayout() {
     // (login, logout, ban-triggered logout, etc.), not just the cold-start
     // check above — otherwise this state can go stale while the app
     // navigates around it.
-    onAuthChange(setIsLoggedIn);
+    onAuthChange((loggedIn) => {
+      setIsLoggedIn(loggedIn);
+      if (!loggedIn) {
+        unregisterPushNotificationsAsync();
+      }
+    });
     return () => onAuthChange(null);
   }, []);
 

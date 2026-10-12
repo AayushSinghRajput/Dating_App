@@ -103,6 +103,10 @@ const userSchema = new mongoose.Schema(
     lastActiveAt: {
       type: Date,
     },
+    pushTokens: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true },
 );
