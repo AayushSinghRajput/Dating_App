@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 import * as FileSystem from "expo-file-system/legacy";
-import { BASE_URL, token, initToken } from "./apiClient";
+import { BASE_URL, token, initToken, handleAuthFailure } from "./apiClient";
 import { ProfilePrompt } from "@/src/constants/prompts";
 
 export interface PhotoAsset {
@@ -133,8 +133,11 @@ export const getProfile = async (): Promise<Profile> => {
       },
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to fetch profile.");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      await handleAuthFailure(res);
+      throw new Error(data.message || "Failed to fetch profile.");
+    }
 
     return data.profile || data;
   } catch (error: any) {
@@ -180,6 +183,7 @@ export const getAllProfiles = async (): Promise<DiscoveryProfile[]> => {
       },
     });
     if (!response.ok) {
+      await handleAuthFailure(response);
       const errorText = await response.text();
       console.error("Backend returned:", errorText);
       throw new Error("Failed to fetch profiles. Check backend logs.");

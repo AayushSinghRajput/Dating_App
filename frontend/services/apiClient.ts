@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from "react-native-toast-message";
 
 // Shared HTTP/auth infrastructure used by every feature service. Not a
 // feature itself — keep this file to plumbing only (base URL, token
@@ -6,6 +7,48 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // domain's endpoints.
 
 export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.1.74:5000";
+
+let isHandlingAuthFailure = false;
+
+/**
+ * Handles 401 (Unauthorized) and 403 (Forbidden/Access Denied) HTTP responses.
+ * When the backend rejects the request due to an expired/invalid token or suspension,
+ * this clears the stored session and informs the user via Toast.
+ * Throttled to prevent multiple simultaneous requests from spamming logouts/toasts.
+ */
+export const handleAuthFailure = async (response: Response): Promise<boolean> => {
+  if (response.status === 401 || response.status === 403) {
+    const currentToken = token || (await AsyncStorage.getItem("token"));
+    if (currentToken && !isHandlingAuthFailure) {
+      isHandlingAuthFailure = true;
+      try {
+        let message = "Your session has expired. Please log in again.";
+        try {
+          const clone = response.clone();
+          const data = await clone.json();
+          if (data?.message) {
+            message = data.message;
+          }
+        } catch {}
+
+        Toast.show({
+          type: "error",
+          text1: response.status === 403 ? "Access Denied" : "Session Expired",
+          text2: message,
+          visibilityTime: 4000,
+        });
+
+        await clearToken();
+      } finally {
+        setTimeout(() => {
+          isHandlingAuthFailure = false;
+        }, 3000);
+      }
+      return true;
+    }
+  }
+  return false;
+};
 
 export const fetchWithTimeout = async (
   url: string,
@@ -19,6 +62,9 @@ export const fetchWithTimeout = async (
       ...options,
       signal: controller.signal,
     });
+    if (!url.includes("/api/auth/login") && !url.includes("/api/auth/register")) {
+      await handleAuthFailure(res);
+    }
     return res;
   } catch (error: any) {
     if (error.name === "AbortError") {
