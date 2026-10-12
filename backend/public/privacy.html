@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Soulmate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #e63946;
+      --primary-hover: #d62828;
+      --bg: #0f1117;
+      --card-bg: #181b24;
+      --border: #282d3d;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #ff4d6d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      padding: 0;
+    }
+    header {
+      background: rgba(24, 27, 36, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 16px 24px;
+    }
+    .nav-container {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #e63946, #ff758f);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 18px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--accent);
+    }
+    main {
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 24px 80px;
+    }
+    .hero {
+      margin-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(230, 57, 70, 0.15);
+      color: var(--accent);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+    .last-updated {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin: 20px 0 10px;
+      color: var(--text);
+    }
+    p {
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+    }
+    ul {
+      list-style-position: inside;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    li strong {
+      color: var(--text);
+    }
+    .highlight-box {
+      background: rgba(230, 57, 70, 0.08);
+      border-left: 4px solid var(--primary);
+      padding: 16px 20px;
+      border-radius: 0 12px 12px 0;
+      margin: 20px 0;
+    }
+    .highlight-box p {
+      color: var(--text);
+      margin-bottom: 0;
+    }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      h1 { font-size: 28px; }
+      .section-card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-container">
+      <a href="/" class="logo">
+        <div class="logo-badge">♥</div>
+        <span>Soulmate</span>
+      </a>
+      <nav class="nav-links">
+        <a href="/privacy" class="active">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
+        <a href="/community-guidelines">Community Guidelines</a>
+        <a href="/delete-account">Delete Account</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <span class="badge">Legal Document</span>
+      <h1>Privacy Policy</h1>
+      <p class="last-updated">Last Updated: October 12, 2026 • Applies to Soulmate (com.aayushsinghrajput.Datingapp)</p>
+    </div>
+
+    <div class="section-card">
+      <h2>1. Introduction</h2>
+      <p>
+        Welcome to <strong>Soulmate</strong> ("we", "our", or "us"). We are committed to protecting your privacy and ensuring you have a safe, transparent, and enjoyable experience meeting new people.
+      </p>
+      <p>
+        This Privacy Policy explains how we collect, use, disclose, and safeguard your personal data when you use our mobile application and related web services. Please read this policy carefully. If you do not agree with the terms of this Privacy Policy, please do not access or use the application.
+      </p>
+    </div>
+
+    <div class="section-card">
+      <h2>2. Information We Collect</h2>
+      <p>We collect information to facilitate genuine dating connections, ensure safety, and improve our platform:</p>
+
+      <h3>A. Information You Provide Directly</h3>
+      <ul>
+        <li><strong>Account Credentials:</strong> Username, email address, password (securely hashed with bcrypt), or Google OAuth profile identity (Google ID, name, email).</li>
+        <li><strong>Profile Information:</strong> Age, date of birth, gender identity, dating preferences, bio description, interests, relationship goals, and job/education info.</li>
+        <li><strong>User-Generated Media:</strong> Profile gallery photographs, avatar images, and recorded voice notes transmitted in private chats.</li>
+        <li><strong>Identity Verification Media:</strong> Real-time selfie images captured during voluntary photo verification to prevent impersonation and bot profiles.</li>
+      </ul>
+
+      <h3>B. Information Collected Automatically</h3>
+      <ul>
+        <li><strong>Precise & Coarse Location Data:</strong> With your explicit permission, we collect your latitude and longitude coordinates while the app is active to determine distances to potential matches and power our Meetup Safety location-sharing feature. We do not track your location continuously in the background.</li>
+        <li><strong>Device & Network Data:</strong> Device model, operating system version, unique device identifiers, IP address, and network connection type.</li>
+        <li><strong>Push Notification Tokens:</strong> Expo Push Tokens to notify you of instant messages, matches, likes, and incoming voice/video calls.</li>
+        <li><strong>In-App Activity:</strong> Matches created, profiles liked/passed, reports submitted, and chat interaction timestamps.</li>
+      </ul>
+    </div>
+
+    <div class="section-card">
+      <h2>3. Device Permissions & How They Are Used</h2>
+      <p>The Soulmate mobile application requests explicit Android runtime permissions only for core features:</p>
+      <ul>
+        <li><strong>Camera (CAMERA):</strong> Used solely when capturing profile photos, taking verification selfies, and during live WebRTC video calling.</li>
+        <li><strong>Microphone (RECORD_AUDIO):</strong> Used to record voice notes in chat and transmit audio during WebRTC voice and video calls.</li>
+        <li><strong>Location (ACCESS_FINE_LOCATION & ACCESS_COARSE_LOCATION):</strong> Used to calculate proximity between prospective matches and share real-time meetup coordinates with designated safety contacts.</li>
+        <li><strong>Notifications (POST_NOTIFICATIONS):</strong> Used to deliver real-time alerts for incoming calls, match connections, and direct messages.</li>
+      </ul>
+    </div>
+
+    <div class="section-card">
+      <h2>4. Third-Party Service Providers</h2>
+      <p>We work with trusted third-party technology providers to power Soulmate:</p>
+      <ul>
+        <li><strong>Cloudinary:</strong> Secure cloud asset storage for profile pictures, photo verification, and media messages, with automated moderation screening.</li>
+        <li><strong>Resend:</strong> Secure transactional email delivery for email verification and account password resets.</li>
+        <li><strong>Metered.ca:</strong> Enterprise WebRTC TURN and STUN relay servers facilitating peer-to-peer audio and video calls across restrictive carrier NATs and firewalls.</li>
+        <li><strong>Google Identity Services:</strong> Secure OAuth 2.0 single sign-on authentication.</li>
+        <li><strong>eSewa & Khalti:</strong> Authorized digital payment gateways for optional Premium subscriptions. We never store or process credit card or bank login credentials on our servers.</li>
+        <li><strong>MongoDB Atlas:</strong> Encrypted cloud database infrastructure with automated backups and security controls.</li>
+      </ul>
+    </div>
+
+    <div class="section-card">
+      <h2>5. Data Retention & Account Deletion</h2>
+      <div class="highlight-box">
+        <p><strong>Your Right to Complete Data Erasure:</strong> You retain complete ownership of your data and can delete your account at any time.</p>
+      </div>
+      <p>
+        When you delete your account (via <em>Settings ➔ Delete Account</em> within the app, or via our public <a href="/delete-account" style="color: var(--accent); font-weight:600;">Account Deletion Web Page</a>):
+      </p>
+      <ul>
+        <li>Your profile, discovery visibility, likes, passes, matches, and chat messages are permanently deleted.</li>
+        <li>All media stored on Cloudinary (profile pictures, verification selfies, and voice notes) is permanently destroyed via Cloudinary's Admin API.</li>
+        <li>Your notification tokens, reports, and authentication credentials are deleted from the database.</li>
+      </ul>
+    </div>
+
+    <div class="section-card">
+      <h2>6. Underage Protection (Strict 18+ Policy)</h2>
+      <p>
+        Soulmate is strictly intended for individuals who are at least <strong>18 years of age</strong> (or the legal age of majority in your jurisdiction). We do not knowingly permit registration or collect personal data from anyone under the age of 18. If we discover an account belongs to a minor, it is immediately terminated and all associated data is deleted.
+      </p>
+    </div>
+
+    <div class="section-card">
+      <h2>7. Security Safeguards</h2>
+      <p>
+        We employ industry-standard administrative, technical, and physical safeguards to protect your personal information:
+      </p>
+      <ul>
+        <li>End-to-end transport encryption over HTTPS and WSS (TLS 1.3).</li>
+        <li>WebRTC media streams encrypted using DTLS-SRTP protocols.</li>
+        <li>Passwords salted and hashed using bcrypt (cost factor 10).</li>
+        <li>Strict CORS, rate limiting, Helmet HTTP security headers, and JWT session validation.</li>
+      </ul>
+    </div>
+
+    <div class="section-card">
+      <h2>8. Contact Us</h2>
+      <p>
+        If you have any questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact our Data Protection team at:
+      </p>
+      <ul>
+        <li><strong>Email:</strong> support@soulmateapp.com / aayushsinghrajput3003@gmail.com</li>
+        <li><strong>Developer:</strong> Aayush Singh Rajput</li>
+        <li><strong>Application:</strong> Soulmate Dating App</li>
+      </ul>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Soulmate. All rights reserved. • <a href="/terms" style="color: var(--text-muted);">Terms of Service</a> • <a href="/delete-account" style="color: var(--text-muted);">Delete Account</a></p>
+  </footer>
+</body>
+</html>

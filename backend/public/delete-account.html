@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account & Data Deletion Request — Soulmate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #e63946;
+      --primary-hover: #d62828;
+      --bg: #0f1117;
+      --card-bg: #181b24;
+      --border: #282d3d;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #ff4d6d;
+      --danger: #ef4444;
+      --success: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+    header {
+      background: rgba(24, 27, 36, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 16px 24px;
+    }
+    .nav-container {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #e63946, #ff758f);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 18px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--accent);
+    }
+    main {
+      max-width: 780px;
+      margin: 40px auto;
+      padding: 0 24px 80px;
+    }
+    .hero {
+      margin-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+    .hero-sub {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: #fff;
+    }
+    p {
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-size: 14.5px;
+    }
+    ul {
+      list-style-position: inside;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-size: 14.5px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    input[type="email"], select, textarea {
+      width: 100%;
+      background: #0f1117;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: #fff;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="email"]:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    .checkbox-label input[type="checkbox"] {
+      margin-top: 4px;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+    }
+    .submit-btn {
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 10px;
+    }
+    .submit-btn:hover {
+      background: var(--primary-hover);
+    }
+    .submit-btn:active {
+      transform: scale(0.99);
+    }
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .alert-banner {
+      display: none;
+      padding: 16px;
+      border-radius: 12px;
+      margin-top: 20px;
+      font-size: 14.5px;
+    }
+    .alert-banner.success {
+      display: block;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #a7f3d0;
+    }
+    .alert-banner.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-container">
+      <a href="/" class="logo">
+        <div class="logo-badge">♥</div>
+        <span>Soulmate</span>
+      </a>
+      <nav class="nav-links">
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
+        <a href="/community-guidelines">Community Guidelines</a>
+        <a href="/delete-account" class="active">Delete Account</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <span class="badge">Google Play Data Safety</span>
+      <h1>Account & Data Deletion Request</h1>
+      <p class="hero-sub">
+        In compliance with Google Play and Apple App Store policies, you can request the permanent deletion of your Soulmate account and all associated personal data directly from this web page without needing to open the app.
+      </p>
+    </div>
+
+    <div class="section-card">
+      <h2>In-App Instant Deletion (Fastest)</h2>
+      <p>
+        If you currently have the Soulmate mobile app installed, you can delete your account instantly:
+      </p>
+      <ul>
+        <li>Open the <strong>Soulmate</strong> app.</li>
+        <li>Go to <strong>Settings ➔ Delete Account</strong>.</li>
+        <li>Type <strong>DELETE</strong> to confirm.</li>
+      </ul>
+      <p style="margin-bottom: 0;">
+        Your profile, chat messages, matches, and media files will be erased immediately.
+      </p>
+    </div>
+
+    <div class="section-card">
+      <h2>Web Account Deletion Form</h2>
+      <p>
+        If you have uninstalled the app or lost access to your device, submit the form below. We will send a confirmation code to your registered email to verify ownership before permanently wiping your data.
+      </p>
+
+      <form id="deletion-form">
+        <div class="form-group">
+          <label for="email">Registered Email Address *</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="reason">Reason for leaving (Optional)</label>
+          <select id="reason" name="reason">
+            <option value="">Select a reason...</option>
+            <option value="found_match">I found someone on Soulmate</option>
+            <option value="taking_break">Taking a break from dating</option>
+            <option value="privacy_concerns">Privacy concerns</option>
+            <option value="technical_issues">Too many technical bugs</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="details">Additional Notes (Optional)</label>
+          <textarea id="details" name="details" rows="3" placeholder="Tell us anything else..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="confirm-check" required>
+            <span>I understand that this action is permanent and will irreversibly delete my profile, uploaded photos, voice recordings, matches, and chat history.</span>
+          </label>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">Request Account Deletion</button>
+      </form>
+
+      <div id="alert-box" class="alert-banner"></div>
+    </div>
+
+    <div class="section-card">
+      <h2>What Data Gets Deleted?</h2>
+      <ul>
+        <li><strong>Account Data:</strong> Username, email, authentication tokens, and profile attributes.</li>
+        <li><strong>Media Assets:</strong> All profile photos, verification selfies, and audio recordings stored in Cloudinary are permanently erased.</li>
+        <li><strong>Social Graph:</strong> All sent likes, passes, matches, favorites, and notification records.</li>
+        <li><strong>Messages:</strong> All private conversation threads and direct messages.</li>
+      </ul>
+      <p style="margin-bottom: 0;">
+        <strong>Data Retention Timeline:</strong> Once requested and verified, full erasure is completed within 24 to 48 hours. No residual user data is archived.
+      </p>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Soulmate. All rights reserved. • <a href="/privacy" style="color: var(--text-muted);">Privacy Policy</a> • <a href="/terms" style="color: var(--text-muted);">Terms of Service</a></p>
+  </footer>
+
+  <script>
+    const form = document.getElementById('deletion-form');
+    const alertBox = document.getElementById('alert-box');
+    const submitBtn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertBox.className = 'alert-banner';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting Request...';
+
+      const email = document.getElementById('email').value.trim();
+      const reason = document.getElementById('reason').value;
+      const details = document.getElementById('details').value.trim();
+
+      try {
+        const response = await fetch('/api/legal/request-deletion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, reason, details })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alertBox.className = 'alert-banner success';
+          alertBox.innerHTML = `<strong>Request Received:</strong> ${data.message || 'We have received your account deletion request. Please check your email for confirmation.'}`;
+          form.reset();
+        } else {
+          alertBox.className = 'alert-banner error';
+          alertBox.innerHTML = `<strong>Error:</strong> ${data.message || 'Unable to submit request. Please try again or email support@soulmateapp.com.'}`;
+        }
+      } catch (err) {
+        alertBox.className = 'alert-banner error';
+        alertBox.innerHTML = '<strong>Network Error:</strong> Failed to submit. You can also send a deletion request directly to support@soulmateapp.com.';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Request Account Deletion';
+      }
+    });
+  </script>
+</body>
+</html>

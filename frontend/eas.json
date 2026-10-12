@@ -29,6 +29,17 @@
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "788278716084-6rhskvsnc3c4jrvii96k7efe64pgajmj.apps.googleusercontent.com",
         "EXPO_PUBLIC_ANDROID_GOOGLE_CLIENT_ID": "788278716084-65og2d6udqim3b12b3nss573nf8m1u8i.apps.googleusercontent.com"
       }
+    },
+    "production-apk": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://soulmate-backend-f1xn.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "788278716084-6rhskvsnc3c4jrvii96k7efe64pgajmj.apps.googleusercontent.com",
+        "EXPO_PUBLIC_ANDROID_GOOGLE_CLIENT_ID": "788278716084-65og2d6udqim3b12b3nss573nf8m1u8i.apps.googleusercontent.com"
+      }
     }
   },
   "submit": {
