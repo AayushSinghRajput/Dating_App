@@ -27,6 +27,7 @@ import premiumRoutes from "./routes/premiumRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import callRoutes from "./routes/callRoutes.js";
+import legalRoutes from "./routes/legalRoutes.js";
 
 dotenv.config();
 validateEnv();
@@ -50,6 +51,8 @@ app.use(
         // from this origin. Scoped to that one host rather than loosening
         // to a blanket `https:`.
         "img-src": ["'self'", "data:", "https://res.cloudinary.com"],
+        "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        "font-src": ["'self'", "https://fonts.gstatic.com"],
       },
     },
   }),
@@ -91,6 +94,7 @@ app.use("/api/premium", premiumRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/calls", callRoutes);
+app.use("/", legalRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend is running...");

@@ -14,6 +14,10 @@ import InCallScreen from "../src/components/calling/InCallScreen";
 import GlobalActionSheet from "../src/components/GlobalActionSheet";
 import GlobalMatchCelebration from "../src/components/GlobalMatchCelebration";
 import { usePushNotifications, unregisterPushNotificationsAsync } from "../src/hooks/usePushNotifications";
+import { initCrashMonitoring } from "../src/utils/crashMonitoring";
+import { ErrorBoundary } from "../src/components/ErrorBoundary";
+
+initCrashMonitoring();
 
 function AppShell({ isLoggedIn }: { isLoggedIn: boolean }) {
   const { colors } = useTheme();
@@ -87,18 +91,20 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <NotificationProvider>
-          <ChatNotificationProvider>
-            <CallProvider>
-              <AppShell isLoggedIn={isLoggedIn} />
-              <IncomingCallModal />
-              <InCallScreen />
-            </CallProvider>
-          </ChatNotificationProvider>
-        </NotificationProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <NotificationProvider>
+            <ChatNotificationProvider>
+              <CallProvider>
+                <AppShell isLoggedIn={isLoggedIn} />
+                <IncomingCallModal />
+                <InCallScreen />
+              </CallProvider>
+            </ChatNotificationProvider>
+          </NotificationProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
