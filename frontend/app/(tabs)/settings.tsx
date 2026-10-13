@@ -1,12 +1,13 @@
 import { useRouter } from "expo-router";
 import { Alert, StyleSheet, ScrollView, View } from "react-native";
-import settings from "../../assets/data/settingsdata";
+import settingsData from "../../assets/data/settingsdata";
 import ScreenHeader from "../../src/components/ui/ScreenHeader";
 import ProfileCard from "../../src/components/settings/ProfileCard";
 import SettingsSection from "../../src/components/settings/SettingsSection";
 import AppearanceSection from "../../src/components/settings/AppearanceSection";
 import SettingsFooter from "../../src/components/settings/SettingsFooter";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { clearToken } from "@/services/apiClient";
 
 interface SettingsItem {
@@ -19,55 +20,89 @@ interface SettingsItem {
 export default function Settings() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { t } = useLanguage();
+
+  const getSettingTitle = (id: string, defaultTitle: string) => {
+    switch (id) {
+      case "2":
+        return t("settings.accountPrivacy", defaultTitle);
+      case "10":
+        return t("settings.changePassword", defaultTitle);
+      case "11":
+        return t("settings.emailVerification", defaultTitle);
+      case "12":
+        return t("settings.photoVerification", defaultTitle);
+      case "13":
+        return t("settings.safetyCenter", defaultTitle);
+      case "14":
+        return t("settings.inviteFriends", defaultTitle);
+      case "3":
+        return t("settings.notifications", defaultTitle);
+      case "4":
+        return t("settings.payment", defaultTitle);
+      case "5":
+        return t("settings.blockedUsers", defaultTitle);
+      case "6":
+        return t("settings.language", defaultTitle);
+      case "7":
+        return t("settings.helpSupport", defaultTitle);
+      case "8":
+        return t("settings.logout", defaultTitle);
+      case "9":
+        return t("settings.deleteAccount", defaultTitle);
+      default:
+        return defaultTitle;
+    }
+  };
 
   const handlePress = (item: SettingsItem) => {
     if (!item) return;
 
-    switch (item.title) {
-      case "Account Privacy":
+    switch (item.id) {
+      case "2":
         router.push("/screen/Privacy");
         break;
-      case "Change Password":
+      case "10":
         router.push("/screen/ChangePassword");
         break;
-      case "Email & Verification":
+      case "11":
         router.push("/screen/EmailSettings");
         break;
-      case "Photo Verification":
+      case "12":
         router.push("/screen/PhotoVerification");
         break;
-      case "Safety Center":
+      case "13":
         router.push("/screen/SafetyCenter");
         break;
-      case "Invite Friends":
+      case "14":
         router.push("/screen/ReferralProgram");
         break;
-      case "Notifications":
+      case "3":
         router.push("/screen/NotificationSettings");
         break;
-      case "Payment & Subscriptions":
+      case "4":
         router.push("/screen/PaymentSettings");
         break;
-      case "Blocked Users":
+      case "5":
         router.push("/screen/BlockedUsers");
         break;
-      case "Language":
+      case "6":
         router.push("/screen/LanguageSettings");
         break;
-      case "Help & Support":
+      case "7":
         router.push("/screen/HelpSupport");
         break;
-      case "Logout":
+      case "8":
         Alert.alert(
-          "Logout",
-          "Are you sure you want to logout?",
+          t("settings.logoutConfirmTitle", "Log Out"),
+          t("settings.logoutConfirmMessage", "Are you sure you want to log out of Soulmate?"),
           [
             {
-              text: "Cancel",
+              text: t("common.cancel", "Cancel"),
               style: "cancel",
             },
             {
-              text: "Logout",
+              text: t("settings.logout", "Log Out"),
               style: "destructive",
               onPress: async () => {
                 await clearToken();
@@ -77,7 +112,7 @@ export default function Settings() {
           ]
         );
         break;
-      case "Delete Account":
+      case "9":
         router.push("/screen/DeleteAccount");
         break;
       default:
@@ -85,28 +120,39 @@ export default function Settings() {
     }
   };
 
+  // Translate all settings items dynamically
+  const localizedSettings: SettingsItem[] = settingsData.map((item) => ({
+    ...item,
+    title: getSettingTitle(item.id, item.title),
+  }));
+
   // Group settings into logical sections
-  const accountSettings = settings.filter((item) =>
-    ["Account Privacy", "Change Password", "Email & Verification", "Photo Verification", "Notifications"].includes(item.title)
+  const accountSettings = localizedSettings.filter((item) =>
+    ["2", "10", "11", "12", "3"].includes(item.id)
   );
 
-  const safetySettings = settings.filter((item) => ["Safety Center"].includes(item.title));
-
-  const preferencesSettings = settings.filter((item) =>
-    ["Payment & Subscriptions", "Invite Friends", "Blocked Users", "Language"].includes(item.title)
+  const safetySettings = localizedSettings.filter((item) =>
+    ["13"].includes(item.id)
   );
 
-  const supportSettings = settings.filter((item) =>
-    ["Help & Support"].includes(item.title)
+  const preferencesSettings = localizedSettings.filter((item) =>
+    ["4", "14", "5", "6"].includes(item.id)
   );
 
-  const sessionSettings = settings.filter((item) =>
-    ["Logout", "Delete Account"].includes(item.title)
+  const supportSettings = localizedSettings.filter((item) =>
+    ["7"].includes(item.id)
+  );
+
+  const sessionSettings = localizedSettings.filter((item) =>
+    ["8", "9"].includes(item.id)
   );
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScreenHeader title="Settings" subtitle="Manage your account preferences" />
+      <ScreenHeader
+        title={t("settings.title", "Settings")}
+        subtitle={t("settings.subtitle", "Manage your account preferences")}
+      />
 
       <ScrollView
         style={styles.scrollView}
@@ -118,39 +164,36 @@ export default function Settings() {
         <AppearanceSection />
 
         <SettingsSection
-          title="Account"
-          description="Manage your profile and privacy"
+          title={t("settings.accountSection", "Account")}
+          description={t("settings.accountDesc", "Manage your profile and privacy")}
           items={accountSettings}
           onItemPress={handlePress}
         />
 
         <SettingsSection
-          title="Safety"
-          description="Stay safe when meeting matches in person"
+          title={t("settings.safetySection", "Safety")}
+          description={t("settings.safetyDesc", "Stay safe when meeting matches in person")}
           items={safetySettings}
           onItemPress={handlePress}
         />
 
         <SettingsSection
-          title="Preferences"
-          description="Customize your app experience"
+          title={t("settings.preferencesSection", "Preferences")}
+          description={t("settings.preferencesDesc", "Customize your app experience")}
           items={preferencesSettings}
           onItemPress={handlePress}
         />
 
         <SettingsSection
-          title="Support"
-          description="Get help and information"
+          title={t("settings.helpSupport", "Help & Support")}
           items={supportSettings}
           onItemPress={handlePress}
         />
 
         <SettingsSection
-          title="Session"
-          description="Manage your account session"
+          title={t("settings.accountSection", "Account")}
           items={sessionSettings}
           onItemPress={handlePress}
-          isLogoutSection
         />
 
         <SettingsFooter />

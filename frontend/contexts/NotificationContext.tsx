@@ -8,7 +8,7 @@ import React, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
-import { socket, connectSocket } from "@/utils/socket";
+import { socket, connectSocket } from "../utils/socket";
 import {
   AppNotification,
   getNotifications,

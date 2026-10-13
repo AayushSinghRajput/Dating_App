@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   getLikedByMe,
   getMatches,
@@ -35,6 +36,7 @@ type ActiveTab = "likes" | "matches";
 
 export default function LikesScreen() {
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("likes");
@@ -166,15 +168,15 @@ export default function LikesScreen() {
   const subtitle =
     activeTab === "likes"
       ? likes.length > 0
-        ? `${likes.length} ${likes.length === 1 ? "person" : "people"} liked you`
+        ? `${likes.length} ${likes.length === 1 ? t("likes.personLikedYou", "person liked you") : t("likes.peopleLikedYou", "people liked you")}`
         : undefined
       : matches.length > 0
-      ? `${matches.length} mutual ${matches.length === 1 ? "match" : "matches"}`
+      ? `${matches.length} ${matches.length === 1 ? t("likes.mutualMatch", "mutual match") : t("likes.mutualMatches", "mutual matches")}`
       : undefined;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScreenHeader title="Likes & Matches" subtitle={subtitle} />
+      <ScreenHeader title={t("likes.title", "Likes & Matches")} subtitle={subtitle} />
 
       {/* Segmented Sub-tab Control */}
       <View style={[styles.tabBarContainer, { backgroundColor: colors.background }]}>
@@ -201,7 +203,7 @@ export default function LikesScreen() {
                 activeTab === "likes" && styles.tabButtonTextActive,
               ]}
             >
-              Likes You
+              {t("likes.likesYou", "Likes You")}
             </Text>
             {likes.length > 0 && (
               <View
@@ -237,7 +239,7 @@ export default function LikesScreen() {
                 activeTab === "matches" && styles.tabButtonTextActive,
               ]}
             >
-              Matches
+              {t("likes.matches", "Matches")}
             </Text>
             {matches.length > 0 && (
               <View
@@ -266,16 +268,20 @@ export default function LikesScreen() {
             <View style={[styles.emptyIconCircle, { backgroundColor: colors.surfaceAlt }]}>
               <Ionicons name="heart-outline" size={48} color={colors.accent} />
             </View>
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>No Likes Yet</Text>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              {t("likes.noLikesYet", "No Likes Yet")}
+            </Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              When someone likes your profile, they will appear here. Swipe on the discovery feed to boost your visibility!
+              {t("likes.noLikesYetDesc", "When someone likes your profile, they will appear here. Swipe on the discovery feed to boost your visibility!")}
             </Text>
             <Pressable
               style={[styles.emptyActionBtn, { backgroundColor: colors.accent }]}
               onPress={() => router.push("/(tabs)")}
             >
               <Ionicons name="flame" size={18} color="#fff" />
-              <Text style={styles.emptyActionBtnText}>Explore Profiles</Text>
+              <Text style={styles.emptyActionBtnText}>
+                {t("discovery.exploreProfiles", "Explore Profiles")}
+              </Text>
             </Pressable>
           </View>
         ) : (
@@ -370,16 +376,20 @@ export default function LikesScreen() {
             <View style={[styles.emptyIconCircle, { backgroundColor: colors.surfaceAlt }]}>
               <Ionicons name="sparkles-outline" size={48} color="#ff7b00" />
             </View>
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>No Matches Yet</Text>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              {t("likes.noMatchesYet", "No Matches Yet")}
+            </Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              When you both like each other, you form a match! Check your &quot;Likes You&quot; tab or discover more people.
+              {t("likes.noMatchesYetDesc", "When you both like each other, you form a match! Check your \"Likes You\" tab or discover more people.")}
             </Text>
             <Pressable
               style={[styles.emptyActionBtn, { backgroundColor: colors.accent }]}
               onPress={() => router.push("/(tabs)")}
             >
               <Ionicons name="flame" size={18} color="#fff" />
-              <Text style={styles.emptyActionBtnText}>Find Matches</Text>
+              <Text style={styles.emptyActionBtnText}>
+                {t("likes.findMatches", "Find Matches")}
+              </Text>
             </Pressable>
           </View>
         ) : (

@@ -16,7 +16,7 @@ import {
 } from "react-native-webrtc";
 import InCallManager from "react-native-incall-manager";
 import Toast from "react-native-toast-message";
-import { socket, connectSocket } from "@/utils/socket";
+import { socket, connectSocket } from "../utils/socket";
 import { getIceServers, DEFAULT_ICE_SERVERS } from "@/services/callService";
 
 export type CallType = "audio" | "video";

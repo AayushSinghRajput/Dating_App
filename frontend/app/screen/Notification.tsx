@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { AppNotification } from "@/services/notificationService";
 import { createOrGetChat } from "@/services/chatService";
@@ -98,6 +99,7 @@ interface NotificationSection {
 
 export default function NotificationScreen() {
   const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const router = useRouter();
   const { notifications, refresh, markRead, markAllRead } = useNotifications();
 
@@ -150,12 +152,12 @@ export default function NotificationScreen() {
     });
 
     const result: NotificationSection[] = [];
-    if (todayItems.length > 0) result.push({ title: "NEW", data: todayItems });
-    if (thisWeekItems.length > 0) result.push({ title: "THIS WEEK", data: thisWeekItems });
-    if (earlierItems.length > 0) result.push({ title: "EARLIER", data: earlierItems });
+    if (todayItems.length > 0) result.push({ title: t("notificationsScreen.newSection", "NEW"), data: todayItems });
+    if (thisWeekItems.length > 0) result.push({ title: t("notificationsScreen.thisWeekSection", "THIS WEEK"), data: thisWeekItems });
+    if (earlierItems.length > 0) result.push({ title: t("notificationsScreen.earlierSection", "EARLIER"), data: earlierItems });
 
     return result;
-  }, [notifications]);
+  }, [notifications, t]);
 
   const handleAction = async (item: AppNotification) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -334,7 +336,7 @@ export default function NotificationScreen() {
         </Pressable>
 
         <Text style={[styles.headerTitle, { color: colors.text }]}>
-          Notifications
+          {t("notificationsScreen.title", "Notifications")}
         </Text>
 
         <View style={styles.headerRightSpace} />
@@ -382,7 +384,7 @@ export default function NotificationScreen() {
                 />
               </View>
               <Text style={[styles.emptyTitle, { color: colors.text }]}>
-                No Notifications Yet
+                {t("notificationsScreen.noNotifications", "No Notifications Yet")}
               </Text>
               <Text
                 style={[styles.emptySubtitle, { color: colors.textSecondary }]}
