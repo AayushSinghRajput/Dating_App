@@ -1,101 +1,170 @@
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
+  SectionList,
   Image,
   Pressable,
-  Animated,
   ActivityIndicator,
+  RefreshControl,
+  StatusBar,
 } from "react-native";
-import { useState, useRef, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import * as Haptics from "expo-haptics";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { AppNotification } from "@/services/notificationService";
 import { createOrGetChat } from "@/services/chatService";
 
-function formatRelativeTime(iso: string) {
+function formatRelativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const minutes = Math.floor(diffMs / 60000);
   if (minutes < 1) return "Just now";
   if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
+  const hours = Math.floor(diffMs / 3600000);
   if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
+  const days = Math.floor(diffMs / 86400000);
   if (days < 7) return `${days}d ago`;
   return new Date(iso).toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-function describeNotification(item: AppNotification) {
-  const name = item.fromUser?.username || "Someone";
+interface NotificationDetails {
+  user: string;
+  actionText: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  badgeBg: string;
+  actionButtonLabel: string;
+  actionButtonType: "primary" | "secondary" | "outline";
+}
+
+function getNotificationDetails(item: AppNotification): NotificationDetails {
+  const user = item.fromUser?.username || "Someone";
   switch (item.type) {
-    case "like":
-      return { user: name, text: "liked your profile", icon: "heart" as const, color: "#e63946" };
     case "match":
-      return { user: name, text: "It's a match! 🎉", icon: "sparkles" as const, color: "#4CAF50" };
-    case "favorite":
-      return { user: name, text: "added you to favorites", icon: "star" as const, color: "#FFB800" };
+      return {
+        user,
+        actionText: "matched with you! Send a message to break the ice.",
+        icon: "sparkles",
+        badgeBg: "#10b981", // vibrant emerald
+        actionButtonLabel: "Message",
+        actionButtonType: "primary",
+      };
+    case "like":
+      return {
+        user,
+        actionText: "liked your profile. Tap to see who's interested in you.",
+        icon: "heart",
+        badgeBg: "#e63946", // brand crimson
+        actionButtonLabel: "View",
+        actionButtonType: "outline",
+      };
     case "missed_call":
       return {
-        user: name,
-        text: `Missed ${item.callType === "video" ? "video" : "voice"} call`,
-        icon: item.callType === "video" ? ("videocam" as const) : ("call" as const),
-        color: "#FF6B6B",
+        user,
+        actionText: `called you (Missed ${item.callType === "video" ? "video" : "audio"} call).`,
+        icon: item.callType === "video" ? "videocam" : "call",
+        badgeBg: "#ff4b6e",
+        actionButtonLabel: "Call back",
+        actionButtonType: "secondary",
+      };
+    case "favorite":
+      return {
+        user,
+        actionText: "added you to their favorites list.",
+        icon: "star",
+        badgeBg: "#f59e0b", // warm amber
+        actionButtonLabel: "View",
+        actionButtonType: "outline",
       };
     default:
-      return { user: name, text: "sent a notification", icon: "notifications" as const, color: "#888" };
+      return {
+        user,
+        actionText: "sent you a notification.",
+        icon: "notifications",
+        badgeBg: "#6b7280",
+        actionButtonLabel: "View",
+        actionButtonType: "outline",
+      };
   }
 }
 
-export default function Notification() {
-  const { colors } = useTheme();
+interface NotificationSection {
+  title: string;
+  data: AppNotification[];
+}
+
+export default function NotificationScreen() {
+  const { colors, isDark } = useTheme();
   const router = useRouter();
-  const { notifications, unreadCount, refresh, markRead, markAllRead } = useNotifications();
-  const [activeFilter, setActiveFilter] = useState<"all" | "unread">("all");
-  const [refreshing, setRefreshing] = useState(false);
+  const { notifications, refresh, markRead, markAllRead } = useNotifications();
+
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
+  // Automatically mark notifications as read on screen open (TikTok / Facebook style)
   useEffect(() => {
-    refresh().finally(() => setLoading(false));
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  }, []);
+    refresh()
+      .then(() => {
+        // Silently mark all as read in background so red badges clear naturally
+        markAllRead().catch(() => {});
+      })
+      .finally(() => setLoading(false));
+  }, [refresh, markAllRead]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await refresh();
-    setRefreshing(false);
+    try {
+      await refresh();
+      await markAllRead();
+    } finally {
+      setRefreshing(false);
+    }
   };
 
-  const filteredNotifications =
-    activeFilter === "unread" ? notifications.filter((item) => !item.read) : notifications;
+  // Group notifications chronologically: New (Today), This Week, Earlier
+  const sections = useMemo<NotificationSection[]>(() => {
+    if (!notifications || notifications.length === 0) return [];
 
-  const NotificationCard = ({ item }: { item: AppNotification }) => {
-    const scaleAnim = useRef(new Animated.Value(1)).current;
-    const { user, text, icon, color } = describeNotification(item);
+    const now = Date.now();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    const sevenDaysMs = 7 * oneDayMs;
 
-    const handlePressIn = () => {
-      Animated.spring(scaleAnim, { toValue: 0.98, useNativeDriver: true }).start();
-    };
+    const todayItems: AppNotification[] = [];
+    const thisWeekItems: AppNotification[] = [];
+    const earlierItems: AppNotification[] = [];
 
-    const handlePressOut = () => {
-      Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();
-    };
+    notifications.forEach((item) => {
+      const itemTime = new Date(item.createdAt).getTime();
+      const diff = now - itemTime;
 
-    const handlePress = async () => {
-      if (!item.read) markRead(item._id);
+      if (diff < oneDayMs) {
+        todayItems.push(item);
+      } else if (diff < sevenDaysMs) {
+        thisWeekItems.push(item);
+      } else {
+        earlierItems.push(item);
+      }
+    });
 
-      // Matches and missed calls naturally lead into a conversation; likes don't
-      // carry enough profile data here to open a profile screen, so just mark read.
-      if ((item.type === "match" || item.type === "missed_call") && item.fromUser) {
+    const result: NotificationSection[] = [];
+    if (todayItems.length > 0) result.push({ title: "NEW", data: todayItems });
+    if (thisWeekItems.length > 0) result.push({ title: "THIS WEEK", data: thisWeekItems });
+    if (earlierItems.length > 0) result.push({ title: "EARLIER", data: earlierItems });
+
+    return result;
+  }, [notifications]);
+
+  const handleAction = async (item: AppNotification) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (!item.read) {
+      markRead(item._id).catch(() => {});
+    }
+
+    if (item.type === "match" || item.type === "missed_call") {
+      if (item.fromUser?._id) {
         try {
           const chat = await createOrGetChat(item.fromUser._id);
           router.push({
@@ -107,150 +176,222 @@ export default function Notification() {
               otherUserId: item.fromUser._id,
             },
           });
+          return;
         } catch (err) {
           console.error("Failed to open chat from notification:", err);
         }
       }
-    };
+    }
 
-    return (
-      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <Pressable
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          onPress={handlePress}
-          style={({ pressed }) => [
-            styles.card,
-            { backgroundColor: colors.surface, shadowColor: colors.shadow, borderColor: "transparent" },
-            !item.read && { backgroundColor: colors.accentSoft, borderColor: colors.accentSoftPressed },
-            pressed && styles.cardPressed,
-          ]}
-        >
-          <View style={styles.avatarContainer}>
-            <Image
-              source={{
-                uri: item.fromUser?.profileImage || "https://placehold.co/100x100",
-              }}
-              style={[styles.avatar, { borderColor: colors.surface }]}
-            />
-            <View style={[styles.iconBadge, { backgroundColor: color, borderColor: colors.surface }]}>
-              <Ionicons name={icon} size={12} color="#fff" />
-            </View>
-          </View>
-
-          <View style={styles.textWrapper}>
-            <Text style={[styles.notificationText, { color: colors.text }]}>
-              <Text style={[styles.user, { color: colors.text }]}>{user}</Text> {text}
-            </Text>
-            <View style={styles.timeContainer}>
-              <Ionicons name="time-outline" size={12} color={colors.textSecondary} />
-              <Text style={[styles.time, { color: colors.textSecondary }]}>
-                {formatRelativeTime(item.createdAt)}
-              </Text>
-            </View>
-          </View>
-
-          {!item.read && <View style={[styles.unreadIndicator, { backgroundColor: colors.accent }]} />}
-        </Pressable>
-      </Animated.View>
-    );
+    // Default for likes or favorites: take them to discovery / likes feed
+    router.push("/(tabs)/likes");
   };
 
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Animated.View
-        style={[
-          styles.header,
-          { backgroundColor: colors.surface, shadowColor: colors.shadow, opacity: fadeAnim },
+  const renderItem = ({ item }: { item: AppNotification }) => {
+    const details = getNotificationDetails(item);
+
+    return (
+      <Pressable
+        onPress={() => handleAction(item)}
+        style={({ pressed }) => [
+          styles.row,
+          {
+            backgroundColor: !item.read
+              ? isDark
+                ? "rgba(230, 57, 70, 0.08)"
+                : "rgba(230, 57, 70, 0.04)"
+              : colors.background,
+            borderBottomColor: colors.border,
+          },
+          pressed && {
+            backgroundColor: isDark ? colors.surfaceAlt : "#f1f2f4",
+          },
         ]}
       >
-        <View style={styles.headerTop}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Notifications</Text>
-          <View style={styles.headerIcons}>
-            {unreadCount > 0 && (
-              <Pressable style={styles.markAllButton} onPress={markAllRead}>
-                <Ionicons name="checkmark-done" size={20} color={colors.textSecondary} />
-                <Text style={[styles.markAllText, { color: colors.textSecondary }]}>Mark all read</Text>
-              </Pressable>
+        {/* Avatar with status badge overlay */}
+        <View style={styles.avatarContainer}>
+          <Image
+            source={{
+              uri:
+                item.fromUser?.profileImage ||
+                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop",
+            }}
+            style={[styles.avatar, { backgroundColor: colors.surfaceAlt }]}
+          />
+          <View
+            style={[
+              styles.badgeOverlay,
+              {
+                backgroundColor: details.badgeBg,
+                borderColor: colors.surface,
+              },
+            ]}
+          >
+            <Ionicons name={details.icon} size={11} color="#ffffff" />
+          </View>
+        </View>
+
+        {/* Narrative text description */}
+        <View style={styles.textContainer}>
+          <Text style={[styles.narrativeText, { color: colors.textSecondary }]}>
+            <Text style={[styles.userName, { color: colors.text }]}>
+              {details.user}{" "}
+            </Text>
+            {details.actionText}
+          </Text>
+
+          <View style={styles.timeRow}>
+            <Text style={[styles.timeText, { color: colors.textTertiary }]}>
+              {formatRelativeTime(item.createdAt)}
+            </Text>
+            {!item.read && (
+              <View
+                style={[
+                  styles.unreadDot,
+                  { backgroundColor: colors.accent },
+                ]}
+              />
             )}
           </View>
         </View>
 
-        <View style={[styles.filterContainer, { backgroundColor: colors.surfaceAlt }]}>
-          <Pressable
+        {/* Right contextual action pill (like TikTok / Facebook) */}
+        <Pressable
+          onPress={() => handleAction(item)}
+          hitSlop={6}
+          style={({ pressed }) => [
+            styles.actionButton,
+            details.actionButtonType === "primary" && {
+              backgroundColor: colors.accent,
+            },
+            details.actionButtonType === "secondary" && {
+              backgroundColor: isDark ? colors.surfaceAlt : colors.accentSoft,
+              borderWidth: 1,
+              borderColor: isDark ? colors.border : "transparent",
+            },
+            details.actionButtonType === "outline" && {
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.border,
+            },
+            pressed && { opacity: 0.8, transform: [{ scale: 0.96 }] },
+          ]}
+        >
+          <Text
             style={[
-              styles.filterButton,
-              activeFilter === "all" && [
-                styles.filterButtonActive,
-                { backgroundColor: colors.surface, shadowColor: colors.shadow },
-              ],
+              styles.actionButtonText,
+              details.actionButtonType === "primary" && { color: "#ffffff" },
+              details.actionButtonType === "secondary" && {
+                color: isDark ? colors.text : colors.accent,
+              },
+              details.actionButtonType === "outline" && {
+                color: colors.text,
+              },
             ]}
-            onPress={() => setActiveFilter("all")}
           >
-            <Text
-              style={[
-                styles.filterText,
-                { color: colors.textSecondary },
-                activeFilter === "all" && { color: colors.accent },
-              ]}
-            >
-              All
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[
-              styles.filterButton,
-              activeFilter === "unread" && [
-                styles.filterButtonActive,
-                { backgroundColor: colors.surface, shadowColor: colors.shadow },
-              ],
-            ]}
-            onPress={() => setActiveFilter("unread")}
-          >
-            <View style={styles.unreadFilter}>
-              <Text
-                style={[
-                  styles.filterText,
-                  { color: colors.textSecondary },
-                  activeFilter === "unread" && { color: colors.accent },
-                ]}
-              >
-                Unread
-              </Text>
-              {unreadCount > 0 && (
-                <View style={[styles.unreadBadge, { backgroundColor: colors.accent }]}>
-                  <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
-                </View>
-              )}
-            </View>
-          </Pressable>
-        </View>
-      </Animated.View>
+            {details.actionButtonLabel}
+          </Text>
+        </Pressable>
+      </Pressable>
+    );
+  };
 
+  const renderSectionHeader = ({
+    section: { title },
+  }: {
+    section: NotificationSection;
+  }) => (
+    <View
+      style={[
+        styles.sectionHeaderContainer,
+        { backgroundColor: colors.background },
+      ]}
+    >
+      <Text style={[styles.sectionHeaderText, { color: colors.textTertiary }]}>
+        {title}
+      </Text>
+    </View>
+  );
+
+  return (
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
+      <StatusBar
+        barStyle={colors.statusBarStyle}
+        backgroundColor={colors.background}
+      />
+
+      {/* Top Header */}
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          style={styles.backButton}
+        >
+          <Ionicons name="chevron-back" size={26} color={colors.text} />
+        </Pressable>
+
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          Notifications
+        </Text>
+
+        <View style={styles.headerRightSpace} />
+      </View>
+
+      {/* Feed Content */}
       {loading ? (
-        <View style={styles.emptyState}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.accent} />
-        </View>
-      ) : filteredNotifications.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Ionicons name="notifications-off-outline" size={64} color={colors.textTertiary} />
-          <Text style={[styles.emptyStateTitle, { color: colors.textSecondary }]}>No notifications</Text>
-          <Text style={[styles.emptyStateText, { color: colors.textTertiary }]}>
-            {activeFilter === "unread"
-              ? "You're all caught up! No unread notifications."
-              : "You don't have any notifications yet."}
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+            Loading notifications...
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={filteredNotifications}
+        <SectionList
+          sections={sections}
           keyExtractor={(item) => item._id}
-          renderItem={({ item }) => <NotificationCard item={item} />}
-          contentContainerStyle={styles.listContent}
+          renderItem={renderItem}
+          renderSectionHeader={renderSectionHeader}
+          stickySectionHeadersEnabled={false}
           showsVerticalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
+          contentContainerStyle={
+            sections.length === 0 ? styles.emptyContainer : styles.listContent
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.accent}
+              colors={[colors.accent]}
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyStateWrapper}>
+              <View
+                style={[
+                  styles.emptyIconCircle,
+                  { backgroundColor: isDark ? colors.surfaceAlt : colors.accentSoft },
+                ]}
+              >
+                <Ionicons
+                  name="notifications-off-outline"
+                  size={36}
+                  color={colors.accent}
+                />
+              </View>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                No Notifications Yet
+              </Text>
+              <Text
+                style={[styles.emptySubtitle, { color: colors.textSecondary }]}
+              >
+                When you get matches, likes, or calls, they will appear here in
+                real-time.
+              </Text>
+            </View>
+          }
         />
       )}
     </SafeAreaView>
@@ -262,164 +403,140 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 16,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  headerTop: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-  },
-  headerIcons: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-  },
-  markAllButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    padding: 8,
-  },
-  markAllText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  filterContainer: {
-    flexDirection: "row",
-    borderRadius: 12,
+  backButton: {
     padding: 4,
   },
-  filterButton: {
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    letterSpacing: -0.4,
+  },
+  headerRightSpace: {
+    width: 34,
+  },
+  loadingContainer: {
     flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  filterButtonActive: {
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  filterText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  unreadFilter: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  unreadBadge: {
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 4,
+    gap: 12,
   },
-  unreadBadgeText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "700",
+  loadingText: {
+    fontSize: 14,
   },
   listContent: {
-    padding: 16,
-    paddingTop: 8,
+    paddingBottom: 32,
   },
-  card: {
+  sectionHeaderContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 8,
+  },
+  sectionHeaderText: {
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
+  row: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    borderRadius: 16,
-    shadowOpacity: 0.06,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 3,
-    borderWidth: 1,
-  },
-  cardPressed: {
-    transform: [{ scale: 0.98 }],
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   avatarContainer: {
     position: "relative",
-    marginRight: 12,
+    marginRight: 14,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 2,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
-  iconBadge: {
+  badgeOverlay: {
     position: "absolute",
     bottom: -2,
     right: -2,
     width: 20,
     height: 20,
     borderRadius: 10,
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
     borderWidth: 2,
   },
-  textWrapper: {
+  textContainer: {
     flex: 1,
+    marginRight: 12,
+    justifyContent: "center",
   },
-  notificationText: {
-    fontSize: 15,
-    lineHeight: 20,
-    marginBottom: 4,
+  narrativeText: {
+    fontSize: 14,
+    lineHeight: 19,
   },
-  user: {
+  userName: {
     fontWeight: "700",
   },
-  timeContainer: {
+  timeRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    marginTop: 4,
+    gap: 6,
   },
-  time: {
+  timeText: {
     fontSize: 12,
     fontWeight: "500",
   },
-  unreadIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginLeft: 8,
+  unreadDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
   },
-  separator: {
-    height: 8,
+  actionButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 70,
   },
-  emptyState: {
+  actionButtonText: {
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+  },
+  emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 40,
   },
-  emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginTop: 16,
-    marginBottom: 8,
+  emptyStateWrapper: {
+    alignItems: "center",
+    justifyContent: "center",
   },
-  emptyStateText: {
-    fontSize: 14,
+  emptyIconCircle: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 18,
+  },
+  emptyTitle: {
+    fontSize: 19,
+    fontWeight: "800",
+    marginBottom: 8,
     textAlign: "center",
+  },
+  emptySubtitle: {
+    fontSize: 14,
     lineHeight: 20,
+    textAlign: "center",
   },
 });

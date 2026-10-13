@@ -101,12 +101,35 @@ export const getLikedByProfiles = async (req, res) => {
  */
 export const getMatches = async (req, res) => {
   const currentUserId = req.user.id;
-  const currentProfile = await Profile.findOne({ user: currentUserId }).populate(
-    "matches",
-    "user profileImage location age"
-  );
+  const currentProfile = await Profile.findOne({ user: currentUserId }).populate({
+    path: "matches",
+    select: "user name profileImage photos location age aboutMe profession blockedUsers",
+    populate: { path: "user", select: "username" },
+  });
 
   if (!currentProfile) return res.status(404).json({ message: "Profile not found" });
 
-  res.status(200).json({ matches: currentProfile.matches });
+  const blockedByMe = (currentProfile.blockedUsers || []).map((id) => id.toString());
+
+  const validMatches = (currentProfile.matches || [])
+    .filter((p) => {
+      if (!p || !p.user) return false;
+      const otherUserId = p.user._id ? p.user._id.toString() : p.user.toString();
+      const iBlockedThem = blockedByMe.includes(otherUserId);
+      const theyBlockedMe = (p.blockedUsers || []).some((id) => id.toString() === currentUserId);
+      return !iBlockedThem && !theyBlockedMe;
+    })
+    .map((p) => ({
+      id: p._id,
+      userId: p.user._id ? p.user._id.toString() : p.user.toString(),
+      name: p.name || p.user?.username || "Match",
+      age: p.age,
+      profileImage: p.profileImage,
+      photos: p.photos || [],
+      location: p.location,
+      aboutMe: p.aboutMe,
+      profession: p.profession,
+    }));
+
+  res.status(200).json({ matches: validMatches });
 };

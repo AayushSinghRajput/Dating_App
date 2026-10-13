@@ -12,7 +12,12 @@ export default function IncomingCallModal() {
   if (!visible) return null;
 
   return (
-    <Modal visible={visible} animationType="fade" statusBarTranslucent>
+    <Modal
+      visible={visible}
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={rejectCall}
+    >
       <View style={styles.overlay}>
         <View style={styles.content}>
           <Image

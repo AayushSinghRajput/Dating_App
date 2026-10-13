@@ -67,6 +67,19 @@ export default function ChatDetail() {
   const currentUserIdRef = useRef<string | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const targetUserId =
+    otherUserId ||
+    messages.find((m) => !m.fromMe && m.sender?._id)?.sender?._id ||
+    "";
+  const targetName =
+    name ||
+    messages.find((m) => !m.fromMe && m.senderName)?.senderName ||
+    "User";
+  const targetAvatar =
+    avatar ||
+    messages.find((m) => !m.fromMe && m.senderAvatar)?.senderAvatar ||
+    "";
+
   // While this screen is open, the global chat-notification listener skips
   // toasting for messages that belong to this exact conversation.
   useEffect(() => {
@@ -634,7 +647,7 @@ export default function ChatDetail() {
             <Pressable
               style={styles.iconButton}
               onPress={() =>
-                startCall(otherUserId, chatId, "audio", name, avatar)
+                startCall(targetUserId, chatId, "audio", targetName, targetAvatar)
               }
             >
               <Ionicons name="call-outline" size={22} color={colors.accent} />
@@ -642,7 +655,7 @@ export default function ChatDetail() {
             <Pressable
               style={styles.iconButton}
               onPress={() =>
-                startCall(otherUserId, chatId, "video", name, avatar)
+                startCall(targetUserId, chatId, "video", targetName, targetAvatar)
               }
             >
               <Ionicons
