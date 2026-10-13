@@ -9,6 +9,7 @@ import { CallProvider } from "../contexts/CallContext";
 import { NotificationProvider } from "../contexts/NotificationContext";
 import { ChatNotificationProvider } from "../contexts/ChatNotificationContext";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
+import { LanguageProvider } from "../contexts/LanguageContext";
 import IncomingCallModal from "../src/components/calling/IncomingCallModal";
 import InCallScreen from "../src/components/calling/InCallScreen";
 import GlobalActionSheet from "../src/components/GlobalActionSheet";
@@ -109,15 +110,17 @@ export default function RootLayout() {
     <ErrorBoundary>
       <SafeAreaProvider>
         <ThemeProvider>
-          <NotificationProvider>
-            <ChatNotificationProvider>
-              <CallProvider>
-                <AppShell isLoggedIn={isLoggedIn} />
-                <IncomingCallModal />
-                <InCallScreen />
-              </CallProvider>
-            </ChatNotificationProvider>
-          </NotificationProvider>
+          <LanguageProvider>
+            <NotificationProvider>
+              <ChatNotificationProvider>
+                <CallProvider>
+                  <AppShell isLoggedIn={isLoggedIn} />
+                  <IncomingCallModal />
+                  <InCallScreen />
+                </CallProvider>
+              </ChatNotificationProvider>
+            </NotificationProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </ErrorBoundary>

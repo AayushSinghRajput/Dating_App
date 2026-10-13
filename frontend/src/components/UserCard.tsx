@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Pressable, Dimensions, Animated } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import Toast from "react-native-toast-message";
@@ -9,6 +9,7 @@ import { toggleFavorite, getFavorites, DiscoveryProfile } from "@/services/profi
 import { likeProfile, superLikeProfile, passProfile } from "@/services/matchService";
 import { createOrGetChat } from "@/services/chatService";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { spacing } from "@/src/theme/spacing";
 import { radius } from "@/src/theme/radius";
 import { typography } from "@/src/theme/typography";
@@ -25,6 +26,7 @@ interface UserCardProps {
 
 export default function UserCard({ user, index = 0 }: UserCardProps) {
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const router = useRouter();
   const [favorite, setFavorite] = useState<boolean | null>(null);
   const [loadingFavorite, setLoadingFavorite] = useState(false);
@@ -64,7 +66,7 @@ export default function UserCard({ user, index = 0 }: UserCardProps) {
   const goToPrevPhoto = () => setActivePhotoIndex((prev) => Math.max(0, prev - 1));
   const goToNextPhoto = () => setActivePhotoIndex((prev) => Math.min(photos.length - 1, prev + 1));
 
-  const fetchFavorites = async () => {
+  const fetchFavorites = useCallback(async () => {
     try {
       const favoritesList = await getFavorites();
       const ids = favoritesList.map((f: any) => f._id);
@@ -74,11 +76,11 @@ export default function UserCard({ user, index = 0 }: UserCardProps) {
       console.error("Failed to fetch favorites:", error);
       setFavorite(false);
     }
-  };
+  }, [user.userId]);
 
   useEffect(() => {
     fetchFavorites();
-  }, []);
+  }, [fetchFavorites]);
 
   useEffect(() => {
     if (user?.userId && loggedInUserFavorites.length > 0) {
@@ -290,7 +292,7 @@ export default function UserCard({ user, index = 0 }: UserCardProps) {
           {user.isBoosted && (
             <View style={[styles.boostRibbon, { backgroundColor: colors.accent }]}>
               <Ionicons name="flash" size={12} color="#fff" />
-              <Text style={styles.boostRibbonText}>Boosted</Text>
+              <Text style={styles.boostRibbonText}>{t("discovery.boosted", "Boosted")}</Text>
             </View>
           )}
 
@@ -322,7 +324,9 @@ export default function UserCard({ user, index = 0 }: UserCardProps) {
                   {user?.name || "Unknown"}
                   {user.age ? `, ${user.age}` : ""}
                 </Text>
-                {user?.isVerified && <Badge label="Verified" icon="checkmark-circle" tone="info" />}
+                {user?.isVerified && (
+                  <Badge label={t("discovery.verified", "Verified")} icon="checkmark-circle" tone="info" />
+                )}
               </View>
 
               <View style={styles.locationRow}>

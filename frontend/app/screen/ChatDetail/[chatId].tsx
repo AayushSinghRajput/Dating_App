@@ -35,7 +35,7 @@ import { showReportReasonPicker } from "@/src/utils/reportFlow";
 import { showActionSheet } from "@/src/components/GlobalActionSheet";
 import { shareMyLocation } from "@/src/utils/safety";
 import { setActiveChatId } from "@/src/utils/activeChat";
-import { socket, connectSocket, joinRoom, emitTyping, emitStopTyping } from "@/utils/socket";
+import { socket, connectSocket, joinRoom, emitTyping, emitStopTyping } from "../../../utils/socket";
 import { useCall } from "@/contexts/CallContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useChatNotifications } from "@/contexts/ChatNotificationContext";
@@ -201,7 +201,7 @@ export default function ChatDetail() {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       emitStopTyping(chatId);
     };
-  }, [chatId]);
+  }, [chatId, name, otherUserId, router]);
 
   const handleBack = () => router.back();
 
@@ -573,7 +573,7 @@ export default function ChatDetail() {
       const mediaType: "image" | "video" = asset.type === "video" ? "video" : "image";
       const mimeType = asset.mimeType || (mediaType === "video" ? "video/mp4" : "image/jpeg");
       handleMediaSelected(asset.uri, mediaType, mimeType);
-    } catch (error) {
+    } catch {
       Toast.show({
         type: "error",
         text1: "Couldn't open photo picker",

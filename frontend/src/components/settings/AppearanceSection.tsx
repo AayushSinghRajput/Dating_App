@@ -2,26 +2,30 @@ import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme, ThemeMode } from "@/contexts/ThemeContext";
-
-const OPTIONS: {
-  mode: ThemeMode;
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-}[] = [
-  { mode: "light", label: "Light", icon: "sunny-outline" },
-  { mode: "dark", label: "Dark", icon: "moon-outline" },
-  { mode: "system", label: "System", icon: "phone-portrait-outline" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AppearanceSection() {
   const { mode, setMode, colors } = useTheme();
+  const { t } = useLanguage();
+
+  const options: {
+    mode: ThemeMode;
+    label: string;
+    icon: keyof typeof Ionicons.glyphMap;
+  }[] = [
+    { mode: "light", label: t("settings.light", "Light"), icon: "sunny-outline" },
+    { mode: "dark", label: t("settings.dark", "Dark"), icon: "moon-outline" },
+    { mode: "system", label: t("settings.system", "System"), icon: "phone-portrait-outline" },
+  ];
 
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Appearance</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          {t("settings.appearance", "Appearance")}
+        </Text>
         <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
-          Choose how Soulmate looks on your device
+          {t("settings.appearanceDesc", "Choose how Soulmate looks on your device")}
         </Text>
       </View>
 
@@ -33,7 +37,7 @@ export default function AppearanceSection() {
           ]}
         >
           <View style={[styles.segmentedControl, { backgroundColor: colors.surfaceAlt }]}>
-            {OPTIONS.map((option) => {
+            {options.map((option) => {
               const isActive = mode === option.mode;
               return (
                 <Pressable

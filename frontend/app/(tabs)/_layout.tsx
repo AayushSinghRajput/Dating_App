@@ -1,10 +1,12 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useChatNotifications } from "@/contexts/ChatNotificationContext";
 
 export default function TabsLayout() {
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const { unreadChatsCount } = useChatNotifications();
 
   return (
@@ -22,7 +24,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: t("tabs.home"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
@@ -31,7 +33,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="likes"
         options={{
-          title: "Likes",
+          title: t("tabs.likes"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="heart" size={size} color={color} />
           ),
@@ -40,7 +42,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="chat"
         options={{
-          title: "Chat",
+          title: t("tabs.chat"),
           tabBarBadge: unreadChatsCount > 0 ? unreadChatsCount : undefined,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubbles" size={size} color={color} />
@@ -50,7 +52,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: t("tabs.settings"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings" size={size} color={color} />
           ),

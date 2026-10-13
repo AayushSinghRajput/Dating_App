@@ -10,12 +10,14 @@ import Avatar from "@/src/components/ui/Avatar";
 import { spacing } from "@/src/theme/spacing";
 import { typography } from "@/src/theme/typography";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const logo = require("../../assets/images/logo.png");
 
 export default function HomeHeader() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const { unreadCount } = useNotifications();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { status, handleRewind, handleBoost } = usePremiumActions();
@@ -28,10 +30,18 @@ export default function HomeHeader() {
 
   const openPremiumActions = () => {
     showActionSheet({
-      title: "Get noticed",
+      title: t("homeHeader.getNoticed", "Get noticed"),
       options: [
-        { label: status?.boostActive ? "Boosted — priority visibility active" : "⚡ Boost My Profile", onPress: handleBoost },
-        { label: "↩️ Rewind Last Swipe", onPress: handleRewind },
+        {
+          label: status?.boostActive
+            ? t("homeHeader.boostActive", "Boosted — priority visibility active")
+            : t("homeHeader.boostProfile", "⚡ Boost My Profile"),
+          onPress: handleBoost,
+        },
+        {
+          label: t("homeHeader.rewindSwipe", "↩️ Rewind Last Swipe"),
+          onPress: handleRewind,
+        },
       ],
     });
   };

@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { getProfile } from "@/services/profileService";
 import Avatar from "@/src/components/ui/Avatar";
 import { spacing } from "@/src/theme/spacing";
@@ -10,6 +11,7 @@ import { radius } from "@/src/theme/radius";
 
 export default function ProfileCard() {
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const router = useRouter();
   const [name, setName] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -35,9 +37,11 @@ export default function ProfileCard() {
       <Avatar uri={avatarUrl} size="lg" accessibilityLabel="Your profile photo" />
       <View style={styles.info}>
         <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
-          {name || "Your Profile"}
+          {name || t("settings.yourProfile", "Your Profile")}
         </Text>
-        <Text style={[styles.editLink, { color: colors.accent }]}>Edit Profile</Text>
+        <Text style={[styles.editLink, { color: colors.accent }]}>
+          {t("settings.editProfile", "Edit Profile")}
+        </Text>
       </View>
       <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
     </Pressable>

@@ -20,7 +20,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
-import { socket, connectSocket } from "@/utils/socket";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { socket, connectSocket } from "../../utils/socket";
 import { useChatNotifications } from "@/contexts/ChatNotificationContext";
 
 if (
@@ -54,6 +55,7 @@ interface ChatsHeaderProps {
 export default function Chats() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
@@ -147,10 +149,15 @@ export default function Chats() {
   const ChatsHeader = ({ chatsCount, isSearching }: ChatsHeaderProps) => (
     <View style={[styles.chatsHeader, { borderBottomColor: colors.surfaceAlt }]}>
       <Text style={[styles.chatsTitle, { color: colors.text }]}>
-        {isSearching ? "Search Results" : "Recent Conversations"}
+        {isSearching
+          ? t("chatScreen.searchResults", "Search Results")
+          : t("chatScreen.recentConversations", "Recent Conversations")}
       </Text>
       <Text style={[styles.chatsCount, { color: colors.textSecondary }]}>
-        {chatsCount} {chatsCount === 1 ? "chat" : "chats"}
+        {chatsCount}{" "}
+        {chatsCount === 1
+          ? t("chatScreen.chatSingular", "chat")
+          : t("chatScreen.chatPlural", "chats")}
       </Text>
     </View>
   );
@@ -161,7 +168,9 @@ export default function Chats() {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.surface }]}>
         <ActivityIndicator size="large" color={colors.accent} />
-        <Text style={{ color: colors.textSecondary, marginTop: 8 }}>Loading Chats...</Text>
+        <Text style={{ color: colors.textSecondary, marginTop: 8 }}>
+          {t("chatScreen.loadingChats", "Loading Chats...")}
+        </Text>
       </View>
     );
   }
@@ -179,7 +188,7 @@ export default function Chats() {
               <TextInput
                 ref={searchInputRef}
                 style={[styles.searchInput, { color: colors.text }]}
-                placeholder="Search by name..."
+                placeholder={t("chatScreen.searchPlaceholder", "Search by name...")}
                 placeholderTextColor={colors.textTertiary}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -195,18 +204,25 @@ export default function Chats() {
               )}
             </View>
             <Pressable onPress={closeSearch} hitSlop={8}>
-              <Text style={[styles.cancelText, { color: colors.accent }]}>Cancel</Text>
+              <Text style={[styles.cancelText, { color: colors.accent }]}>
+                {t("chatScreen.cancel", "Cancel")}
+              </Text>
             </Pressable>
           </View>
         ) : (
           <>
             <View style={styles.headerContent}>
-              <Text style={[styles.headerTitle, { color: colors.text }]}>Messages</Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>
+                {t("chatScreen.title", "Messages")}
+              </Text>
               <Text style={[styles.headerSubtitle, { color: colors.textTertiary }]}>
                 {unreadCount > 0
-                  ? `${unreadCount} unread ${unreadCount === 1 ? "message" : "messages"
-                  }`
-                  : "You're all caught up"}
+                  ? `${unreadCount} ${
+                      unreadCount === 1
+                        ? t("chatScreen.unreadMessage", "unread message")
+                        : t("chatScreen.unreadMessages", "unread messages")
+                    }`
+                  : t("chatScreen.allCaughtUp", "You're all caught up")}
               </Text>
             </View>
 
@@ -227,7 +243,9 @@ export default function Chats() {
       {/* Online Users Strip */}
       {!isSearching && onlineUsers.length > 0 && (
         <View style={[styles.onlineSection, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-          <Text style={[styles.onlineTitle, { color: colors.text }]}>Online Now</Text>
+          <Text style={[styles.onlineTitle, { color: colors.text }]}>
+            {t("chatScreen.onlineNow", "Online Now")}
+          </Text>
           <FlatList
             horizontal
             data={onlineUsers}
@@ -271,10 +289,10 @@ export default function Chats() {
               <View style={styles.emptyState}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
                 <Text style={[styles.emptyStateText, { color: colors.textTertiary }]}>
-                  No conversations found
+                  {t("chatScreen.noConversationsFound", "No conversations found")}
                 </Text>
                 <Text style={[styles.emptyStateSubtext, { color: colors.textTertiary }]}>
-                  Try searching a different name
+                  {t("chatScreen.trySearchingDifferent", "Try searching a different name")}
                 </Text>
               </View>
             ) : null

@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { getProfile } from "@/services/profileService";
 import { getMatches, rewindLastSwipe, MatchProfile } from "@/services/matchService";
 import { createOrGetChat } from "@/services/chatService";
@@ -30,6 +31,7 @@ export default function EmptyDiscoveryState({
   refreshing,
 }: EmptyDiscoveryStateProps) {
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const router = useRouter();
 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -95,8 +97,8 @@ export default function EmptyDiscoveryState({
       await rewindLastSwipe();
       Toast.show({
         type: "success",
-        text1: "Last swipe undone!",
-        text2: "Profile restored to your deck.",
+        text1: t("discovery.lastSwipeUndone", "Last swipe undone!"),
+        text2: t("discovery.profileRestored", "Profile restored to your deck."),
       });
       onRefresh();
     } catch (err: any) {
@@ -110,7 +112,7 @@ export default function EmptyDiscoveryState({
       } else {
         Toast.show({
           type: "error",
-          text1: "Could not rewind",
+          text1: t("discovery.couldNotRewind", "Could not rewind"),
           text2: err?.message || "No recent swipes to undo.",
         });
       }
@@ -227,10 +229,10 @@ export default function EmptyDiscoveryState({
       {/* Main Copy */}
       <View style={styles.textContainer}>
         <Text style={[styles.headline, { color: colors.text }]}>
-          You&apos;re All Caught Up! 🎉
+          {t("discovery.allCaughtUp", "You're All Caught Up! 🎉")}
         </Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          You&apos;ve seen everyone nearby for now. Widen your preferences or say hi to your matches!
+          {t("discovery.allCaughtUpSub", "You've seen everyone nearby for now. Widen your preferences or say hi to your matches!")}
         </Text>
       </View>
 
@@ -242,7 +244,9 @@ export default function EmptyDiscoveryState({
           onPress={() => router.push("/screen/ProfileEdit")}
         >
           <Ionicons name="options-outline" size={18} color="#fff" />
-          <Text style={styles.primaryBtnText}>Widen Search Preferences</Text>
+          <Text style={styles.primaryBtnText}>
+            {t("discovery.widenPreferences", "Widen Search Preferences")}
+          </Text>
         </Pressable>
 
         {/* Secondary Row: Rewind & View Matches */}
@@ -260,7 +264,9 @@ export default function EmptyDiscoveryState({
             ) : (
               <>
                 <Ionicons name="arrow-undo-outline" size={16} color={colors.text} />
-                <Text style={[styles.secondaryBtnText, { color: colors.text }]}>Rewind</Text>
+                <Text style={[styles.secondaryBtnText, { color: colors.text }]}>
+                  {t("discovery.rewind", "Rewind")}
+                </Text>
               </>
             )}
           </Pressable>
@@ -273,7 +279,9 @@ export default function EmptyDiscoveryState({
             onPress={() => router.push("/(tabs)/likes")}
           >
             <Ionicons name="heart-outline" size={16} color={colors.accent} />
-            <Text style={[styles.secondaryBtnText, { color: colors.text }]}>View Likes</Text>
+            <Text style={[styles.secondaryBtnText, { color: colors.text }]}>
+              {t("discovery.viewLikes", "View Likes")}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -285,14 +293,14 @@ export default function EmptyDiscoveryState({
             <View style={styles.matchesHeaderTitleRow}>
               <Ionicons name="chatbubbles" size={18} color="#ff7b00" />
               <Text style={[styles.matchesSectionTitle, { color: colors.text }]}>
-                Your Matches
+                {t("discovery.yourMatches", "Your Matches")}
               </Text>
               <View style={[styles.matchBadge, { backgroundColor: "#ff7b00" }]}>
                 <Text style={styles.matchBadgeText}>{matches.length}</Text>
               </View>
             </View>
             <Text style={[styles.matchesSectionSubtitle, { color: colors.textSecondary }]}>
-              Say hello while you wait for new people!
+              {t("discovery.sayHello", "Say hello while you wait for new people!")}
             </Text>
           </View>
 
