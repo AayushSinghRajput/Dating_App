@@ -81,10 +81,22 @@ export const passProfile = async (targetProfileId: string) => {
   }
 };
 
+export interface MatchProfile {
+  id: string;
+  userId: string;
+  name: string;
+  age?: number;
+  profileImage?: string;
+  photos?: string[];
+  location?: string;
+  aboutMe?: string;
+  profession?: string;
+}
+
 /**
  * Get all matches for the logged-in user
  */
-export const getMatches = async () => {
+export const getMatches = async (): Promise<MatchProfile[]> => {
   try {
     const token = await AsyncStorage.getItem("token");
     if (!token) throw new Error("User not authenticated");
@@ -94,14 +106,19 @@ export const getMatches = async () => {
         Authorization: `Bearer ${token}`,
       },
     });
+    if (!response.ok) {
+      await handleAuthFailure(response);
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.message || "Failed to get matches");
+    }
     const data = await response.json();
-    return data.matches;
+    return data.matches || [];
   } catch (error: any) {
     console.error(
       "Error fetching matches:",
-      error.response?.data || error.message
+      error.message
     );
-    throw new Error(error.response?.data?.message || "Failed to get matches");
+    throw new Error(error.message || "Failed to get matches");
   }
 };
 

@@ -16,6 +16,7 @@ import GlobalMatchCelebration from "../src/components/GlobalMatchCelebration";
 import { usePushNotifications, unregisterPushNotificationsAsync } from "../src/hooks/usePushNotifications";
 import { initCrashMonitoring } from "../src/utils/crashMonitoring";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
+import { connectSocket, disconnectSocket } from "../utils/socket";
 
 initCrashMonitoring();
 
@@ -28,10 +29,20 @@ function AppShell({ isLoggedIn }: { isLoggedIn: boolean }) {
 
   useEffect(() => {
     const inAuthGroup = segments[0] === "auth";
+    const inOnboarding = segments[0] === "onboarding";
 
-    if (!isLoggedIn && !inAuthGroup) {
-      router.replace("/auth/login");
-    } else if (isLoggedIn && inAuthGroup) {
+    if (!isLoggedIn) {
+      if (inAuthGroup || inOnboarding) {
+        return;
+      }
+      AsyncStorage.getItem("@has_seen_onboarding").then((seen) => {
+        if (seen === "true") {
+          router.replace("/auth/login");
+        } else {
+          router.replace("/onboarding");
+        }
+      });
+    } else if (isLoggedIn && (inAuthGroup || inOnboarding)) {
       router.replace("/(tabs)");
     }
   }, [isLoggedIn, segments, router]);
@@ -48,6 +59,7 @@ function AppShell({ isLoggedIn }: { isLoggedIn: boolean }) {
           contentStyle: { backgroundColor: colors.background },
         }}
       >
+        <Stack.Screen name="onboarding" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="auth/login" />
         <Stack.Screen
@@ -81,6 +93,9 @@ export default function RootLayout() {
       setIsLoggedIn(loggedIn);
       if (!loggedIn) {
         unregisterPushNotificationsAsync();
+        disconnectSocket();
+      } else {
+        connectSocket(true);
       }
     });
     return () => onAuthChange(null);

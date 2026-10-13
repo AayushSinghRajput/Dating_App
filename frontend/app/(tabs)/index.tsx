@@ -8,6 +8,7 @@ import { spacing } from "@/src/theme/spacing";
 import { radius } from "@/src/theme/radius";
 import Skeleton from "@/src/components/ui/Skeleton";
 import EmptyState from "@/src/components/ui/EmptyState";
+import EmptyDiscoveryState from "@/src/components/EmptyDiscoveryState";
 
 const { width } = Dimensions.get("window");
 
@@ -84,29 +85,24 @@ export default function Home() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <HomeHeader />
-      <FlatList
-        style={styles.list}
-        data={users}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => <UserCard user={item} index={index} />}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.accent}
-            colors={[colors.accent]}
-          />
-        }
-        ListEmptyComponent={
-          <EmptyState
-            icon="people-outline"
-            title="No one new nearby"
-            description="Check back soon, or widen your preferences to see more people."
-            actionLabel="Refresh"
-            onAction={loadProfiles}
-          />
-        }
-      />
+      {users.length === 0 ? (
+        <EmptyDiscoveryState onRefresh={onRefresh} refreshing={refreshing} />
+      ) : (
+        <FlatList
+          style={styles.list}
+          data={users}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => <UserCard user={item} index={index} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.accent}
+              colors={[colors.accent]}
+            />
+          }
+        />
+      )}
     </View>
   );
 }

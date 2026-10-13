@@ -234,7 +234,20 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       name: string,
       avatar: string
     ) => {
-      if (callStatus !== "idle") return;
+      if (!toUserId) {
+        Toast.show({
+          type: "error",
+          text1: "Cannot start call",
+          text2: "Recipient could not be identified. Please reopen the chat.",
+        });
+        return;
+      }
+
+      if (callStatus !== "idle") {
+        cleanup();
+      }
+
+      await connectSocket();
 
       const granted = await requestCallPermissions(type);
       if (!granted) {
