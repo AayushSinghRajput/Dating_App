@@ -30,28 +30,13 @@ function getNodemailerTransporter() {
  */
 export async function sendEmail({ to, subject, text, html }) {
   const from = process.env.EMAIL_FROM || "Soulmate <onboarding@resend.dev>";
+  const errors = [];
 
-  // 1. Primary: Resend API
-  if (process.env.RESEND_API_KEY) {
-    const resend = getResendClient();
-    const { data, error } = await resend.emails.send({
-      from,
-      to,
-      subject,
-      text,
-      html,
-    });
+  const isResendSandbox = !from || from.includes("resend.dev");
+  const hasGmail = Boolean(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
+  const hasResend = Boolean(process.env.RESEND_API_KEY);
 
-    if (error) {
-      console.error("[Email] Resend API error:", error);
-      throw new Error(`Resend email delivery failed: ${error.message || JSON.stringify(error)}`);
-    }
-
-    return { provider: "resend", id: data?.id };
-  }
-
-  // 2. Fallback: Gmail Nodemailer
-  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+  const tryGmail = async () => {
     const transporter = getNodemailerTransporter();
     const info = await transporter.sendMail({
       from: `"Soulmate" <${process.env.GMAIL_USER}>`,
@@ -61,19 +46,60 @@ export async function sendEmail({ to, subject, text, html }) {
       html,
     });
     return { provider: "gmail", id: info.messageId };
+  };
+
+  const tryResend = async () => {
+    const resend = getResendClient();
+    const { data, error } = await resend.emails.send({
+      from,
+      to,
+      subject,
+      text,
+      html,
+    });
+    if (error) {
+      throw new Error(error.message || JSON.stringify(error));
+    }
+    return { provider: "resend", id: data?.id };
+  };
+
+  // Determine provider priority:
+  // If Gmail is configured and Resend is on the test domain (resend.dev),
+  // Gmail is preferred because resend.dev only allows sending to the single registered Resend account.
+  const providers = [];
+  if (hasGmail && isResendSandbox) {
+    providers.push({ name: "gmail", fn: tryGmail });
+    if (hasResend) providers.push({ name: "resend", fn: tryResend });
+  } else {
+    if (hasResend) providers.push({ name: "resend", fn: tryResend });
+    if (hasGmail) providers.push({ name: "gmail", fn: tryGmail });
   }
 
-  // 3. Development local mock
+  for (const provider of providers) {
+    try {
+      const result = await provider.fn();
+      console.log(`[Email] Successfully sent email to ${to} via ${provider.name} (id: ${result.id})`);
+      return result;
+    } catch (err) {
+      console.warn(`[Email] ${provider.name} delivery attempt failed:`, err?.message || err);
+      errors.push(`${provider.name}: ${err?.message || err}`);
+    }
+  }
+
+  // Fallback: Development local mock simulator
   if (process.env.NODE_ENV !== "production") {
     console.warn("\n================ [DEV EMAIL SIMULATOR] ================");
     console.warn(`To: ${to}`);
     console.warn(`Subject: ${subject}`);
     console.warn(`Body: ${text}`);
+    if (errors.length) {
+      console.warn(`(Notice: Live email delivery failed: ${errors.join("; ")})`);
+    }
     console.warn("========================================================\n");
     return { provider: "mock", id: "dev-mock-id" };
   }
 
-  throw new Error("No transactional email provider configured. Please set RESEND_API_KEY in environment variables.");
+  throw new Error(`Email delivery failed: ${errors.join("; ") || "No transactional email provider configured"}`);
 }
 
 export async function sendPasswordResetEmail(toEmail, code) {

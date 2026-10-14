@@ -3,6 +3,7 @@ import Chat from "../models/chatModel.js";
 import Message from "../models/messageModel.js";
 import Profile from "../models/profileModel.js";
 import { isBlockedEitherWay } from "../utils/block.js";
+import { isUserOnline } from "../utils/socket.js";
 
 function previewForMessage(lastMsg) {
   if (!lastMsg) return "Say hi 👋";
@@ -64,6 +65,7 @@ export const getUserChats = async (req, res) => {
         lastMessage: previewForMessage(chat.lastMessage),
         time: chat.lastMessage?.createdAt || chat.updatedAt,
         unread: unreadByChat.get(chat._id.toString()) || 0,
+        isOnline: isUserOnline(otherUser._id.toString()),
       };
     })
     .filter(Boolean);

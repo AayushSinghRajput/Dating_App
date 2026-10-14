@@ -9,6 +9,7 @@ import { radius } from "@/src/theme/radius";
 import Skeleton from "@/src/components/ui/Skeleton";
 import EmptyState from "@/src/components/ui/EmptyState";
 import EmptyDiscoveryState from "@/src/components/EmptyDiscoveryState";
+import TabSwipeWrapper from "@/src/components/TabSwipeWrapper";
 
 const { width } = Dimensions.get("window");
 
@@ -58,52 +59,58 @@ export default function Home() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <HomeHeader />
-        <View style={styles.skeletonList}>
-          <ProfileCardSkeleton />
+      <TabSwipeWrapper leftTab="/(tabs)/likes">
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+          <HomeHeader />
+          <View style={styles.skeletonList}>
+            <ProfileCardSkeleton />
+          </View>
         </View>
-      </View>
+      </TabSwipeWrapper>
     );
   }
 
   if (error) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <HomeHeader />
-        <EmptyState
-          icon="cloud-offline-outline"
-          title="Couldn't load profiles"
-          description={error}
-          actionLabel="Try Again"
-          onAction={loadProfiles}
-        />
-      </View>
+      <TabSwipeWrapper leftTab="/(tabs)/likes">
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+          <HomeHeader />
+          <EmptyState
+            icon="cloud-offline-outline"
+            title="Couldn't load profiles"
+            description={error}
+            actionLabel="Try Again"
+            onAction={loadProfiles}
+          />
+        </View>
+      </TabSwipeWrapper>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <HomeHeader />
-      {users.length === 0 ? (
-        <EmptyDiscoveryState onRefresh={onRefresh} refreshing={refreshing} />
-      ) : (
-        <FlatList
-          style={styles.list}
-          data={users}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item, index }) => <UserCard user={item} index={index} />}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.accent}
-              colors={[colors.accent]}
-            />
-          }
-        />
-      )}
-    </View>
+    <TabSwipeWrapper leftTab="/(tabs)/likes">
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <HomeHeader />
+        {users.length === 0 ? (
+          <EmptyDiscoveryState onRefresh={onRefresh} refreshing={refreshing} />
+        ) : (
+          <FlatList
+            style={styles.list}
+            data={users}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item, index }) => <UserCard user={item} index={index} />}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.accent}
+                colors={[colors.accent]}
+              />
+            }
+          />
+        )}
+      </View>
+    </TabSwipeWrapper>
   );
 }
 

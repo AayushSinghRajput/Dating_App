@@ -6,6 +6,19 @@ import Chat from "../models/chatModel.js";
 import { sendNotification } from "./notify.js";
 import { isBlockedEitherWay } from "./block.js";
 
+// Global online users tracker: userId (string) -> Set of socketIds
+const onlineUsers = new Map();
+
+export const isUserOnline = (userId) => {
+  if (!userId) return false;
+  const sockets = onlineUsers.get(userId.toString());
+  return Boolean(sockets && sockets.size > 0);
+};
+
+export const getOnlineUserIds = () => {
+  return Array.from(onlineUsers.keys());
+};
+
 const setupSocket = (io) => {
   // callId -> { chatId, callerId, calleeId, callType, startedAt, answeredAt }
   const activeCalls = new Map();
@@ -72,7 +85,7 @@ const setupSocket = (io) => {
       const token = socket.handshake.auth?.token;
       if (!token) return next(new Error("Unauthorized"));
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      socket.userId = decoded.id;
+      socket.userId = decoded.id ? decoded.id.toString() : null;
       next();
     } catch (error) {
       next(new Error("Unauthorized"));
@@ -80,13 +93,34 @@ const setupSocket = (io) => {
   });
 
   io.on("connection", (socket) => {
-    console.log("User connected:", socket.id, "user:", socket.userId);
+    const userId = socket.userId;
+    console.log("User connected:", socket.id, "user:", userId);
 
-    // Personal room so this user can be reached directly (e.g. for calls)
-    socket.join(socket.userId);
+    if (userId) {
+      // Personal room so this user can be reached directly (e.g. for calls)
+      socket.join(userId);
 
-    // Best-effort DAU/retention signal — a socket connection means the app was opened.
-    User.findByIdAndUpdate(socket.userId, { lastActiveAt: new Date() }).catch(() => {});
+      const existingSockets = onlineUsers.get(userId) || new Set();
+      const wasOffline = existingSockets.size === 0;
+      existingSockets.add(socket.id);
+      onlineUsers.set(userId, existingSockets);
+
+      // Best-effort DAU/retention signal — a socket connection means the app was opened.
+      User.findByIdAndUpdate(userId, { lastActiveAt: new Date() }).catch(() => {});
+
+      // Send the current list of online user IDs to the newly connected user
+      socket.emit("onlineUsers", Array.from(onlineUsers.keys()));
+
+      // Broadcast to all other users that this user came online
+      if (wasOffline) {
+        socket.broadcast.emit("userOnline", { userId });
+      }
+    }
+
+    // Allow clients to query the current list of online users on demand
+    socket.on("getOnlineUsers", () => {
+      socket.emit("onlineUsers", Array.from(onlineUsers.keys()));
+    });
 
     // Join a chat room
     socket.on("joinRoom", (chatId) => {
@@ -173,7 +207,18 @@ const setupSocket = (io) => {
     });
 
     socket.on("disconnect", () => {
-      console.log("User disconnected:", socket.id);
+      console.log("User disconnected:", socket.id, "user:", userId);
+      if (userId) {
+        const userSockets = onlineUsers.get(userId);
+        if (userSockets) {
+          userSockets.delete(socket.id);
+          if (userSockets.size === 0) {
+            onlineUsers.delete(userId);
+            User.findByIdAndUpdate(userId, { lastActiveAt: new Date() }).catch(() => {});
+            socket.broadcast.emit("userOffline", { userId });
+          }
+        }
+      }
     });
   });
 };
