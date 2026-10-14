@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import EmojiSelector from "react-native-emoji-selector";
+import EmojiPicker from "@/src/components/chat/EmojiPicker";
 import Toast from "react-native-toast-message";
 import * as ImagePicker from "expo-image-picker";
 import {
@@ -64,6 +64,7 @@ export default function ChatDetail() {
   const [loading, setLoading] = useState(true);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isOtherTyping, setIsOtherTyping] = useState(false);
+  const [isOtherOnline, setIsOtherOnline] = useState(false);
   const currentUserIdRef = useRef<string | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -161,6 +162,33 @@ export default function ChatDetail() {
     };
     socket.on("unmatched", handleUnmatched);
 
+    const handleOnlineUsers = (ids: string[]) => {
+      const set = new Set((ids || []).map((id) => String(id)));
+      if (otherUserId && set.has(String(otherUserId))) {
+        setIsOtherOnline(true);
+      }
+    };
+
+    const handleUserOnline = ({ userId }: { userId: string }) => {
+      if (otherUserId && String(userId) === String(otherUserId)) {
+        setIsOtherOnline(true);
+      }
+    };
+
+    const handleUserOffline = ({ userId }: { userId: string }) => {
+      if (otherUserId && String(userId) === String(otherUserId)) {
+        setIsOtherOnline(false);
+      }
+    };
+
+    socket.on("onlineUsers", handleOnlineUsers);
+    socket.on("userOnline", handleUserOnline);
+    socket.on("userOffline", handleUserOffline);
+
+    if (socket.connected) {
+      socket.emit("getOnlineUsers");
+    }
+
     const handleUserTyping = ({ chatId: tChatId, userId }: { chatId: string; userId: string }) => {
       if (tChatId === chatId && userId === otherUserId) setIsOtherTyping(true);
     };
@@ -195,6 +223,9 @@ export default function ChatDetail() {
       socket.off("newMessage", handleNewMessage);
       socket.off("messagesRead");
       socket.off("unmatched", handleUnmatched);
+      socket.off("onlineUsers", handleOnlineUsers);
+      socket.off("userOnline", handleUserOnline);
+      socket.off("userOffline", handleUserOffline);
       socket.off("userTyping", handleUserTyping);
       socket.off("userStoppedTyping", handleUserStoppedTyping);
       socket.off("messageDeleted", handleMessageDeleted);
@@ -350,6 +381,15 @@ export default function ChatDetail() {
       Keyboard.dismiss();
       setShowEmojiPicker(true);
     }
+  };
+
+  const handleEmojiBackspace = () => {
+    setInput((prev) => {
+      if (!prev) return "";
+      const chars = Array.from(prev);
+      chars.pop();
+      return chars.join("");
+    });
   };
 
   // Confirms an optimistically-sent message with its real server id, and
@@ -627,7 +667,12 @@ export default function ChatDetail() {
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </Pressable>
           <View style={styles.profileSection}>
-            <Image source={{ uri: avatar }} style={styles.profileImage} />
+            <View style={styles.headerAvatarWrapper}>
+              <Image source={{ uri: avatar }} style={styles.profileImage} />
+              {isOtherOnline && (
+                <View style={[styles.headerOnlineDot, { borderColor: colors.surface }]} />
+              )}
+            </View>
             <View style={{ flexShrink: 1, minWidth: 0 }}>
               <Text
                 style={[styles.profileName, { color: colors.text }]}
@@ -636,11 +681,15 @@ export default function ChatDetail() {
               >
                 {name}
               </Text>
-              {isOtherTyping && (
+              {isOtherTyping ? (
                 <Text style={[styles.typingIndicator, { color: colors.accent }]}>
                   typing...
                 </Text>
-              )}
+              ) : isOtherOnline ? (
+                <Text style={[styles.onlineStatusText, { color: "#22c55e" }]}>
+                  Online
+                </Text>
+              ) : null}
             </View>
           </View>
           <View style={styles.headerIcons}>
@@ -707,7 +756,11 @@ export default function ChatDetail() {
           ) : (
             <View style={[styles.pill, { backgroundColor: colors.surfaceAlt }]}>
               <Pressable onPress={toggleEmojiPicker} style={styles.pillIconButton} hitSlop={6}>
-                <Ionicons name="happy" size={24} color={colors.textSecondary} />
+                <Ionicons
+                  name={showEmojiPicker ? "keypad-outline" : "happy-outline"}
+                  size={24}
+                  color={showEmojiPicker ? colors.accent : colors.textSecondary}
+                />
               </Pressable>
               <TextInput
                 style={[styles.pillInput, { color: colors.text }]}
@@ -715,6 +768,7 @@ export default function ChatDetail() {
                 placeholderTextColor={colors.textTertiary}
                 value={input}
                 onChangeText={handleInputChange}
+                onFocus={() => setShowEmojiPicker(false)}
                 multiline
               />
               <Pressable onPress={handlePickMedia} style={styles.pillIconButton} hitSlop={6}>
@@ -750,12 +804,9 @@ export default function ChatDetail() {
         </View>
 
         {showEmojiPicker && (
-          <EmojiSelector
+          <EmojiPicker
             onEmojiSelected={(emoji) => setInput((prev) => prev + emoji)}
-            showSearchBar={false}
-            showTabs
-            columns={8}
-            showHistory
+            onBackspace={handleEmojiBackspace}
           />
         )}
       </KeyboardAvoidingView>
@@ -777,9 +828,26 @@ const styles = StyleSheet.create({
     minWidth: 0,
     gap: 10,
   },
+  headerAvatarWrapper: {
+    position: "relative",
+    flexShrink: 0,
+  },
   profileImage: { width: 40, height: 40, borderRadius: 20, flexShrink: 0 },
+  headerOnlineDot: {
+    position: "absolute",
+    bottom: -1,
+    right: -1,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#22c55e",
+    borderWidth: 2,
+    zIndex: 2,
+    elevation: 2,
+  },
   profileName: { fontSize: 18, fontWeight: "600", flexShrink: 1 },
   typingIndicator: { fontSize: 12, fontWeight: "500", marginTop: 1 },
+  onlineStatusText: { fontSize: 12, fontWeight: "600", marginTop: 1 },
   headerIcons: { flexDirection: "row", gap: 12, flexShrink: 0 },
   iconButton: { padding: 4 },
   messagesContainer: { paddingHorizontal: 12, paddingBottom: 10 },

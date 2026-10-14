@@ -27,6 +27,7 @@ import {
 import { createOrGetChat } from "@/services/chatService";
 import { showMatchCelebration } from "@/src/components/GlobalMatchCelebration";
 import ScreenHeader from "@/src/components/ui/ScreenHeader";
+import TabSwipeWrapper from "@/src/components/TabSwipeWrapper";
 import { radius } from "@/src/theme/radius";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -175,8 +176,9 @@ export default function LikesScreen() {
       : undefined;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScreenHeader title={t("likes.title", "Likes & Matches")} subtitle={subtitle} />
+    <TabSwipeWrapper leftTab="/(tabs)/chat" rightTab="/(tabs)">
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ScreenHeader title={t("likes.title", "Likes & Matches")} subtitle={subtitle} />
 
       {/* Segmented Sub-tab Control */}
       <View style={[styles.tabBarContainer, { backgroundColor: colors.background }]}>
@@ -394,11 +396,10 @@ export default function LikesScreen() {
           </View>
         ) : (
           <FlatList
+            key="matches-list-1col"
             data={matches}
             keyExtractor={(item) => item.id}
-            numColumns={2}
-            contentContainerStyle={styles.grid}
-            columnWrapperStyle={styles.row}
+            contentContainerStyle={styles.matchesListContainer}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -410,48 +411,71 @@ export default function LikesScreen() {
             renderItem={({ item }) => (
               <Pressable
                 style={[
-                  styles.card,
-                  { backgroundColor: colors.surface, shadowColor: colors.shadow },
+                  styles.matchCard,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
                 ]}
                 onPress={() => handleOpenProfile(item)}
               >
-                <Image
-                  source={{ uri: item.profileImage || "https://placehold.co/400x500" }}
-                  style={styles.cardImage}
-                  contentFit="cover"
-                  transition={200}
-                />
-                <LinearGradient
-                  colors={["transparent", "rgba(0,0,0,0.75)"]}
-                  style={styles.imageGradient}
-                />
+                <View style={styles.matchImageContainer}>
+                  <Image
+                    source={{ uri: item.profileImage || "https://placehold.co/600x800" }}
+                    style={styles.matchCardImage}
+                    contentFit="cover"
+                    transition={200}
+                  />
+                  <LinearGradient
+                    colors={["transparent", "rgba(0,0,0,0.85)"]}
+                    style={styles.matchImageGradient}
+                  />
 
-                <View style={styles.matchBadge}>
-                  <Ionicons name="heart" size={11} color="#fff" />
-                  <Text style={styles.matchBadgeText}>Match</Text>
+                  {/* Match Pill Badge */}
+                  <View style={styles.matchPillBadge}>
+                    <Ionicons name="sparkles" size={12} color="#ffffff" />
+                    <Text style={styles.matchPillText}>Mutual Match</Text>
+                  </View>
+
+                  {/* Text Overlay on Photo */}
+                  <View style={styles.matchCardOverlay}>
+                    <Text style={styles.matchCardName} numberOfLines={1}>
+                      {item.name}
+                      {item.age ? `, ${item.age}` : ""}
+                    </Text>
+
+                    <View style={styles.matchMetaRow}>
+                      {item.location && (
+                        <View style={styles.matchMetaItem}>
+                          <Ionicons name="location-sharp" size={13} color="rgba(255,255,255,0.9)" />
+                          <Text style={styles.matchMetaText} numberOfLines={1}>
+                            {item.location}
+                          </Text>
+                        </View>
+                      )}
+                      {item.profession && (
+                        <View style={styles.matchMetaItem}>
+                          <Ionicons name="briefcase" size={12} color="rgba(255,255,255,0.9)" />
+                          <Text style={styles.matchMetaText} numberOfLines={1}>
+                            {item.profession}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {item.aboutMe ? (
+                      <Text style={styles.matchCardAbout} numberOfLines={2}>
+                        &ldquo;{item.aboutMe}&rdquo;
+                      </Text>
+                    ) : null}
+                  </View>
                 </View>
 
-                <View style={styles.cardInfo}>
-                  <Text style={styles.cardName} numberOfLines={1}>
-                    {item.name}
-                    {item.age ? `, ${item.age}` : ""}
-                  </Text>
-                  {item.profession ? (
-                    <Text style={styles.cardLocation} numberOfLines={1}>
-                      {item.profession}
-                    </Text>
-                  ) : item.location ? (
-                    <Text style={styles.cardLocation} numberOfLines={1}>
-                      <Ionicons name="location-sharp" size={11} color="rgba(255,255,255,0.8)" />{" "}
-                      {item.location}
-                    </Text>
-                  ) : null}
-                </View>
-
-                {/* Direct Message Button */}
-                <View style={[styles.cardActions, { backgroundColor: colors.surface }]}>
+                {/* Bottom Action Footer */}
+                <View style={[styles.matchCardActions, { backgroundColor: colors.surface }]}>
                   <Pressable
-                    style={[styles.messageButton, { backgroundColor: colors.accent }]}
+                    style={({ pressed }) => [
+                      styles.matchChatButton,
+                      { backgroundColor: colors.accent },
+                      pressed && { opacity: 0.9 },
+                    ]}
                     onPress={(e) => {
                       e.stopPropagation();
                       handleOpenChat(item);
@@ -459,13 +483,29 @@ export default function LikesScreen() {
                     disabled={messagingUserId === item.userId}
                   >
                     {messagingUserId === item.userId ? (
-                      <ActivityIndicator size="small" color="#fff" />
+                      <ActivityIndicator size="small" color="#ffffff" />
                     ) : (
                       <>
-                        <Ionicons name="chatbubble-ellipses" size={16} color="#fff" />
-                        <Text style={styles.messageButtonText}>Chat</Text>
+                        <Ionicons name="chatbubble-ellipses" size={18} color="#ffffff" />
+                        <Text style={styles.matchChatButtonText}>
+                          {t("likes.startChat", "Send Message")}
+                        </Text>
                       </>
                     )}
+                  </Pressable>
+
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.matchProfileBtn,
+                      { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+                      pressed && { opacity: 0.8 },
+                    ]}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleOpenProfile(item);
+                    }}
+                  >
+                    <Ionicons name="person-outline" size={18} color={colors.text} />
                   </Pressable>
                 </View>
               </Pressable>
@@ -473,7 +513,8 @@ export default function LikesScreen() {
           />
         )
       )}
-    </View>
+      </View>
+    </TabSwipeWrapper>
   );
 }
 
@@ -678,5 +719,123 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "700",
+  },
+  matchesListContainer: {
+    padding: 16,
+    paddingBottom: 32,
+    gap: 16,
+  },
+  matchCard: {
+    width: "100%",
+    borderRadius: 22,
+    overflow: "hidden",
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  matchImageContainer: {
+    width: "100%",
+    height: 320,
+    position: "relative",
+  },
+  matchCardImage: {
+    width: "100%",
+    height: "100%",
+  },
+  matchImageGradient: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 180,
+  },
+  matchPillBadge: {
+    position: "absolute",
+    top: 14,
+    left: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(230, 57, 70, 0.9)",
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+  matchPillText: {
+    color: "#ffffff",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.3,
+  },
+  matchCardOverlay: {
+    position: "absolute",
+    bottom: 14,
+    left: 16,
+    right: 16,
+    gap: 4,
+  },
+  matchCardName: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#ffffff",
+    textShadowColor: "rgba(0, 0, 0, 0.6)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  matchMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 12,
+    marginTop: 2,
+  },
+  matchMetaItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  matchMetaText: {
+    color: "rgba(255, 255, 255, 0.9)",
+    fontSize: 12.5,
+    fontWeight: "600",
+  },
+  matchCardAbout: {
+    color: "rgba(255, 255, 255, 0.85)",
+    fontSize: 12.5,
+    fontStyle: "italic",
+    lineHeight: 17,
+    marginTop: 4,
+  },
+  matchCardActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 12,
+    paddingHorizontal: 14,
+  },
+  matchChatButton: {
+    flex: 1,
+    height: 44,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  matchChatButtonText: {
+    color: "#ffffff",
+    fontSize: 14.5,
+    fontWeight: "700",
+  },
+  matchProfileBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

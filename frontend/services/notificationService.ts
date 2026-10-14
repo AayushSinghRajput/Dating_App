@@ -72,6 +72,7 @@ export const markAllNotificationsRead = async (): Promise<void> => {
 
 export interface NotificationPreferences {
   like: boolean;
+  super_like?: boolean;
   match: boolean;
   missed_call: boolean;
   favorite: boolean;

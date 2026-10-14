@@ -20,7 +20,14 @@ export const sendVerificationEmail = async (req, res) => {
   user.emailVerificationExpires = new Date(Date.now() + 15 * 60 * 1000);
   await user.save();
 
-  await sendEmailVerificationEmail(user.email, code);
+  try {
+    await sendEmailVerificationEmail(user.email, code);
+  } catch (err) {
+    console.error("[EmailVerification] Failed to send code:", err);
+    return res.status(500).json({
+      message: err.message || "Failed to send verification email. Please try again later.",
+    });
+  }
 
   res.status(200).json({ message: "Verification code sent" });
 };

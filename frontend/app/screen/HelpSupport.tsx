@@ -9,7 +9,9 @@ import {
   Alert,
   TextInput,
   Platform,
+  Modal,
 } from "react-native";
+import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -146,7 +148,8 @@ export default function HelpSupport() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<FAQCategory>("all");
-  const [expandedId, setExpandedId] = useState<string | null>("1");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [activeSafetyModal, setActiveSafetyModal] = useState<"irl" | "scam" | null>(null);
 
   // Fast dating app action cards (Bumble & Tinder Quick Hub)
   const quickHubItems = [
@@ -194,11 +197,8 @@ export default function HelpSupport() {
       badge: "IRL Guide",
       accentColor: "#f59e0b",
       action: () => {
-        Alert.alert(
-          "First Date Safety Tips",
-          "1. Meet in a bustling public place.\n2. Arrange your own ride to and from the venue.\n3. Share your live date plans with a close friend.\n4. Stay aware and never leave drinks unattended.\n5. If something feels off, leave immediately without hesitation.",
-          [{ text: "Got It" }]
-        );
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+        setActiveSafetyModal("irl");
       },
     },
     {
@@ -209,11 +209,8 @@ export default function HelpSupport() {
       badge: "Scam Alert",
       accentColor: "#ef4444",
       action: () => {
-        Alert.alert(
-          "Catfish & Scam Awareness",
-          "• Never send money, crypto, or gift cards to someone you haven't met.\n• Be wary of matches who immediately push to move to WhatsApp or Telegram.\n• Look for the Blue Verified Checkmark on profiles.\n• Insist on a video call before meeting if in doubt.",
-          [{ text: "Understood" }]
-        );
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+        setActiveSafetyModal("scam");
       },
     },
     {
@@ -751,30 +748,6 @@ export default function HelpSupport() {
                 </Text>
               </Pressable>
             </View>
-
-            {/* Trust Assurance Row */}
-            <View style={[styles.trustDivider, { borderTopColor: colors.border }]}>
-              <View style={styles.trustItem}>
-                <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
-                <Text style={[styles.trustItemText, { color: colors.textSecondary }]}>
-                  Avg response: &lt; 2 hrs
-                </Text>
-              </View>
-              <View style={styles.trustDot} />
-              <View style={styles.trustItem}>
-                <Ionicons name="lock-closed-outline" size={14} color={colors.textSecondary} />
-                <Text style={[styles.trustItemText, { color: colors.textSecondary }]}>
-                  Encrypted & Private
-                </Text>
-              </View>
-              <View style={styles.trustDot} />
-              <View style={styles.trustItem}>
-                <Ionicons name="heart-outline" size={14} color={colors.textSecondary} />
-                <Text style={[styles.trustItemText, { color: colors.textSecondary }]}>
-                  100% Confidential
-                </Text>
-              </View>
-            </View>
           </LinearGradient>
         </View>
 
@@ -794,6 +767,308 @@ export default function HelpSupport() {
           </Text>
         </View>
       </ScrollView>
+
+      {/* Custom Dating Safety Popups (IRL Guide & Scam Alert) */}
+      <Modal
+        visible={activeSafetyModal !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setActiveSafetyModal(null)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setActiveSafetyModal(null)}
+        >
+          <Pressable
+            style={[
+              styles.safetyModalContainer,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {activeSafetyModal === "irl" && (
+              <>
+                <View style={styles.modalHeaderTop}>
+                  <LinearGradient
+                    colors={["#f59e0b", "#fbbf24"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.modalHeaderBadge}
+                  >
+                    <Ionicons name="cafe" size={24} color="#ffffff" />
+                  </LinearGradient>
+                  <Pressable
+                    style={[styles.modalCloseBtn, { backgroundColor: colors.surfaceAlt }]}
+                    onPress={() => setActiveSafetyModal(null)}
+                    hitSlop={8}
+                  >
+                    <Ionicons name="close" size={18} color={colors.textSecondary} />
+                  </Pressable>
+                </View>
+
+                <View style={[styles.modalPill, { backgroundColor: "#fef3c7" }]}>
+                  <Text style={[styles.modalPillText, { color: "#b45309" }]}>
+                    FIRST DATE IRL GUIDE
+                  </Text>
+                </View>
+
+                <Text style={[styles.modalTitle, { color: colors.text }]}>
+                  First Date Safety Checklist
+                </Text>
+                <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
+                  Smart rules to ensure every real-life date is fun, exciting, and 100% safe.
+                </Text>
+
+                <ScrollView
+                  style={styles.modalScroll}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.modalScrollContent}
+                >
+                  <View style={styles.modalTipRow}>
+                    <View style={[styles.modalTipIconBox, { backgroundColor: "#fef3c7" }]}>
+                      <Ionicons name="location-outline" size={18} color="#d97706" />
+                    </View>
+                    <View style={styles.modalTipTextWrap}>
+                      <Text style={[styles.modalTipTitle, { color: colors.text }]}>
+                        Bustling Public Venues
+                      </Text>
+                      <Text style={[styles.modalTipDesc, { color: colors.textSecondary }]}>
+                        Always meet in a public coffee shop, restaurant, or popular lounge. Never agree to private homes or secluded areas on early dates.
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.modalTipRow}>
+                    <View style={[styles.modalTipIconBox, { backgroundColor: "#fef3c7" }]}>
+                      <Ionicons name="car-outline" size={18} color="#d97706" />
+                    </View>
+                    <View style={styles.modalTipTextWrap}>
+                      <Text style={[styles.modalTipTitle, { color: colors.text }]}>
+                        Arrange Independent Transport
+                      </Text>
+                      <Text style={[styles.modalTipDesc, { color: colors.textSecondary }]}>
+                        Drive yourself, take public transit, or book a rideshare. Do not let someone you just met pick you up from your residence.
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.modalTipRow}>
+                    <View style={[styles.modalTipIconBox, { backgroundColor: "#fef3c7" }]}>
+                      <Ionicons name="share-social-outline" size={18} color="#d97706" />
+                    </View>
+                    <View style={styles.modalTipTextWrap}>
+                      <Text style={[styles.modalTipTitle, { color: colors.text }]}>
+                        Share Plans With a Friend
+                      </Text>
+                      <Text style={[styles.modalTipDesc, { color: colors.textSecondary }]}>
+                        {"Tell a close friend where you are going, your match's name and photo, and set a check-in time."}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.modalTipRow}>
+                    <View style={[styles.modalTipIconBox, { backgroundColor: "#fef3c7" }]}>
+                      <Ionicons name="wine-outline" size={18} color="#d97706" />
+                    </View>
+                    <View style={styles.modalTipTextWrap}>
+                      <Text style={[styles.modalTipTitle, { color: colors.text }]}>
+                        Keep Drinks in Sight
+                      </Text>
+                      <Text style={[styles.modalTipDesc, { color: colors.textSecondary }]}>
+                        Never leave your food, drinks, or purse unattended. If you step away to the restroom, order a fresh beverage.
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.modalTipRow}>
+                    <View style={[styles.modalTipIconBox, { backgroundColor: "#fef3c7" }]}>
+                      <Ionicons name="walk-outline" size={18} color="#d97706" />
+                    </View>
+                    <View style={styles.modalTipTextWrap}>
+                      <Text style={[styles.modalTipTitle, { color: colors.text }]}>
+                        Trust Your Intuition
+                      </Text>
+                      <Text style={[styles.modalTipDesc, { color: colors.textSecondary }]}>
+                        If you ever feel uncomfortable, pressured, or unsafe, leave immediately. You owe no one an apology for prioritizing yourself.
+                      </Text>
+                    </View>
+                  </View>
+                </ScrollView>
+
+                <View style={styles.modalActions}>
+                  <Pressable
+                    style={styles.modalPrimaryBtn}
+                    onPress={() => setActiveSafetyModal(null)}
+                  >
+                    <LinearGradient
+                      colors={["#f59e0b", "#d97706"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.modalPrimaryGradient}
+                    >
+                      <Text style={styles.modalPrimaryBtnText}>Got It, Stay Safe</Text>
+                    </LinearGradient>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.modalSecondaryBtn, { borderColor: colors.border }]}
+                    onPress={() => {
+                      setActiveSafetyModal(null);
+                      router.push("/screen/SafetyCenter" as any);
+                    }}
+                  >
+                    <Ionicons name="shield-checkmark-outline" size={16} color={colors.accent} />
+                    <Text style={[styles.modalSecondaryBtnText, { color: colors.accent }]}>
+                      Open Soulmate Safety Center
+                    </Text>
+                  </Pressable>
+                </View>
+              </>
+            )}
+
+            {activeSafetyModal === "scam" && (
+              <>
+                <View style={styles.modalHeaderTop}>
+                  <LinearGradient
+                    colors={["#ef4444", "#dc2626"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.modalHeaderBadge}
+                  >
+                    <Ionicons name="shield-half-outline" size={24} color="#ffffff" />
+                  </LinearGradient>
+                  <Pressable
+                    style={[styles.modalCloseBtn, { backgroundColor: colors.surfaceAlt }]}
+                    onPress={() => setActiveSafetyModal(null)}
+                    hitSlop={8}
+                  >
+                    <Ionicons name="close" size={18} color={colors.textSecondary} />
+                  </Pressable>
+                </View>
+
+                <View style={[styles.modalPill, { backgroundColor: "#fee2e2" }]}>
+                  <Text style={[styles.modalPillText, { color: "#b91c1c" }]}>
+                    CATFISH &amp; SCAM PREVENTION
+                  </Text>
+                </View>
+
+                <Text style={[styles.modalTitle, { color: colors.text }]}>
+                  Spotting Fake Profiles &amp; Scams
+                </Text>
+                <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
+                  Protect your heart, private information, and finances from online fraudsters.
+                </Text>
+
+                <ScrollView
+                  style={styles.modalScroll}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.modalScrollContent}
+                >
+                  <View style={styles.modalTipRow}>
+                    <View style={[styles.modalTipIconBox, { backgroundColor: "#fee2e2" }]}>
+                      <Ionicons name="cash-outline" size={18} color="#ef4444" />
+                    </View>
+                    <View style={styles.modalTipTextWrap}>
+                      <Text style={[styles.modalTipTitle, { color: colors.text }]}>
+                        Never Send Money or Crypto
+                      </Text>
+                      <Text style={[styles.modalTipDesc, { color: colors.textSecondary }]}>
+                        {"Scammers invent heartbreaking emergencies, hospital bills, or investment schemes. No genuine match asks for money or gift cards."}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.modalTipRow}>
+                    <View style={[styles.modalTipIconBox, { backgroundColor: "#fee2e2" }]}>
+                      <Ionicons name="logo-whatsapp" size={18} color="#ef4444" />
+                    </View>
+                    <View style={styles.modalTipTextWrap}>
+                      <Text style={[styles.modalTipTitle, { color: colors.text }]}>
+                        Rushing Off-App Too Quickly
+                      </Text>
+                      <Text style={[styles.modalTipDesc, { color: colors.textSecondary }]}>
+                        {"Be alert if a new match pressures you into WhatsApp or Telegram immediately to evade Soulmate's safety moderation."}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.modalTipRow}>
+                    <View style={[styles.modalTipIconBox, { backgroundColor: "#fee2e2" }]}>
+                      <Ionicons name="checkmark-circle-outline" size={18} color="#ef4444" />
+                    </View>
+                    <View style={styles.modalTipTextWrap}>
+                      <Text style={[styles.modalTipTitle, { color: colors.text }]}>
+                        Look for the Blue Verification Tick
+                      </Text>
+                      <Text style={[styles.modalTipDesc, { color: colors.textSecondary }]}>
+                        Verified members have passed real-time video selfie verification to prove they truly look like their photos.
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.modalTipRow}>
+                    <View style={[styles.modalTipIconBox, { backgroundColor: "#fee2e2" }]}>
+                      <Ionicons name="videocam-outline" size={18} color="#ef4444" />
+                    </View>
+                    <View style={styles.modalTipTextWrap}>
+                      <Text style={[styles.modalTipTitle, { color: colors.text }]}>
+                        Ask for a Quick Video Chat
+                      </Text>
+                      <Text style={[styles.modalTipDesc, { color: colors.textSecondary }]}>
+                        If a profile looks too good to be true, request a quick 2-minute video call inside Soulmate before scheduling a date.
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.modalTipRow}>
+                    <View style={[styles.modalTipIconBox, { backgroundColor: "#fee2e2" }]}>
+                      <Ionicons name="flag-outline" size={18} color="#ef4444" />
+                    </View>
+                    <View style={styles.modalTipTextWrap}>
+                      <Text style={[styles.modalTipTitle, { color: colors.text }]}>
+                        Report Suspicious Behavior
+                      </Text>
+                      <Text style={[styles.modalTipDesc, { color: colors.textSecondary }]}>
+                        Notice stolen model photos, inconsistencies, or aggressive behavior? Tap the three dots on their profile to report anonymously.
+                      </Text>
+                    </View>
+                  </View>
+                </ScrollView>
+
+                <View style={styles.modalActions}>
+                  <Pressable
+                    style={styles.modalPrimaryBtn}
+                    onPress={() => setActiveSafetyModal(null)}
+                  >
+                    <LinearGradient
+                      colors={["#ef4444", "#dc2626"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.modalPrimaryGradient}
+                    >
+                      <Text style={styles.modalPrimaryBtnText}>Understood, Stay Vigilant</Text>
+                    </LinearGradient>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.modalSecondaryBtn, { borderColor: colors.border }]}
+                    onPress={() => {
+                      setActiveSafetyModal(null);
+                      const subject = encodeURIComponent("[SECURITY ALERT] Suspicious Profile Report");
+                      Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${subject}`);
+                    }}
+                  >
+                    <Ionicons name="mail-outline" size={16} color={colors.accent} />
+                    <Text style={[styles.modalSecondaryBtnText, { color: colors.accent }]}>
+                      Contact Trust &amp; Safety Team
+                    </Text>
+                  </Pressable>
+                </View>
+              </>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -1161,7 +1436,6 @@ const styles = StyleSheet.create({
   },
   contactActionButtons: {
     gap: 10,
-    marginBottom: 16,
   },
   primaryContactBtn: {
     flexDirection: "row",
@@ -1196,20 +1470,130 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
   },
-  trustItem: {
+  /* Custom Dating Safety Modal */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.65)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  safetyModalContainer: {
+    width: "100%",
+    maxWidth: 420,
+    maxHeight: "86%",
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 10 },
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalHeaderTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  modalHeaderBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalCloseBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalPill: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  modalPillText: {
+    fontSize: 10.5,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+  },
+  modalTitle: {
+    fontSize: 19,
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: 12.5,
+    lineHeight: 17,
+    marginBottom: 14,
+  },
+  modalScroll: {
+    marginBottom: 14,
+  },
+  modalScrollContent: {
+    gap: 12,
+    paddingBottom: 4,
+  },
+  modalTipRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  modalTipIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalTipTextWrap: {
+    flex: 1,
+  },
+  modalTipTitle: {
+    fontSize: 13.5,
+    fontWeight: "700",
+    marginBottom: 2,
+  },
+  modalTipDesc: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  modalActions: {
+    gap: 8,
+    paddingTop: 4,
+  },
+  modalPrimaryBtn: {
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  modalPrimaryGradient: {
+    paddingVertical: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalPrimaryBtnText: {
+    color: "#ffffff",
+    fontSize: 14.5,
+    fontWeight: "700",
+  },
+  modalSecondaryBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    justifyContent: "center",
+    paddingVertical: 11,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 6,
   },
-  trustItemText: {
-    fontSize: 11,
-    fontWeight: "500",
-  },
-  trustDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: "#9a9aa0",
+  modalSecondaryBtnText: {
+    fontSize: 13,
+    fontWeight: "600",
   },
 
   /* Footer Note */
