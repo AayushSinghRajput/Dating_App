@@ -359,11 +359,11 @@
           form.reset();
         } else {
           alertBox.className = 'alert-banner error';
-          alertBox.innerHTML = `<strong>Error:</strong> ${data.message || 'Unable to submit request. Please try again or email support@soulmateapp.com.'}`;
+          alertBox.innerHTML = `<strong>Error:</strong> ${data.message || 'Unable to submit request. Please try again or email soulmatelumi@gmail.com.'}`;
         }
       } catch (err) {
         alertBox.className = 'alert-banner error';
-        alertBox.innerHTML = '<strong>Network Error:</strong> Failed to submit. You can also send a deletion request directly to support@soulmateapp.com.';
+        alertBox.innerHTML = '<strong>Network Error:</strong> Failed to submit. You can also send a deletion request directly to soulmatelumi@gmail.com.';
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Request Account Deletion';

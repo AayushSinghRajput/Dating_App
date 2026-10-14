@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, Linking } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -116,10 +116,13 @@ export default function PrivacyPolicy() {
           <Text style={[styles.contactDescription, { color: colors.textSecondary }]}>
             If you have any questions about this Privacy Policy or our data practices, please contact us at:
           </Text>
-          <View style={styles.contactInfo}>
-            <Ionicons name="mail" size={16} color={colors.textSecondary} />
-            <Text style={[styles.contactText, { color: colors.textSecondary }]}>privacy@datingapp.com</Text>
-          </View>
+          <Pressable
+            style={styles.contactInfo}
+            onPress={() => Linking.openURL("mailto:soulmatelumi@gmail.com")}
+          >
+            <Ionicons name="mail" size={16} color={colors.accent} />
+            <Text style={[styles.contactText, { color: colors.accent }]}>soulmatelumi@gmail.com</Text>
+          </Pressable>
         </View>
 
         {/* Quick Actions */}
