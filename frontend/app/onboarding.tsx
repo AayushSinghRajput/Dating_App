@@ -233,7 +233,7 @@ export default function OnboardingScreen() {
           <Image
             source={require("../assets/images/logo.png")}
             style={styles.brandLogo}
-            resizeMode="contain"
+            resizeMode="cover"
           />
           <Text style={[styles.brandName, { color: colors.text }]}>
             Soul<Text style={{ color: colors.accent }}>mate</Text>
@@ -340,8 +340,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   brandLogo: {
-    width: 32,
-    height: 32,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    overflow: "hidden",
   },
   brandName: {
     fontSize: 20,

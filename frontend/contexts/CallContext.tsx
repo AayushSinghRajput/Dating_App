@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { PermissionsAndroid, Platform } from "react-native";
+import { AppState, PermissionsAndroid, Platform } from "react-native";
 import {
   RTCPeerConnection,
   RTCIceCandidate,
@@ -18,6 +18,7 @@ import InCallManager from "react-native-incall-manager";
 import Toast from "react-native-toast-message";
 import { socket, connectSocket } from "../utils/socket";
 import { getIceServers, DEFAULT_ICE_SERVERS } from "@/services/callService";
+import { Notifications } from "../src/hooks/usePushNotifications";
 
 export type CallType = "audio" | "video";
 export type CallStatus =
@@ -87,6 +88,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const pendingCandidatesRef = useRef<any[]>([]);
   const callIdRef = useRef<string | null>(null);
 
+  const acceptCallRef = useRef<() => Promise<void>>(null);
+
   const cleanup = useCallback(() => {
     InCallManager.stopRingtone();
     InCallManager.stopRingback();
@@ -101,6 +104,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     pendingOfferRef.current = null;
     pendingCandidatesRef.current = [];
     callIdRef.current = null;
+
+    if (Notifications?.dismissAllNotificationsAsync) {
+      Notifications.dismissAllNotificationsAsync().catch(() => {});
+    }
 
     setLocalStream(null);
     setRemoteStream(null);
@@ -141,12 +148,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     pendingCandidatesRef.current = [];
   }, []);
 
-  useEffect(() => {
-    connectSocket();
-    // Warm ICE/TURN servers cache in background for quick call negotiation
-    getIceServers().catch(() => {});
-
-    const handleIncomingCall = ({
+  const handleIncomingCall = useCallback(
+    ({
       fromUserId,
       fromName,
       fromAvatar,
@@ -172,7 +175,107 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       setCallType(incomingType);
       setCallStatus("incoming-ringing");
       InCallManager.startRingtone("_DEFAULT_", [1000, 1000], "", 30);
+
+      console.log(
+        "[CallContext] Incoming call received! AppState:",
+        AppState.currentState,
+        "caller:",
+        fromName,
+        "callId:",
+        callId
+      );
+
+      // Trigger high-priority heads-up notification with Accept / Decline buttons
+      if (Notifications?.scheduleNotificationAsync) {
+        Notifications.scheduleNotificationAsync({
+          content: {
+            title: `Incoming ${incomingType === "video" ? "Video" : "Audio"} Call`,
+            body: `${fromName || "Someone"} is calling you... Tap to answer.`,
+            data: {
+              type: "incoming_call",
+              fromUserId,
+              fromName,
+              fromAvatar,
+              chatId,
+              callType: incomingType,
+              offer,
+              callId,
+            },
+            categoryIdentifier: "incoming_call",
+            priority: "max",
+            sound: "default",
+            sticky: true,
+          },
+          trigger: {
+            channelId: "voip_calls_v2",
+          },
+        })
+          .then((id: string) =>
+            console.log("[CallContext] Successfully scheduled call notification, id:", id)
+          )
+          .catch((err: any) =>
+            console.error("[CallContext] Failed scheduling local call notification:", err)
+          );
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    connectSocket();
+    // Warm ICE/TURN servers cache in background for quick call negotiation
+    getIceServers().catch(() => {});
+
+    const processNotification = (response: any) => {
+      const data = response?.notification?.request?.content?.data;
+      if (data?.type !== "incoming_call") return;
+
+      const actionId = response?.actionIdentifier;
+      if (actionId === "decline") {
+        socket.emit("rejectCall", { toUserId: data.fromUserId, callId: data.callId });
+        cleanup();
+        return;
+      }
+
+      handleIncomingCall({
+        fromUserId: data.fromUserId,
+        fromName: data.fromName,
+        fromAvatar: data.fromAvatar,
+        chatId: data.chatId,
+        callType: data.callType,
+        offer: data.offer,
+        callId: data.callId,
+      });
+
+      // Verify if the call is still active on the server
+      socket.emit("checkCallStatus", { callId: data.callId }, (res: any) => {
+        if (res && res.active === false) {
+          Toast.show({ type: "info", text1: "Call ended", text2: "The caller hung up." });
+          cleanup();
+        }
+      });
+
+      if (actionId === "accept") {
+        setTimeout(() => {
+          acceptCallRef.current?.();
+        }, 400);
+      }
     };
+
+    // Cold-start launch: check if app was opened by tapping an incoming call notification
+    if (Notifications?.getLastNotificationResponseAsync) {
+      Notifications.getLastNotificationResponseAsync().then((response: any) => {
+        if (response) {
+          processNotification(response);
+        }
+      }).catch((err: any) => console.warn("Failed checking last notification:", err));
+    }
+
+    // App in background: user tapped notification or action button
+    let notificationSub: any = null;
+    if (Notifications?.addNotificationResponseReceivedListener) {
+      notificationSub = Notifications.addNotificationResponseReceivedListener(processNotification);
+    }
 
     const handleCallAnswered = async ({ answer }: any) => {
       const pc = peerConnectionRef.current;
@@ -218,13 +321,14 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     socket.on("callEnded", handleCallEnded);
 
     return () => {
+      notificationSub?.remove?.();
       socket.off("incomingCall", handleIncomingCall);
       socket.off("callAnswered", handleCallAnswered);
       socket.off("iceCandidate", handleIceCandidate);
       socket.off("callRejected", handleCallRejected);
       socket.off("callEnded", handleCallEnded);
     };
-  }, [cleanup, flushPendingCandidates]);
+  }, [cleanup, flushPendingCandidates, handleIncomingCall]);
 
   const startCall = useCallback(
     async (
@@ -309,7 +413,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   );
 
   const acceptCall = useCallback(async () => {
-    if (callStatus !== "incoming-ringing" || !remoteUserRef.current) return;
+    if (!remoteUserRef.current || !pendingOfferRef.current) return;
 
     const granted = await requestCallPermissions(callTypeRef.current);
     if (!granted) {
@@ -362,7 +466,9 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       });
       cleanup();
     }
-  }, [callStatus, createPeerConnection, flushPendingCandidates, cleanup]);
+  }, [createPeerConnection, flushPendingCandidates, cleanup]);
+
+  acceptCallRef.current = acceptCall;
 
   const rejectCall = useCallback(() => {
     if (remoteUserRef.current) {

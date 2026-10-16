@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "437547937412",
+    "project_id": "soulmate-datingapp",
+    "storage_bucket": "soulmate-datingapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:437547937412:android:50622d198d0bb9246edcd1",
+        "android_client_info": {
+          "package_name": "com.aayushsinghrajput.Datingapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdBtgsYiCU8Xy4TWuwvqsJ9jmAvyvNGNw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

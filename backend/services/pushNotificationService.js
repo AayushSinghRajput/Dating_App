@@ -9,7 +9,19 @@ const expo = new Expo({
  * Sends a background push notification to all registered devices of a given user.
  * Automatically validates tokens and prunes invalid/unregistered ones.
  */
-export async function sendPushToUser(userId, { title, body, data = {} }) {
+export async function sendPushToUser(
+  userId,
+  {
+    title,
+    body,
+    data = {},
+    channelId = "default",
+    categoryId,
+    priority = "high",
+    sound = "default",
+    sticky = false,
+  }
+) {
   if (!userId) return;
 
   try {
@@ -33,13 +45,15 @@ export async function sendPushToUser(userId, { title, body, data = {} }) {
 
       messages.push({
         to: pushToken,
-        sound: "default",
+        sound,
         title,
         body,
         data,
         badge: 1,
-        priority: "high",
-        channelId: "default",
+        priority,
+        channelId,
+        sticky,
+        ...(categoryId ? { categoryId } : {}),
       });
     }
 

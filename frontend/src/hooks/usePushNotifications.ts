@@ -38,6 +38,8 @@ try {
   // expo-notifications native module not compiled into current dev build
 }
 
+export { Notifications };
+
 const PUSH_TOKEN_STORAGE_KEY = "expo_push_token";
 
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
@@ -54,7 +56,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
       return null;
     }
 
-    // Set up Android notification channel
+    // Set up Android notification channels & categories
     if (Platform.OS === "android") {
       await Notifications.setNotificationChannelAsync("default", {
         name: "Soulmate Notifications",
@@ -63,6 +65,43 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
         lightColor: "#e63946",
         sound: "default",
       });
+
+      // High-importance channel specifically for incoming VoIP calls
+      await Notifications.setNotificationChannelAsync("voip_calls_v2", {
+        name: "Voice & Video Calls",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 1000, 500, 1000, 500, 1000],
+        lightColor: "#e63946",
+        sound: "default",
+        audioAttributes: {
+          usage: Notifications.AndroidAudioUsage.NOTIFICATION_COMMUNICATION_REQUEST,
+          contentType: Notifications.AndroidAudioContentType.SONIFICATION,
+        },
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+        bypassDnd: true,
+        enableLights: true,
+        enableVibrate: true,
+        showBadge: true,
+      });
+
+      // Call action buttons: Accept & Decline
+      await Notifications.setNotificationCategoryAsync("incoming_call", [
+        {
+          identifier: "accept",
+          buttonTitle: "Accept",
+          options: {
+            opensAppToForeground: true,
+          },
+        },
+        {
+          identifier: "decline",
+          buttonTitle: "Decline",
+          options: {
+            opensAppToForeground: false,
+            isDestructive: true,
+          },
+        },
+      ]);
     }
 
     // Request permissions
@@ -82,17 +121,25 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
     const projectId =
       Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
 
-    const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId,
-    });
-    const pushToken = tokenData.data;
+    try {
+      const tokenData = await Notifications.getExpoPushTokenAsync({
+        projectId,
+      });
+      const pushToken = tokenData.data;
 
-    await AsyncStorage.setItem(PUSH_TOKEN_STORAGE_KEY, pushToken);
-    await registerPushTokenApi(pushToken);
+      await AsyncStorage.setItem(PUSH_TOKEN_STORAGE_KEY, pushToken);
+      await registerPushTokenApi(pushToken);
 
-    return pushToken;
+      return pushToken;
+    } catch (tokenErr) {
+      console.warn(
+        "[Push Notifications] Error obtaining push token:",
+        tokenErr instanceof Error ? tokenErr.message : tokenErr
+      );
+      return null;
+    }
   } catch (error) {
-    console.error("[Push Notifications] Error getting Expo push token:", error);
+    console.error("[Push Notifications] Error setting up notifications:", error);
     return null;
   }
 }
@@ -122,6 +169,10 @@ export function usePushNotifications() {
       responseListener.current = Notifications.addNotificationResponseReceivedListener(
         (response) => {
           const data = response.notification.request.content.data;
+          // Incoming calls are handled specifically by CallContext
+          if (data?.type === "incoming_call") {
+            return;
+          }
           if (data?.url) {
             try {
               router.push(data.url as any);
