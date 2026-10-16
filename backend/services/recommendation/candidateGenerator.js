@@ -74,7 +74,7 @@ export async function generateCandidates(viewerProfile, viewerUserId) {
         localField: "user",
         foreignField: "_id",
         as: "userDoc",
-        pipeline: [{ $project: { username: 1, banned: 1, lastActiveAt: 1 } }],
+        pipeline: [{ $project: { username: 1, banned: 1, frozen: 1, isShadowbanned: 1, lastActiveAt: 1 } }],
       },
     },
     { $unwind: { path: "$userDoc", preserveNullAndEmptyArrays: true } },
