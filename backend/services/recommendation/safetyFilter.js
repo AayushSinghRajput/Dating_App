@@ -17,8 +17,11 @@ export function buildProfileSafetyMatch(viewerUserId, blockedByMeIds) {
   };
 }
 
-// Banned status lives on the User document, not Profile — applied as a
-// $match after the $lookup that joins userDoc in candidateGenerator.js.
+// Banned, frozen, or shadowbanned status lives on the User document, not Profile —
+// applied as a $match after the $lookup that joins userDoc in candidateGenerator.js.
+// Shadowbanned users' profiles are suppressed so normal daters never see them (Tinder/Bumble model).
 export const excludeBannedUsersMatch = {
   "userDoc.banned": { $ne: true },
+  "userDoc.frozen": { $ne: true },
+  "userDoc.isShadowbanned": { $ne: true },
 };

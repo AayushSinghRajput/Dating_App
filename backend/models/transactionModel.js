@@ -34,6 +34,17 @@ const transactionSchema = new mongoose.Schema(
     providerRef: {
       type: String,
     },
+    refundStatus: {
+      type: String,
+      enum: ["none", "requested", "approved", "rejected"],
+      default: "none",
+    },
+    refundNote: {
+      type: String,
+    },
+    refundedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

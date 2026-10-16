@@ -1,22 +1,49 @@
 import Report from "../models/reportModel.js";
 import User from "../models/userModel.js";
 import { notifyBannedUser } from "../utils/notify.js";
+import { logAdminAction } from "../utils/auditLogger.js";
 
-// @desc    List reports, newest first
-// @route   GET /api/admin/reports?status=open
+// @desc    List reports, newest first with server-side pagination, search & status filter
+// @route   GET /api/admin/reports?status=open&search=&page=
 // @access  Private/Admin
 export const listReports = async (req, res) => {
-  const { status } = req.query;
-  const filter = status ? { status } : {};
+  const { status, search = "", page = "1" } = req.query;
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const pageSize = 20;
 
-  const reports = await Report.find(filter)
-    .populate("reporter", "username email")
-    .populate("reportedUser", "username email banned")
-    .sort({ createdAt: -1 })
-    .limit(200)
-    .lean();
+  const filter = {};
+  if (status && status !== "all") {
+    filter.status = status;
+  }
 
-  res.status(200).json({ reports });
+  if (search.trim()) {
+    const matchingUsers = await User.find({
+      $or: [
+        { username: { $regex: search.trim(), $options: "i" } },
+        { email: { $regex: search.trim(), $options: "i" } },
+      ],
+    }).select("_id");
+    const userIds = matchingUsers.map((u) => u._id);
+
+    filter.$or = [
+      { reason: { $regex: search.trim(), $options: "i" } },
+      { reporter: { $in: userIds } },
+      { reportedUser: { $in: userIds } },
+    ];
+  }
+
+  const [reports, total] = await Promise.all([
+    Report.find(filter)
+      .populate("reporter", "username email")
+      .populate("reportedUser", "username email banned")
+      .sort({ createdAt: -1 })
+      .skip((pageNum - 1) * pageSize)
+      .limit(pageSize)
+      .lean(),
+    Report.countDocuments(filter),
+  ]);
+
+  res.status(200).json({ reports, total, page: pageNum, pageSize });
 };
 
 // @desc    Act on a report: dismiss it, or ban the reported user
@@ -47,6 +74,15 @@ export const resolveReport = async (req, res) => {
   }
 
   await report.save();
+
+  await logAdminAction({
+    adminId: req.user._id,
+    action: action === "ban" ? "REPORT_ACTION_BAN" : "REPORT_DISMISS",
+    targetId: reportId,
+    targetType: "Report",
+    details: { reportedUser: report.reportedUser, action, reason },
+    req,
+  });
 
   res.status(200).json({ message: "Report resolved", report });
 };

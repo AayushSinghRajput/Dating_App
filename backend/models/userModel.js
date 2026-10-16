@@ -90,6 +90,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    adminRole: {
+      type: String,
+      enum: ["superadmin", "moderator", "analyst", "support", "none"],
+      default: "none",
+    },
     banned: {
       type: Boolean,
       default: false,
@@ -100,12 +105,51 @@ const userSchema = new mongoose.Schema(
     banReason: {
       type: String,
     },
+    frozen: {
+      type: Boolean,
+      default: false,
+    },
+    frozenAt: {
+      type: Date,
+    },
+    frozenReason: {
+      type: String,
+    },
     lastActiveAt: {
       type: Date,
     },
     pushTokens: {
       type: [String],
       default: [],
+    },
+    isShadowbanned: {
+      type: Boolean,
+      default: false,
+    },
+    shadowbanReason: {
+      type: String,
+      default: "",
+    },
+    shadowbannedAt: {
+      type: Date,
+    },
+    trustScore: {
+      type: Number,
+      default: 100,
+      min: 0,
+      max: 100,
+    },
+    deviceId: {
+      type: String,
+      sparse: true,
+    },
+    hardwareFingerprint: {
+      type: String,
+      sparse: true,
+    },
+    lastIp: {
+      type: String,
+      default: "",
     },
   },
   { timestamps: true },
@@ -117,6 +161,8 @@ userSchema.index({ lastActiveAt: 1 });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ banned: 1 });
 userSchema.index({ isPremium: 1, premiumExpiresAt: 1 });
+userSchema.index({ isShadowbanned: 1 });
+userSchema.index({ trustScore: 1 });
 
 // Hash password before saving
 userSchema.pre("save", async function (next) {

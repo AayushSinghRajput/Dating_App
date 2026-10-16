@@ -41,6 +41,7 @@ export const registerUser = async (req, res) => {
     _id: user._id,
     username: user.username,
     email: user.email,
+    isAdmin: Boolean(user.isAdmin),
     token: generateToken(user._id),
   });
 };
@@ -66,6 +67,14 @@ export const loginUser = async (req, res) => {
       _id: user._id,
       username: user.username,
       email: user.email,
+      isAdmin: Boolean(user.isAdmin),
+      user: {
+        id: user._id,
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        isAdmin: Boolean(user.isAdmin),
+      },
       token: generateToken(user._id),
     });
   }
