@@ -60,7 +60,16 @@ app.use(
 app.use(compression());
 app.use(
   cors({
-    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : "*",
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const allowed = process.env.ALLOWED_ORIGINS
+        ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+        : ["http://localhost:3000", "http://localhost:8081", "http://localhost:5000"];
+      if (allowed.includes("*") || allowed.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Permissive in development
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   }),
@@ -71,9 +80,6 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 app.use("/api", apiLimiter);
 app.use("/api/auth", authLimiter);
-
-// Static admin panel (plain HTML/CSS/JS — no build step, see public/admin/)
-app.use("/admin", express.static(path.join(__dirname, "public/admin")));
 
 //HTTP server + socket.io
 const server = http.createServer(app);
