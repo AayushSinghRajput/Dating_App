@@ -5,6 +5,7 @@ import User from "../models/userModel.js";
 import Chat from "../models/chatModel.js";
 import { sendNotification } from "./notify.js";
 import { isBlockedEitherWay } from "./block.js";
+import { sendPushToUser } from "../services/pushNotificationService.js";
 
 // Global online users tracker: userId (string) -> Set of socketIds
 const onlineUsers = new Map();
@@ -145,6 +146,7 @@ const setupSocket = (io) => {
           callerId: socket.userId,
           calleeId: toUserId,
           callType,
+          offer,
           startedAt: Date.now(),
           answeredAt: null,
         });
@@ -158,8 +160,39 @@ const setupSocket = (io) => {
           offer,
           callId,
         });
+
+        // Send high-priority push notification so the call rings when app is closed / locked
+        sendPushToUser(toUserId, {
+          title: `Incoming ${callType === "video" ? "Video" : "Audio"} Call`,
+          body: `${caller?.username || "Someone"} is calling you...`,
+          data: {
+            type: "incoming_call",
+            callId,
+            chatId,
+            callType,
+            fromUserId: socket.userId,
+            fromName: caller?.username || "Someone",
+            fromAvatar: callerProfile?.profileImage || "",
+            offer,
+          },
+          channelId: "voip_calls_v2",
+          categoryId: "incoming_call",
+          priority: "high",
+          sticky: true,
+        }).catch((err) => console.error("Error sending incoming call push:", err));
       } catch (err) {
         console.error("Error relaying callUser:", err);
+      }
+    });
+
+    socket.on("checkCallStatus", ({ callId }, callback) => {
+      const call = activeCalls.get(callId);
+      if (typeof callback === "function") {
+        callback({
+          active: Boolean(call),
+          answered: Boolean(call?.answeredAt),
+          call: call || null,
+        });
       }
     });
 
