@@ -10,7 +10,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build:admin-css": "tailwindcss -c public/admin/tailwind.config.js -i public/admin/tailwind.src.css -o public/admin/style.css --minify",
     "generate-secret": "node scripts/generateSecret.js",
     "sync-indexes": "node scripts/syncIndexes.js"
   },
