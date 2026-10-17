@@ -99,6 +99,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const callIdRef = useRef<string | null>(null);
 
   const acceptCallRef = useRef<() => Promise<void>>(null);
+  const processedCallIdsRef = useRef<Set<string>>(new Set());
 
   const cleanup = useCallback(() => {
     InCallManager.stopRingtone();
@@ -187,6 +188,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       // Busy: already in/starting a call, ignore silently (no call-waiting support yet)
       if (peerConnectionRef.current) return;
 
+      // Expiration guard: ignore stale/replayed calls older than 45 seconds
+      if (callId) {
+        const callTimestamp = parseInt(String(callId).split("-")[0], 10);
+        if (!isNaN(callTimestamp) && Date.now() - callTimestamp > 45000) {
+          console.log("[CallContext] handleIncomingCall ignored expired call (>45s old):", callId);
+          return;
+        }
+      }
+
       // Duplicate guard: ignore if already ringing or connected to this same call
       if (
         callId &&
@@ -264,10 +274,24 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       const data = response?.notification?.request?.content?.data;
       if (data?.type !== "incoming_call") return;
 
+      const callId = data.callId;
+      if (!callId) return;
+
+      const callTimestamp = parseInt(String(callId).split("-")[0], 10);
+      if (!isNaN(callTimestamp) && Date.now() - callTimestamp > 45000) {
+        console.log("[CallContext] processNotification ignored expired call (>45s old):", callId);
+        return;
+      }
+
+      if (processedCallIdsRef.current.has(callId)) {
+        console.log("[CallContext] processNotification ignored already processed callId:", callId);
+        return;
+      }
+      processedCallIdsRef.current.add(callId);
+
       const actionId = response?.actionIdentifier;
       if (actionId === "decline") {
         const toUserId = data.fromUserId || "";
-        const callId = data.callId;
         console.log("[CallContext] Notification decline pressed:", { toUserId, callId });
         socket.emit("rejectCall", { toUserId, callId });
         if (callId) {
@@ -401,6 +425,19 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             console.warn("[CallContext] Deep link incoming_call missing callId, ignoring");
             return;
           }
+
+          // Discard stale deep links (older than 45 seconds, e.g. from app reloads)
+          const callTimestamp = parseInt(String(incomingCallId).split("-")[0], 10);
+          if (!isNaN(callTimestamp) && Date.now() - callTimestamp > 45000) {
+            console.log("[CallContext] Deep link ignored expired call (>45s old):", incomingCallId);
+            return;
+          }
+
+          if (processedCallIdsRef.current.has(incomingCallId)) {
+            console.log("[CallContext] Deep link already processed, skipping replay:", incomingCallId);
+            return;
+          }
+          processedCallIdsRef.current.add(incomingCallId);
 
           if (callStatusRef.current === "incoming-ringing" && callIdRef.current === incomingCallId) {
             if (callAction === "accept") {
