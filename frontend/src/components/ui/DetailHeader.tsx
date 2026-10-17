@@ -22,6 +22,16 @@ export default function DetailHeader({ title, onBack, right }: DetailHeaderProps
   const router = useRouter();
   const { colors } = useTheme();
 
+  const handleBackPress = () => {
+    if (onBack) {
+      onBack();
+    } else if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  };
+
   return (
     <SafeAreaView
       edges={["top"]}
@@ -30,7 +40,7 @@ export default function DetailHeader({ title, onBack, right }: DetailHeaderProps
       <View style={styles.row}>
         <Pressable
           style={styles.side}
-          onPress={onBack || (() => router.back())}
+          onPress={handleBackPress}
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel="Go back"

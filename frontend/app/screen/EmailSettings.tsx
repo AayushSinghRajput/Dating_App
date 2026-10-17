@@ -73,7 +73,13 @@ export default function EmailSettings() {
     return () => clearInterval(timer);
   }, [resendCountdown]);
 
-  const handleBack = () => router.back();
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/settings");
+    }
+  };
 
   const isGoogleUser = currentUser?.authProvider === "google";
   const emailVerified = currentUser?.emailVerified ?? false;

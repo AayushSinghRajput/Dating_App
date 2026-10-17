@@ -114,6 +114,18 @@ export const SOULMATE_POLICY_SECTIONS: PolicySectionData[] = [
       "Response Time: Within 24-48 business hours",
     ],
   },
+  {
+    id: "11",
+    title: "11. End User License Agreement (EULA) & UGC Safety",
+    content:
+      "Soulmate maintains a strict zero-tolerance policy for objectionable content and abusive users. All community members must comply with these terms.",
+    highlights: [
+      "Zero tolerance for hate speech, harassment, nudity, scams, or offensive content.",
+      "In-app Report & Block features are available on every chat and user profile.",
+      "Moderation team reviews and acts on all flagged reports within 24 hours.",
+      "Violations result in immediate content deletion and permanent account bans.",
+    ],
+  },
 ];
 
 function wrapText(text: string, maxLen = 92): string[] {

@@ -114,7 +114,13 @@ export default function CommunityGuidelines() {
 
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
 
-  const handleBack = () => router.back();
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/settings");
+    }
+  };
 
   const handleTabChange = (tab: FilterTab) => {
     Haptics.selectionAsync().catch(() => {});

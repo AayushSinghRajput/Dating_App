@@ -86,7 +86,13 @@ export default function FeedbackScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
 
-  const handleBack = () => router.back();
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/settings");
+    }
+  };
 
   const handleSelectCategory = (cat: FeedbackCategory) => {
     Haptics.selectionAsync().catch(() => {});

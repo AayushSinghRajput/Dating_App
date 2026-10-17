@@ -328,7 +328,13 @@ export default function NotificationScreen() {
       {/* Top Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/(tabs)");
+            }
+          }}
           hitSlop={12}
           style={styles.backButton}
         >

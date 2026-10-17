@@ -35,7 +35,13 @@ export default function LanguageSettings() {
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleBack = () => router.back();
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/settings");
+    }
+  };
 
   const handleSelectLanguage = async (selected: SupportedLanguage) => {
     if (selected.code === language) return;

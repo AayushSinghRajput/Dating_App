@@ -100,7 +100,13 @@ export default function PaymentSettings() {
     loadStatus().finally(() => setLoading(false));
   }, []);
 
-  const handleBack = () => router.back();
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/settings");
+    }
+  };
 
   const handlePay = async (provider: "esewa" | "khalti") => {
     if (payingWith) return;

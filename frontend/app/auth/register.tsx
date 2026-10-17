@@ -314,27 +314,42 @@ export default function RegisterScreen() {
                   />
                 </View>
 
-                <TouchableOpacity
-                  style={styles.termsRow}
-                  onPress={() => setAcceptedTerms((prev) => !prev)}
-                  activeOpacity={0.7}
-                >
-                  <View
+                <View style={styles.termsRow}>
+                  <TouchableOpacity
                     style={[
                       styles.checkbox,
                       acceptedTerms && styles.checkboxChecked,
                     ]}
+                    onPress={() => setAcceptedTerms((prev) => !prev)}
+                    activeOpacity={0.7}
                   >
                     {acceptedTerms && (
                       <Ionicons name="checkmark" size={14} color="#ff6b6b" />
                     )}
-                  </View>
-                  <Text style={styles.termsText}>
+                  </TouchableOpacity>
+                  <Text style={styles.termsText} onPress={() => setAcceptedTerms((prev) => !prev)}>
                     I confirm I&apos;m 18 or older and agree to the{" "}
-                    <Text style={styles.termsLink}>Terms of Service</Text> and{" "}
-                    <Text style={styles.termsLink}>Privacy Policy</Text>
+                    <Text
+                      style={styles.termsLink}
+                      onPress={(e) => {
+                        e.stopPropagation?.();
+                        router.push("/screen/PrivacyPolicy");
+                      }}
+                    >
+                      Terms of Service &amp; EULA
+                    </Text>{" "}
+                    and{" "}
+                    <Text
+                      style={styles.termsLink}
+                      onPress={(e) => {
+                        e.stopPropagation?.();
+                        router.push("/screen/PrivacyPolicy");
+                      }}
+                    >
+                      Privacy Policy
+                    </Text>
                   </Text>
-                </TouchableOpacity>
+                </View>
 
                 <TouchableOpacity
                   style={[
