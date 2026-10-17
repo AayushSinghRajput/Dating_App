@@ -144,3 +144,25 @@ export const rejectCallHttp = async (req, res) => {
     return res.status(500).json({ message: "Failed to reject call" });
   }
 };
+
+/**
+ * @desc    HTTP endpoint to end/cancel an active or ringing call.
+ *          Used as a fallback when socket disconnects or during rapid caller hangup.
+ * @route   POST /api/calls/end
+ * @access  Public
+ */
+export const endCallHttp = async (req, res) => {
+  try {
+    const { callId, toUserId } = req.body || {};
+    if (!callId && !toUserId) {
+      return res.status(400).json({ message: "callId or toUserId is required" });
+    }
+    const { endActiveCall } = await import("../utils/socket.js");
+    const io = req.app.get("io");
+    await endActiveCall(io, callId, toUserId);
+    return res.status(200).json({ success: true, message: "Call ended successfully" });
+  } catch (err) {
+    console.error("[WebRTC] Error in endCallHttp:", err);
+    return res.status(500).json({ message: "Failed to end call" });
+  }
+};

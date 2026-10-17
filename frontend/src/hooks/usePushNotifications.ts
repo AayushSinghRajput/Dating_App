@@ -25,12 +25,24 @@ try {
   Notifications = require("expo-notifications");
   if (Notifications?.setNotificationHandler) {
     Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowBanner: true,
-        shouldShowList: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-      }),
+      handleNotification: async (notification: any) => {
+        const type = notification?.request?.content?.data?.type;
+        // Suppress incoming_call push notifications: CallRingingService handles the persistent notification
+        if (type === "incoming_call") {
+          return {
+            shouldShowBanner: false,
+            shouldShowList: false,
+            shouldPlaySound: false,
+            shouldSetBadge: false,
+          };
+        }
+        return {
+          shouldShowBanner: true,
+          shouldShowList: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+        };
+      },
     });
   }
 } catch {

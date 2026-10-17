@@ -43,18 +43,35 @@ export async function sendPushToUser(
         continue;
       }
 
-      messages.push({
+      const isCallSignaling =
+        type === "incoming_call" ||
+        type === "call_ended" ||
+        type === "call_rejected";
+
+      // For call signaling (incoming calls, ended, rejected):
+      // MUST NOT send top-level title or body.
+      // Top-level title/body causes Expo and FCM to deliver a notification message,
+      // which Android OS intercepts in the system tray when the app is killed without waking onMessageReceived.
+      // Omitting title/body ensures a pure DATA message, which forces Android OS to wake up
+      // CallFirebaseMessagingService.onMessageReceived(), start CallRingingService, play the ringtone,
+      // wake up the screen, and launch the incoming call screen.
+      const message = {
         to: pushToken,
-        sound,
-        title,
-        body,
         data,
-        badge: 1,
-        priority,
-        channelId,
-        sticky,
-        ...(categoryId ? { categoryId } : {}),
-      });
+        priority: "high",
+        channelId: channelId || "voip_calls_v4",
+      };
+
+      if (!isCallSignaling) {
+        if (title) message.title = title;
+        if (body) message.body = body;
+        if (sound) message.sound = sound;
+        if (sticky) message.sticky = sticky;
+        if (categoryId) message.categoryId = categoryId;
+        message.badge = 1;
+      }
+
+      messages.push(message);
     }
 
     if (messages.length === 0) return;

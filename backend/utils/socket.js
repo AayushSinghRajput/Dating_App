@@ -128,6 +128,40 @@ export const rejectActiveCall = async (io, callId, optionalCallerId, optionalCal
   }
 };
 
+export const endActiveCall = async (io, callId, optionalToUserId) => {
+  const call = activeCalls.get(callId);
+  const otherUserId = optionalToUserId || (call ? (call.callerId.toString() === optionalToUserId ? call.calleeId : call.callerId) : null);
+
+  console.log(`[Socket] Call ${callId} ended. Notifying other: ${otherUserId}, caller: ${call?.callerId}, callee: ${call?.calleeId}`);
+
+  if (io && otherUserId) {
+    io.to(otherUserId.toString()).emit("callEnded", { callId });
+  }
+  if (io && call?.calleeId) {
+    io.to(call.calleeId.toString()).emit("callEnded", { callId });
+  }
+  if (io && call?.callerId) {
+    io.to(call.callerId.toString()).emit("callEnded", { callId });
+  }
+  if (io && call?.chatId) {
+    io.to(call.chatId).emit("callEnded", { callId });
+  }
+
+  await finalizeCall(io, callId, call?.answeredAt ? "answered" : "missed");
+
+  const notifyTarget = otherUserId || call?.calleeId;
+  if (notifyTarget) {
+    sendPushToUser(notifyTarget.toString(), {
+      data: {
+        type: "call_ended",
+        callId,
+      },
+      channelId: "voip_calls_v4",
+      priority: "high",
+    }).catch(() => {});
+  }
+};
+
 const setupSocket = (io) => {
 
   io.use((socket, next) => {
@@ -210,25 +244,44 @@ const setupSocket = (io) => {
           callId,
         });
 
-        // Send high-priority push notification so the call rings when app is closed / locked
-        sendPushToUser(toUserId, {
-          title: `Incoming ${callType === "video" ? "Video" : "Audio"} Call`,
-          body: `${caller?.username || "Someone"} is calling you...`,
-          data: {
-            type: "incoming_call",
-            callId,
-            chatId,
-            callType,
-            fromUserId: socket.userId,
-            fromName: caller?.username || "Someone",
-            fromAvatar: callerProfile?.profileImage || "",
-            offer,
-          },
-          channelId: "voip_calls_v4",
-          categoryId: "incoming_call",
-          priority: "high",
-          sticky: true,
-        }).catch((err) => console.error("Error sending incoming call push:", err));
+        // Only send push notification if callee is offline (app closed / killed).
+        // When callee is online/in background, the socket event directly shows the persistent CallRingingService notification.
+        if (!isUserOnline(toUserId)) {
+          sendPushToUser(toUserId, {
+            data: {
+              type: "incoming_call",
+              callId,
+              chatId,
+              callType,
+              fromUserId: socket.userId,
+              fromName: caller?.username || "Someone",
+              fromAvatar: callerProfile?.profileImage || "",
+            },
+            channelId: "voip_calls_v4",
+            priority: "high",
+          }).catch((err) => console.error("Error sending incoming call push:", err));
+        } else {
+          // If callee is online, socket directly triggers the native notification.
+          // Fallback: If callee disconnects or hasn't responded in 4s, send push notification.
+          setTimeout(() => {
+            const currentCall = activeCalls.get(callId);
+            if (currentCall && !currentCall.answeredAt && !isUserOnline(toUserId)) {
+              sendPushToUser(toUserId, {
+                data: {
+                  type: "incoming_call",
+                  callId,
+                  chatId,
+                  callType,
+                  fromUserId: socket.userId,
+                  fromName: caller?.username || "Someone",
+                  fromAvatar: callerProfile?.profileImage || "",
+                },
+                channelId: "voip_calls_v4",
+                priority: "high",
+              }).catch(() => {});
+            }
+          }, 4000);
+        }
       } catch (err) {
         console.error("Error relaying callUser:", err);
       }
@@ -260,30 +313,7 @@ const setupSocket = (io) => {
     });
 
     socket.on("endCall", async ({ toUserId, callId }) => {
-      const call = activeCalls.get(callId);
-      const otherUserId = toUserId || (call ? (call.callerId.toString() === socket.userId ? call.calleeId : call.callerId) : null);
-
-      if (otherUserId) {
-        io.to(otherUserId.toString()).emit("callEnded", { callId });
-      }
-      if (call?.chatId) {
-        io.to(call.chatId).emit("callEnded", { callId });
-      }
-
-      await finalizeCall(io, callId, call?.answeredAt ? "answered" : "missed");
-
-      if (otherUserId) {
-        sendPushToUser(otherUserId.toString(), {
-          title: "Call ended",
-          body: "The call has ended",
-          data: {
-            type: "call_ended",
-            callId,
-          },
-          channelId: "voip_calls_v4",
-          priority: "high",
-        }).catch(() => {});
-      }
+      await endActiveCall(io, callId, toUserId);
     });
 
     // Typing indicator (relayed only to other participants in the room)

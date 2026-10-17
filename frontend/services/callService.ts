@@ -81,3 +81,24 @@ export const rejectCallApi = async (callId: string, toUserId?: string): Promise<
     return false;
   }
 };
+
+/**
+ * Ends or cancels an active or ringing call on the backend via HTTP.
+ * Serves as a reliable fallback so the recipient is immediately notified even during socket reconnects.
+ */
+export const endCallApi = async (callId: string, toUserId?: string): Promise<boolean> => {
+  if (!callId && !toUserId) return false;
+  try {
+    const res = await fetch(`${BASE_URL}/api/calls/end`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ callId, toUserId }),
+    });
+    return res.ok;
+  } catch (error) {
+    console.warn("[CallService] Error notifying backend of call end:", error);
+    return false;
+  }
+};
