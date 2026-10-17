@@ -214,8 +214,10 @@ const setupSocket = (io) => {
 
     // ---- Call signaling (relay + call-log persistence) ----
     socket.on("callUser", async ({ toUserId, chatId, callType, offer, callId }) => {
+      console.log(`[Socket] callUser received from ${socket.userId} to ${toUserId}, callId=${callId}`);
       try {
         if (await isBlockedEitherWay(socket.userId, toUserId)) {
+          console.log(`[Socket] Call blocked between ${socket.userId} and ${toUserId}`);
           return;
         }
 
@@ -244,44 +246,20 @@ const setupSocket = (io) => {
           callId,
         });
 
-        // Only send push notification if callee is offline (app closed / killed).
-        // When callee is online/in background, the socket event directly shows the persistent CallRingingService notification.
-        if (!isUserOnline(toUserId)) {
-          sendPushToUser(toUserId, {
-            data: {
-              type: "incoming_call",
-              callId,
-              chatId,
-              callType,
-              fromUserId: socket.userId,
-              fromName: caller?.username || "Someone",
-              fromAvatar: callerProfile?.profileImage || "",
-            },
-            channelId: "voip_calls_v4",
-            priority: "high",
-          }).catch((err) => console.error("Error sending incoming call push:", err));
-        } else {
-          // If callee is online, socket directly triggers the native notification.
-          // Fallback: If callee disconnects or hasn't responded in 4s, send push notification.
-          setTimeout(() => {
-            const currentCall = activeCalls.get(callId);
-            if (currentCall && !currentCall.answeredAt && !isUserOnline(toUserId)) {
-              sendPushToUser(toUserId, {
-                data: {
-                  type: "incoming_call",
-                  callId,
-                  chatId,
-                  callType,
-                  fromUserId: socket.userId,
-                  fromName: caller?.username || "Someone",
-                  fromAvatar: callerProfile?.profileImage || "",
-                },
-                channelId: "voip_calls_v4",
-                priority: "high",
-              }).catch(() => {});
-            }
-          }, 4000);
-        }
+        // Always send VoIP push notification immediately so the receiver's phone rings
+        // even if the app was killed or the device is in background / deep sleep.
+        sendPushToUser(toUserId, {
+          data: {
+            type: "incoming_call",
+            callId,
+            chatId,
+            callType,
+            fromUserId: socket.userId,
+            fromName: caller?.username || "Someone",
+            fromAvatar: callerProfile?.profileImage || "",
+          },
+          priority: "high",
+        }).catch((err) => console.error("Error sending incoming call push:", err));
       } catch (err) {
         console.error("Error relaying callUser:", err);
       }
