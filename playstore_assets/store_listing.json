@@ -1,0 +1,17 @@
+{
+  "packageName": "com.aayushsinghrajput.Datingapp",
+  "appTitle": "Soulmate - Dating & Match",
+  "appTitleLength": 25,
+  "appTitleLimit": 30,
+  "shortDescription": "Find real connections, match, chat, and make crystal-clear calls with Soulmate.",
+  "shortDescriptionLength": 79,
+  "shortDescriptionLimit": 80,
+  "supportEmail": "soulmatelumi@gmail.com",
+  "privacyPolicyUrl": "https://soulmate-backend-f1xn.onrender.com/privacy",
+  "termsOfServiceUrl": "https://soulmate-backend-f1xn.onrender.com/terms",
+  "accountDeletionUrl": "https://soulmate-backend-f1xn.onrender.com/delete-account",
+  "ageRating": "18+",
+  "category": "Dating / Lifestyle",
+  "fullDescriptionLength": 3512,
+  "fullDescriptionLimit": 4000
+}

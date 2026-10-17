@@ -290,7 +290,13 @@ export default function HelpSupport() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <DetailHeader
         title="Help & Member Care"
-        onBack={() => router.back()}
+        onBack={() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace("/(tabs)/settings");
+          }
+        }}
         right={
           <Pressable
             hitSlop={8}

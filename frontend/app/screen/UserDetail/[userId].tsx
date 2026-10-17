@@ -61,7 +61,13 @@ export default function UserDetail() {
     );
   }
 
-  const handleBack = () => router.back();
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  };
 
   const handleLike = async () => {
     if (liked) return;
@@ -127,7 +133,7 @@ export default function UserDetail() {
             try {
               await blockUserApi(user.userId || user.id);
               Toast.show({ type: "success", text1: `${user.name} has been blocked` });
-              router.back();
+              handleBack();
             } catch (error: any) {
               Toast.show({ type: "error", text1: "Failed to block user", text2: error.message });
             }
@@ -142,7 +148,7 @@ export default function UserDetail() {
       try {
         await reportUserApi(user.userId || user.id, reason);
         Toast.show({ type: "success", text1: "Report submitted" });
-        router.back();
+        handleBack();
       } catch (error: any) {
         Toast.show({ type: "error", text1: "Failed to submit report", text2: error.message });
       }

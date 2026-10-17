@@ -63,7 +63,13 @@ export default function DeleteAccount() {
   const isDeleteConfirmed = confirmText.trim().toUpperCase() === "DELETE";
   const canSubmit = (isGoogleUser || password.length > 0) && isDeleteConfirmed;
 
-  const handleBack = () => router.back();
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/settings");
+    }
+  };
 
   const handleSelectReason = (id: string) => {
     Haptics.selectionAsync().catch(() => {});

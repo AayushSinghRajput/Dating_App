@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Alert,
   FlatList,
@@ -111,6 +111,14 @@ export default function ChatDetail() {
     fetchMessages();
   }, [chatId, refreshUnreadChats]);
 
+  const navigateBack = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/chat");
+    }
+  }, [router]);
+
   // Socket setup
   useEffect(() => {
     connectSocket();
@@ -158,7 +166,7 @@ export default function ChatDetail() {
     const handleUnmatched = ({ byUserId }: { byUserId: string }) => {
       if (byUserId !== otherUserId) return;
       Toast.show({ type: "info", text1: `${name || "This user"} unmatched with you` });
-      router.back();
+      navigateBack();
     };
     socket.on("unmatched", handleUnmatched);
 
@@ -232,9 +240,9 @@ export default function ChatDetail() {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       emitStopTyping(chatId);
     };
-  }, [chatId, name, otherUserId, router]);
+  }, [chatId, name, otherUserId, router, navigateBack]);
 
-  const handleBack = () => router.back();
+  const handleBack = () => navigateBack();
 
   const handleUnmatch = () => {
     Alert.alert(
@@ -248,7 +256,7 @@ export default function ChatDetail() {
           onPress: async () => {
             try {
               await unmatchUser(otherUserId);
-              router.back();
+              navigateBack();
             } catch (error: any) {
               Toast.show({
                 type: "error",
@@ -274,7 +282,7 @@ export default function ChatDetail() {
           onPress: async () => {
             try {
               await blockUserApi(otherUserId);
-              router.back();
+              navigateBack();
             } catch (error: any) {
               Toast.show({
                 type: "error",
@@ -293,7 +301,7 @@ export default function ChatDetail() {
       try {
         await reportUserApi(otherUserId, reason);
         Toast.show({ type: "success", text1: "Report submitted" });
-        router.back();
+        navigateBack();
       } catch (error: any) {
         Toast.show({ type: "error", text1: "Failed to submit report", text2: error.message });
       }

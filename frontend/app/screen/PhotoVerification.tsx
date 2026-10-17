@@ -89,7 +89,13 @@ export default function PhotoVerification() {
     };
   }, []);
 
-  const handleBack = () => router.back();
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/settings");
+    }
+  };
 
   const handleShufflePose = () => {
     Haptics.selectionAsync().catch(() => {});
@@ -155,7 +161,7 @@ export default function PhotoVerification() {
           text1: "Verification Submitted",
           text2: "Our Trust & Safety moderators are reviewing your selfie.",
         });
-        router.back();
+        handleBack();
       }
     } catch (error: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
@@ -224,7 +230,7 @@ export default function PhotoVerification() {
 
           <Pressable
             style={styles.doneButton}
-            onPress={() => router.back()}
+            onPress={handleBack}
           >
             <LinearGradient
               colors={["#e63946", "#ff6b78"]}

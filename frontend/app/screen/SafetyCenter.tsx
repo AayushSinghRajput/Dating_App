@@ -80,7 +80,13 @@ export default function SafetyCenter() {
     };
   }, []);
 
-  const handleBack = () => router.back();
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/settings");
+    }
+  };
 
   const persistContacts = async (next: EmergencyContact[]) => {
     const previous = contacts;

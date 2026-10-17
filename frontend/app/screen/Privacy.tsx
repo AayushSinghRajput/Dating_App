@@ -81,7 +81,11 @@ export default function Privacy() {
   }, []);
 
   const handleBack = () => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/settings");
+    }
   };
 
   const handleToggleIncognito = async (newIncognitoValue: boolean) => {

@@ -27,7 +27,11 @@ export default function PrivacyPolicy() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const handleBack = () => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/settings");
+    }
   };
 
   const handleDownloadPdf = async () => {
@@ -94,6 +98,8 @@ export default function PrivacyPolicy() {
         return "trash-bin-outline";
       case "10":
         return "mail-unread-outline";
+      case "11":
+        return "shield-half-outline";
       default:
         return "document-text-outline";
     }

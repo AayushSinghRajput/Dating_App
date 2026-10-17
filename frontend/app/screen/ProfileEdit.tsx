@@ -427,7 +427,7 @@ export default function ProfileEdit() {
             : undefined,
       });
       Toast.show({ type: "success", text1: "Profile saved successfully!" });
-      router.back();
+      handleBack();
     } catch (error: any) {
       Toast.show({ type: "error", text1: "Failed to save profile", text2: error.message });
     } finally {
@@ -436,7 +436,11 @@ export default function ProfileEdit() {
   };
 
   const handleBack = () => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/settings");
+    }
   };
 
   if (loading) {

@@ -26,7 +26,17 @@ export default function MyProfile() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Pressable style={styles.headerButton} onPress={() => router.back()} hitSlop={8}>
+        <Pressable
+          style={styles.headerButton}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/(tabs)/settings");
+            }
+          }}
+          hitSlop={8}
+        >
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
         <Text style={[typography.h3, { color: colors.text }]}>My Profile</Text>

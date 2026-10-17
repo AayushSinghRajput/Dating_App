@@ -125,7 +125,13 @@ export default function ChangePassword() {
     newPassword === confirmPassword &&
     !submitting;
 
-  const handleBack = () => router.back();
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/settings");
+    }
+  };
 
   const handleToggleCurrent = () => {
     Haptics.selectionAsync().catch(() => {});
