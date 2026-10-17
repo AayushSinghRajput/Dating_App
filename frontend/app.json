@@ -15,7 +15,8 @@
         "NSMicrophoneUsageDescription": "Soulmate needs microphone access for audio and video calls.",
         "NSLocationWhenInUseUsageDescription": "Soulmate needs your location to let you share it for safety when meeting a match in person."
       },
-      "bitcode": false
+      "bitcode": false,
+      "bundleIdentifier": "com.aayushsinghrajput.Datingapp"
     },
     "android": {
       "versionCode": 1,
@@ -39,7 +40,9 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.USE_FULL_SCREEN_INTENT",
-        "android.permission.FOREGROUND_SERVICE"
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.VIBRATE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
       ],
       "intentFilters": [
         {

@@ -6,7 +6,14 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { AppState, PermissionsAndroid, Platform } from "react-native";
+import {
+  AppState,
+  Linking,
+  NativeEventEmitter,
+  NativeModules,
+  PermissionsAndroid,
+  Platform,
+} from "react-native";
 import {
   RTCPeerConnection,
   RTCIceCandidate,
@@ -17,8 +24,10 @@ import {
 import InCallManager from "react-native-incall-manager";
 import Toast from "react-native-toast-message";
 import { socket, connectSocket } from "../utils/socket";
-import { getIceServers, DEFAULT_ICE_SERVERS } from "@/services/callService";
+import { getIceServers, DEFAULT_ICE_SERVERS, rejectCallApi, endCallApi } from "@/services/callService";
 import { Notifications } from "../src/hooks/usePushNotifications";
+
+const { CallRingingModule } = NativeModules;
 
 export type CallType = "audio" | "video";
 export type CallStatus =
@@ -72,6 +81,7 @@ async function requestCallPermissions(type: CallType) {
 
 export function CallProvider({ children }: { children: React.ReactNode }) {
   const [callStatus, setCallStatus] = useState<CallStatus>("idle");
+  const callStatusRef = useRef<CallStatus>("idle");
   const [callType, setCallType] = useState<CallType>("audio");
   const [remoteUser, setRemoteUser] = useState<RemoteCallUser | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -94,6 +104,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     InCallManager.stopRingtone();
     InCallManager.stopRingback();
     InCallManager.stop();
+    if (Platform.OS === "android" && CallRingingModule?.stopRinging) {
+      try {
+        CallRingingModule.stopRinging();
+      } catch (e) {
+        console.warn("[CallContext] Error stopping CallRingingModule:", e);
+      }
+    }
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
@@ -103,10 +120,18 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     remoteUserRef.current = null;
     pendingOfferRef.current = null;
     pendingCandidatesRef.current = [];
+
+    const activeCallId = callIdRef.current;
     callIdRef.current = null;
 
-    if (Notifications?.dismissAllNotificationsAsync) {
-      Notifications.dismissAllNotificationsAsync().catch(() => {});
+    if (Notifications) {
+      if (activeCallId && Notifications.dismissNotificationAsync) {
+        Notifications.dismissNotificationAsync(`call_${activeCallId}`).catch(() => {});
+      }
+      Notifications.dismissNotificationAsync?.("777").catch(() => {});
+      if (Notifications.dismissAllNotificationsAsync) {
+        Notifications.dismissAllNotificationsAsync().catch(() => {});
+      }
     }
 
     setLocalStream(null);
@@ -115,6 +140,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     setIsMuted(false);
     setIsSpeakerOn(true);
     setIsFrontCamera(true);
+    callStatusRef.current = "idle";
     setCallStatus("idle");
   }, []);
 
@@ -161,6 +187,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       // Busy: already in/starting a call, ignore silently (no call-waiting support yet)
       if (peerConnectionRef.current) return;
 
+      // Duplicate guard: ignore if already ringing or connected to this same call
+      if (
+        callId &&
+        callIdRef.current === callId &&
+        (callStatusRef.current === "incoming-ringing" || callStatusRef.current === "connected")
+      ) {
+        return;
+      }
+
       pendingOfferRef.current = offer;
       callIdRef.current = callId;
       const remote: RemoteCallUser = {
@@ -173,8 +208,40 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       callTypeRef.current = incomingType;
       setRemoteUser(remote);
       setCallType(incomingType);
+      callStatusRef.current = "incoming-ringing";
       setCallStatus("incoming-ringing");
-      InCallManager.startRingtone("_DEFAULT_", [1000, 1000], "", 30);
+      // Ringtone audio: CallRingingService is the single source of truth on Android; InCallManager on iOS
+      if (Platform.OS === "android" && CallRingingModule?.startRinging) {
+        try {
+          CallRingingModule.startRinging(
+            fromName || "Someone",
+            incomingType || "audio",
+            callId || "",
+            fromUserId || "",
+            fromAvatar || "",
+            chatId || ""
+          );
+        } catch (e) {
+          console.warn("[CallContext] Failed to start CallRingingService:", e);
+        }
+      } else {
+        InCallManager.startRingtone("_DEFAULT_", [1000, 1500], "playback", 45);
+      }
+      try {
+        InCallManager.pokeScreen(45000);
+      } catch (e) {
+        console.warn("[CallContext] InCallManager.pokeScreen error:", e);
+      }
+
+      // Clear any dismissable Expo push notification so only the ongoing un-dismissable notification stays
+      const dismissPushNotifications = () => {
+        if (Notifications?.dismissAllNotificationsAsync) {
+          Notifications.dismissAllNotificationsAsync().catch(() => {});
+        }
+      };
+      dismissPushNotifications();
+      setTimeout(dismissPushNotifications, 600);
+      setTimeout(dismissPushNotifications, 1500);
 
       console.log(
         "[CallContext] Incoming call received! AppState:",
@@ -184,39 +251,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         "callId:",
         callId
       );
-
-      // Trigger high-priority heads-up notification with Accept / Decline buttons
-      if (Notifications?.scheduleNotificationAsync) {
-        Notifications.scheduleNotificationAsync({
-          content: {
-            title: `Incoming ${incomingType === "video" ? "Video" : "Audio"} Call`,
-            body: `${fromName || "Someone"} is calling you... Tap to answer.`,
-            data: {
-              type: "incoming_call",
-              fromUserId,
-              fromName,
-              fromAvatar,
-              chatId,
-              callType: incomingType,
-              offer,
-              callId,
-            },
-            categoryIdentifier: "incoming_call",
-            priority: "max",
-            sound: "default",
-            sticky: true,
-          },
-          trigger: {
-            channelId: "voip_calls_v2",
-          },
-        })
-          .then((id: string) =>
-            console.log("[CallContext] Successfully scheduled call notification, id:", id)
-          )
-          .catch((err: any) =>
-            console.error("[CallContext] Failed scheduling local call notification:", err)
-          );
-      }
     },
     []
   );
@@ -232,7 +266,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
       const actionId = response?.actionIdentifier;
       if (actionId === "decline") {
-        socket.emit("rejectCall", { toUserId: data.fromUserId, callId: data.callId });
+        const toUserId = data.fromUserId || "";
+        const callId = data.callId;
+        console.log("[CallContext] Notification decline pressed:", { toUserId, callId });
+        socket.emit("rejectCall", { toUserId, callId });
+        if (callId) {
+          rejectCallApi(callId, toUserId).catch(() => {});
+        }
         cleanup();
         return;
       }
@@ -252,6 +292,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         if (res && res.active === false) {
           Toast.show({ type: "info", text1: "Call ended", text2: "The caller hung up." });
           cleanup();
+        } else if (res?.call?.offer && !pendingOfferRef.current) {
+          pendingOfferRef.current = res.call.offer;
         }
       });
 
@@ -271,11 +313,141 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       }).catch((err: any) => console.warn("Failed checking last notification:", err));
     }
 
+    // Native notification Decline listener
+    let declineSub: any = null;
+    if (Platform.OS === "android" && CallRingingModule) {
+      try {
+        const eventEmitter = new NativeEventEmitter(CallRingingModule);
+        declineSub = eventEmitter.addListener("onCallDeclinedFromNotification", () => {
+          console.log("[CallContext] Decline clicked from ongoing notification");
+          const toUserId = remoteUserRef.current?.userId || "";
+          const activeCallId = callIdRef.current;
+          if (toUserId || activeCallId) {
+            socket.emit("rejectCall", { toUserId, callId: activeCallId });
+            if (activeCallId) {
+              rejectCallApi(activeCallId, toUserId).catch(() => {});
+            }
+          }
+          cleanup();
+        });
+      } catch (err) {
+        console.warn("[CallContext] Failed to bind notification decline listener:", err);
+      }
+    }
+
+    // App in background/foreground: incoming push notification received
+    let notificationReceivedSub: any = null;
+    if (Notifications?.addNotificationReceivedListener) {
+      notificationReceivedSub = Notifications.addNotificationReceivedListener((notification: any) => {
+        const data = notification?.request?.content?.data;
+        if (data?.type === "incoming_call") {
+          console.log("[CallContext] Incoming call push notification received:", data);
+          const notifId = notification?.request?.identifier;
+          if (notifId && Notifications?.dismissNotificationAsync) {
+            Notifications.dismissNotificationAsync(notifId).catch(() => {});
+          }
+          if (Notifications?.dismissAllNotificationsAsync) {
+            Notifications.dismissAllNotificationsAsync().catch(() => {});
+          }
+          handleIncomingCall({
+            fromUserId: data.fromUserId,
+            fromName: data.fromName,
+            fromAvatar: data.fromAvatar,
+            chatId: data.chatId,
+            callType: data.callType,
+            offer: data.offer,
+            callId: data.callId,
+          });
+        }
+      });
+    }
+
     // App in background: user tapped notification or action button
     let notificationSub: any = null;
     if (Notifications?.addNotificationResponseReceivedListener) {
       notificationSub = Notifications.addNotificationResponseReceivedListener(processNotification);
     }
+
+    // Handle deep link when app is launched over lockscreen via fullScreenIntent (datingapp://call?...)
+    const handleCallUrl = (url: string | null) => {
+      if (!url || !url.includes("datingapp://call")) return;
+      try {
+        const queryIndex = url.indexOf("?");
+        if (queryIndex === -1) return;
+        const search = url.slice(queryIndex + 1);
+        const params = new URLSearchParams(search);
+        if (params.get("type") === "call_rejected" || params.get("type") === "call_ended") {
+          const rejectedCallId = params.get("callId") || callIdRef.current || "";
+          const toUserId = params.get("fromUserId") || remoteUserRef.current?.userId || "";
+          console.log("[CallContext] Deep link received call rejection:", { rejectedCallId, toUserId });
+          if (toUserId || rejectedCallId) {
+            socket.emit("rejectCall", { toUserId, callId: rejectedCallId });
+            rejectCallApi(rejectedCallId, toUserId).catch(() => {});
+          }
+          cleanup();
+          return;
+        }
+
+        if (params.get("type") === "incoming_call") {
+          const incomingCallId = params.get("callId") || "";
+          const fromUserId = params.get("fromUserId") || "";
+          const fromName = params.get("fromName") || "Someone";
+          const fromAvatar = params.get("fromAvatar") || "";
+          const callType = (params.get("callType") as CallType) || "audio";
+          const chatId = params.get("chatId") || "";
+          const callAction = params.get("callAction");
+
+          if (!incomingCallId) {
+            console.warn("[CallContext] Deep link incoming_call missing callId, ignoring");
+            return;
+          }
+
+          if (callStatusRef.current === "incoming-ringing" && callIdRef.current === incomingCallId) {
+            if (callAction === "accept") {
+              setTimeout(() => {
+                acceptCallRef.current?.();
+              }, 300);
+            }
+            return;
+          }
+
+          handleIncomingCall({
+            fromUserId,
+            fromName,
+            fromAvatar,
+            chatId,
+            callType,
+            offer: null,
+            callId: incomingCallId,
+          });
+
+          // Ensure socket is connected and sync call status / offer from server
+          connectSocket().then((sock: any) => {
+            if (sock) {
+              sock.emit("checkCallStatus", { callId: incomingCallId }, (res: any) => {
+                if (res && res.active === false) {
+                  Toast.show({ type: "info", text1: "Call ended", text2: "The caller hung up." });
+                  cleanup();
+                } else if (res?.call?.offer && !pendingOfferRef.current) {
+                  pendingOfferRef.current = res.call.offer;
+                }
+              });
+            }
+          });
+
+          if (callAction === "accept") {
+            setTimeout(() => {
+              acceptCallRef.current?.();
+            }, 350);
+          }
+        }
+      } catch (err) {
+        console.warn("[CallContext] Error parsing call deep link:", err);
+      }
+    };
+
+    Linking.getInitialURL().then(handleCallUrl).catch(() => {});
+    const linkingSub = Linking.addEventListener("url", (event) => handleCallUrl(event.url));
 
     const handleCallAnswered = async ({ answer }: any) => {
       const pc = peerConnectionRef.current;
@@ -284,6 +456,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         await pc.setRemoteDescription(new RTCSessionDescription(answer));
         await flushPendingCandidates(pc);
         InCallManager.setSpeakerphoneOn(true);
+        callStatusRef.current = "connected";
         setCallStatus("connected");
       } catch (err) {
         console.error("Failed to apply call answer:", err);
@@ -321,7 +494,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     socket.on("callEnded", handleCallEnded);
 
     return () => {
+      declineSub?.remove?.();
+      notificationReceivedSub?.remove?.();
       notificationSub?.remove?.();
+      linkingSub.remove();
       socket.off("incomingCall", handleIncomingCall);
       socket.off("callAnswered", handleCallAnswered);
       socket.off("iceCandidate", handleIceCandidate);
@@ -398,6 +574,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         // No ringback here: only the callee should hear a ring, the caller just
         // sees the silent "Ringing…" screen until answered.
         InCallManager.start({ media: type });
+        callStatusRef.current = "outgoing-ringing";
         setCallStatus("outgoing-ringing");
       } catch (err: any) {
         console.error("Failed to start call:", err);
@@ -454,9 +631,30 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       });
 
       InCallManager.stopRingtone();
+      if (Platform.OS === "android" && CallRingingModule?.stopRinging) {
+        try {
+          CallRingingModule.stopRinging();
+        } catch (e) {
+          console.warn("[CallContext] Error stopping CallRingingModule on accept:", e);
+        }
+      }
       InCallManager.start({ media: callTypeRef.current });
       InCallManager.setSpeakerphoneOn(true);
+      callStatusRef.current = "connected";
       setCallStatus("connected");
+
+      // Dismiss incoming call notification once call is picked
+      if (Notifications) {
+        if (Notifications.dismissNotificationAsync) {
+          Notifications.dismissNotificationAsync("777").catch(() => {});
+          if (callIdRef.current) {
+            Notifications.dismissNotificationAsync(`call_${callIdRef.current}`).catch(() => {});
+          }
+        }
+        if (Notifications.dismissAllNotificationsAsync) {
+          Notifications.dismissAllNotificationsAsync().catch(() => {});
+        }
+      }
     } catch (err) {
       console.error("Failed to accept call:", err);
       Toast.show({
@@ -471,17 +669,29 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   acceptCallRef.current = acceptCall;
 
   const rejectCall = useCallback(() => {
-    if (remoteUserRef.current) {
-      socket.emit("rejectCall", { toUserId: remoteUserRef.current.userId, callId: callIdRef.current });
-    }
+    const toUserId = remoteUserRef.current?.userId || "";
+    const callId = callIdRef.current;
+    console.log("[CallContext] rejectCall triggered:", { toUserId, callId });
     cleanup();
+    if (callId || toUserId) {
+      socket.emit("rejectCall", { toUserId, callId });
+      if (callId) {
+        rejectCallApi(callId, toUserId).catch(() => {});
+      }
+    }
   }, [cleanup]);
 
   const endCall = useCallback(() => {
-    if (remoteUserRef.current) {
-      socket.emit("endCall", { toUserId: remoteUserRef.current.userId, callId: callIdRef.current });
-    }
+    const toUserId = remoteUserRef.current?.userId || "";
+    const callId = callIdRef.current;
+    console.log("[CallContext] endCall triggered:", { toUserId, callId });
     cleanup();
+    if (toUserId || callId) {
+      socket.emit("endCall", { toUserId, callId });
+      if (callId) {
+        endCallApi(callId, toUserId).catch(() => {});
+      }
+    }
   }, [cleanup]);
 
   const toggleMute = useCallback(() => {

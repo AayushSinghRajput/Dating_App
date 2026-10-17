@@ -43,18 +43,39 @@ export async function sendPushToUser(
         continue;
       }
 
-      messages.push({
-        to: pushToken,
-        sound,
-        title,
-        body,
-        data,
-        badge: 1,
-        priority,
-        channelId,
-        sticky,
-        ...(categoryId ? { categoryId } : {}),
-      });
+      const isCallSignaling =
+        type === "incoming_call" ||
+        type === "call_ended" ||
+        type === "call_rejected";
+
+      // For call signaling (incoming calls, ended, rejected):
+      // MUST NOT send top-level title, body, or channelId.
+      // Passing channelId, title, or body causes Expo and FCM to deliver an Android notification message,
+      // which Google Play Services intercepts in the system tray when the app is killed without waking onMessageReceived.
+      // Omitting channelId, title, and body ensures a 100% pure FCM DATA message,
+      // which forces Google Play Services to wake up CallFirebaseMessagingService.onMessageReceived(),
+      // start CallRingingService, play the ringtone, wake up the screen, and launch the incoming call screen.
+      const message = isCallSignaling
+        ? {
+            to: pushToken,
+            data,
+            priority: "high",
+            _contentAvailable: true,
+          }
+        : {
+            to: pushToken,
+            data,
+            title,
+            body,
+            priority: "high",
+            channelId: channelId || "default",
+            sound: sound || "default",
+            sticky,
+            categoryId,
+            badge: 1,
+          };
+
+      messages.push(message);
     }
 
     if (messages.length === 0) return;
@@ -63,6 +84,7 @@ export async function sendPushToUser(
     for (const chunk of chunks) {
       try {
         const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+        console.log("[Push Notifications] Expo ticketChunk response:", ticketChunk);
         const deadTokens = [];
 
         ticketChunk.forEach((ticket, idx) => {

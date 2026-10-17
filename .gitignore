@@ -1,0 +1,14 @@
+# Root .gitignore for Dating_App
+node_modules/
+android/app/build/
+android/.gradle/
+android/.idea/
+android/app/.cxx/
+.expo/
+.expo-shared/
+metro-cache/
+package-lock.json
+yarn.lock
+.DS_Store
+.idea/
+*.log

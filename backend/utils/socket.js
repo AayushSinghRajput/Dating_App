@@ -20,66 +20,149 @@ export const getOnlineUserIds = () => {
   return Array.from(onlineUsers.keys());
 };
 
-const setupSocket = (io) => {
-  // callId -> { chatId, callerId, calleeId, callType, startedAt, answeredAt }
-  const activeCalls = new Map();
+// Global active calls tracker: callId -> { chatId, callerId, calleeId, callType, startedAt, answeredAt }
+const activeCalls = new Map();
 
-  async function finalizeCall(callId, status) {
-    const call = activeCalls.get(callId);
-    if (!call) return;
-    activeCalls.delete(callId);
+export async function finalizeCall(io, callId, status) {
+  const call = activeCalls.get(callId);
+  if (!call) return;
+  activeCalls.delete(callId);
 
-    const duration =
-      status === "answered" && call.answeredAt
-        ? Math.round((Date.now() - call.answeredAt) / 1000)
-        : 0;
+  const duration =
+    status === "answered" && call.answeredAt
+      ? Math.round((Date.now() - call.answeredAt) / 1000)
+      : 0;
 
-    try {
-      const message = await Message.create({
-        chat: call.chatId,
-        sender: call.callerId,
-        type: "call",
-        call: { callType: call.callType, status, duration, caller: call.callerId },
-      });
+  try {
+    const message = await Message.create({
+      chat: call.chatId,
+      sender: call.callerId,
+      type: "call",
+      call: { callType: call.callType, status, duration, caller: call.callerId },
+    });
 
-      const [caller, callerProfile] = await Promise.all([
-        User.findById(call.callerId).select("username"),
-        Profile.findOne({ user: call.callerId }).select("profileImage"),
-      ]);
+    const [caller, callerProfile] = await Promise.all([
+      User.findById(call.callerId).select("username"),
+      Profile.findOne({ user: call.callerId }).select("profileImage"),
+    ]);
 
-      const payload = {
-        _id: message._id,
-        chat: message.chat,
-        type: "call",
-        call: message.call,
-        createdAt: message.createdAt,
-        sender: {
-          _id: call.callerId,
-          username: caller?.username || "Unknown",
-          profileImage: callerProfile?.profileImage || "",
-        },
-      };
+    const payload = {
+      _id: message._id,
+      chat: message.chat,
+      type: "call",
+      call: message.call,
+      createdAt: message.createdAt,
+      sender: {
+        _id: call.callerId,
+        username: caller?.username || "Unknown",
+        profileImage: callerProfile?.profileImage || "",
+      },
+    };
 
-      await Chat.findByIdAndUpdate(call.chatId, {
-        lastMessage: message._id,
-        updatedAt: new Date(),
-      });
+    await Chat.findByIdAndUpdate(call.chatId, {
+      lastMessage: message._id,
+      updatedAt: new Date(),
+    });
 
+    if (io) {
       io.to(call.chatId).emit("newMessage", payload);
-
-      if (status === "missed") {
-        await sendNotification(io, {
-          userId: call.calleeId,
-          type: "missed_call",
-          fromUserId: call.callerId,
-          chat: call.chatId,
-          callType: call.callType,
-        });
-      }
-    } catch (err) {
-      console.error("Error saving call-log message:", err);
     }
+
+    if (status === "missed" && io) {
+      await sendNotification(io, {
+        userId: call.calleeId,
+        type: "missed_call",
+        fromUserId: call.callerId,
+        chat: call.chatId,
+        callType: call.callType,
+      });
+    }
+  } catch (err) {
+    console.error("Error saving call-log message:", err);
   }
+}
+
+export const rejectActiveCall = async (io, callId, optionalCallerId, optionalCalleeId) => {
+  const call = activeCalls.get(callId);
+  // Caller is the initiator of the call who must be notified that the receiver declined
+  const targetCallerId = (call && call.callerId) ? call.callerId.toString() : (optionalCallerId ? optionalCallerId.toString() : null);
+  const targetCalleeId = (call && call.calleeId) ? call.calleeId.toString() : (optionalCalleeId ? optionalCalleeId.toString() : null);
+
+  console.log(`[Socket] Call ${callId} declined. Notifying caller: ${targetCallerId}, callee: ${targetCalleeId}`);
+
+  if (io && targetCallerId) {
+    io.to(targetCallerId).emit("callRejected", { callId });
+  }
+  if (io && targetCalleeId) {
+    io.to(targetCalleeId).emit("callRejected", { callId });
+  }
+  if (io && call?.chatId) {
+    io.to(call.chatId).emit("callRejected", { callId });
+  }
+
+  await finalizeCall(io, callId, "rejected");
+
+  if (targetCallerId) {
+    sendPushToUser(targetCallerId, {
+      title: "Call declined",
+      body: "The call was declined",
+      data: {
+        type: "call_rejected",
+        callId,
+      },
+      channelId: "voip_calls_v4",
+      priority: "high",
+    }).catch(() => {});
+  }
+  if (targetCalleeId) {
+    sendPushToUser(targetCalleeId, {
+      title: "Call declined",
+      body: "The call was declined",
+      data: {
+        type: "call_rejected",
+        callId,
+      },
+      channelId: "voip_calls_v4",
+      priority: "high",
+    }).catch(() => {});
+  }
+};
+
+export const endActiveCall = async (io, callId, optionalToUserId) => {
+  const call = activeCalls.get(callId);
+  const otherUserId = optionalToUserId || (call ? (call.callerId.toString() === optionalToUserId ? call.calleeId : call.callerId) : null);
+
+  console.log(`[Socket] Call ${callId} ended. Notifying other: ${otherUserId}, caller: ${call?.callerId}, callee: ${call?.calleeId}`);
+
+  if (io && otherUserId) {
+    io.to(otherUserId.toString()).emit("callEnded", { callId });
+  }
+  if (io && call?.calleeId) {
+    io.to(call.calleeId.toString()).emit("callEnded", { callId });
+  }
+  if (io && call?.callerId) {
+    io.to(call.callerId.toString()).emit("callEnded", { callId });
+  }
+  if (io && call?.chatId) {
+    io.to(call.chatId).emit("callEnded", { callId });
+  }
+
+  await finalizeCall(io, callId, call?.answeredAt ? "answered" : "missed");
+
+  const notifyTarget = otherUserId || call?.calleeId;
+  if (notifyTarget) {
+    sendPushToUser(notifyTarget.toString(), {
+      data: {
+        type: "call_ended",
+        callId,
+      },
+      channelId: "voip_calls_v4",
+      priority: "high",
+    }).catch(() => {});
+  }
+};
+
+const setupSocket = (io) => {
 
   io.use((socket, next) => {
     try {
@@ -131,8 +214,10 @@ const setupSocket = (io) => {
 
     // ---- Call signaling (relay + call-log persistence) ----
     socket.on("callUser", async ({ toUserId, chatId, callType, offer, callId }) => {
+      console.log(`[Socket] callUser received from ${socket.userId} to ${toUserId}, callId=${callId}`);
       try {
         if (await isBlockedEitherWay(socket.userId, toUserId)) {
+          console.log(`[Socket] Call blocked between ${socket.userId} and ${toUserId}`);
           return;
         }
 
@@ -161,10 +246,9 @@ const setupSocket = (io) => {
           callId,
         });
 
-        // Send high-priority push notification so the call rings when app is closed / locked
+        // Always send VoIP push notification immediately so the receiver's phone rings
+        // even if the app was killed or the device is in background / deep sleep.
         sendPushToUser(toUserId, {
-          title: `Incoming ${callType === "video" ? "Video" : "Audio"} Call`,
-          body: `${caller?.username || "Someone"} is calling you...`,
           data: {
             type: "incoming_call",
             callId,
@@ -173,12 +257,8 @@ const setupSocket = (io) => {
             fromUserId: socket.userId,
             fromName: caller?.username || "Someone",
             fromAvatar: callerProfile?.profileImage || "",
-            offer,
           },
-          channelId: "voip_calls_v2",
-          categoryId: "incoming_call",
           priority: "high",
-          sticky: true,
         }).catch((err) => console.error("Error sending incoming call push:", err));
       } catch (err) {
         console.error("Error relaying callUser:", err);
@@ -206,15 +286,12 @@ const setupSocket = (io) => {
       io.to(toUserId).emit("iceCandidate", { candidate });
     });
 
-    socket.on("rejectCall", ({ toUserId, callId }) => {
-      io.to(toUserId).emit("callRejected");
-      finalizeCall(callId, "rejected");
+    socket.on("rejectCall", async ({ toUserId, callId }) => {
+      await rejectActiveCall(io, callId, toUserId);
     });
 
-    socket.on("endCall", ({ toUserId, callId }) => {
-      io.to(toUserId).emit("callEnded");
-      const call = activeCalls.get(callId);
-      finalizeCall(callId, call?.answeredAt ? "answered" : "missed");
+    socket.on("endCall", async ({ toUserId, callId }) => {
+      await endActiveCall(io, callId, toUserId);
     });
 
     // Typing indicator (relayed only to other participants in the room)
