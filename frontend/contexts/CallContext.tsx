@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { AppState, PermissionsAndroid, Platform } from "react-native";
+import { AppState, Linking, PermissionsAndroid, Platform } from "react-native";
 import {
   RTCPeerConnection,
   RTCIceCandidate,
@@ -17,7 +17,7 @@ import {
 import InCallManager from "react-native-incall-manager";
 import Toast from "react-native-toast-message";
 import { socket, connectSocket } from "../utils/socket";
-import { getIceServers, DEFAULT_ICE_SERVERS } from "@/services/callService";
+import { getIceServers, DEFAULT_ICE_SERVERS, rejectCallApi } from "@/services/callService";
 import { Notifications } from "../src/hooks/usePushNotifications";
 
 export type CallType = "audio" | "video";
@@ -103,10 +103,18 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     remoteUserRef.current = null;
     pendingOfferRef.current = null;
     pendingCandidatesRef.current = [];
+
+    const activeCallId = callIdRef.current;
     callIdRef.current = null;
 
-    if (Notifications?.dismissAllNotificationsAsync) {
-      Notifications.dismissAllNotificationsAsync().catch(() => {});
+    if (Notifications) {
+      if (activeCallId && Notifications.dismissNotificationAsync) {
+        Notifications.dismissNotificationAsync(`call_${activeCallId}`).catch(() => {});
+      }
+      Notifications.dismissNotificationAsync?.("777").catch(() => {});
+      if (Notifications.dismissAllNotificationsAsync) {
+        Notifications.dismissAllNotificationsAsync().catch(() => {});
+      }
     }
 
     setLocalStream(null);
@@ -174,7 +182,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       setRemoteUser(remote);
       setCallType(incomingType);
       setCallStatus("incoming-ringing");
-      InCallManager.startRingtone("_DEFAULT_", [1000, 1000], "", 30);
+      // WhatsApp style: Continuous looping ringtone on STREAM_RING without notification sound interference
+      InCallManager.startRingtone("_DEFAULT_", [1000, 1500], "playback", 45);
+      try {
+        InCallManager.pokeScreen(45000);
+      } catch (e) {
+        console.warn("[CallContext] InCallManager.pokeScreen error:", e);
+      }
 
       console.log(
         "[CallContext] Incoming call received! AppState:",
@@ -184,39 +198,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         "callId:",
         callId
       );
-
-      // Trigger high-priority heads-up notification with Accept / Decline buttons
-      if (Notifications?.scheduleNotificationAsync) {
-        Notifications.scheduleNotificationAsync({
-          content: {
-            title: `Incoming ${incomingType === "video" ? "Video" : "Audio"} Call`,
-            body: `${fromName || "Someone"} is calling you... Tap to answer.`,
-            data: {
-              type: "incoming_call",
-              fromUserId,
-              fromName,
-              fromAvatar,
-              chatId,
-              callType: incomingType,
-              offer,
-              callId,
-            },
-            categoryIdentifier: "incoming_call",
-            priority: "max",
-            sound: "default",
-            sticky: true,
-          },
-          trigger: {
-            channelId: "voip_calls_v2",
-          },
-        })
-          .then((id: string) =>
-            console.log("[CallContext] Successfully scheduled call notification, id:", id)
-          )
-          .catch((err: any) =>
-            console.error("[CallContext] Failed scheduling local call notification:", err)
-          );
-      }
     },
     []
   );
@@ -232,7 +213,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
       const actionId = response?.actionIdentifier;
       if (actionId === "decline") {
-        socket.emit("rejectCall", { toUserId: data.fromUserId, callId: data.callId });
+        const toUserId = data.fromUserId || "";
+        const callId = data.callId;
+        console.log("[CallContext] Notification decline pressed:", { toUserId, callId });
+        socket.emit("rejectCall", { toUserId, callId });
+        if (callId) {
+          rejectCallApi(callId, toUserId).catch(() => {});
+        }
         cleanup();
         return;
       }
@@ -252,6 +239,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         if (res && res.active === false) {
           Toast.show({ type: "info", text1: "Call ended", text2: "The caller hung up." });
           cleanup();
+        } else if (res?.call?.offer && !pendingOfferRef.current) {
+          pendingOfferRef.current = res.call.offer;
         }
       });
 
@@ -276,6 +265,72 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     if (Notifications?.addNotificationResponseReceivedListener) {
       notificationSub = Notifications.addNotificationResponseReceivedListener(processNotification);
     }
+
+    // Handle deep link when app is launched over lockscreen via fullScreenIntent (datingapp://call?...)
+    const handleCallUrl = (url: string | null) => {
+      if (!url || !url.includes("datingapp://call")) return;
+      try {
+        const queryIndex = url.indexOf("?");
+        if (queryIndex === -1) return;
+        const search = url.slice(queryIndex + 1);
+        const params = new URLSearchParams(search);
+        if (params.get("type") === "call_rejected" || params.get("type") === "call_ended") {
+          const rejectedCallId = params.get("callId") || callIdRef.current || "";
+          const toUserId = params.get("fromUserId") || remoteUserRef.current?.userId || "";
+          console.log("[CallContext] Deep link received call rejection:", { rejectedCallId, toUserId });
+          if (toUserId || rejectedCallId) {
+            socket.emit("rejectCall", { toUserId, callId: rejectedCallId });
+            rejectCallApi(rejectedCallId, toUserId).catch(() => {});
+          }
+          cleanup();
+          return;
+        }
+
+        if (params.get("type") === "incoming_call") {
+          const incomingCallId = params.get("callId") || "";
+          const fromUserId = params.get("fromUserId") || "";
+          const fromName = params.get("fromName") || "Someone";
+          const fromAvatar = params.get("fromAvatar") || "";
+          const callType = (params.get("callType") as CallType) || "audio";
+          const chatId = params.get("chatId") || "";
+          const callAction = params.get("callAction");
+          handleIncomingCall({
+            fromUserId,
+            fromName,
+            fromAvatar,
+            chatId,
+            callType,
+            offer: null,
+            callId: incomingCallId,
+          });
+
+          // Ensure socket is connected and sync call status / offer from server
+          connectSocket().then((sock: any) => {
+            if (sock) {
+              sock.emit("checkCallStatus", { callId: incomingCallId }, (res: any) => {
+                if (res && res.active === false) {
+                  Toast.show({ type: "info", text1: "Call ended", text2: "The caller hung up." });
+                  cleanup();
+                } else if (res?.call?.offer && !pendingOfferRef.current) {
+                  pendingOfferRef.current = res.call.offer;
+                }
+              });
+            }
+          });
+
+          if (callAction === "accept") {
+            setTimeout(() => {
+              acceptCallRef.current?.();
+            }, 350);
+          }
+        }
+      } catch (err) {
+        console.warn("[CallContext] Error parsing call deep link:", err);
+      }
+    };
+
+    Linking.getInitialURL().then(handleCallUrl).catch(() => {});
+    const linkingSub = Linking.addEventListener("url", (event) => handleCallUrl(event.url));
 
     const handleCallAnswered = async ({ answer }: any) => {
       const pc = peerConnectionRef.current;
@@ -322,6 +377,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       notificationSub?.remove?.();
+      linkingSub.remove();
       socket.off("incomingCall", handleIncomingCall);
       socket.off("callAnswered", handleCallAnswered);
       socket.off("iceCandidate", handleIceCandidate);
@@ -457,6 +513,19 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       InCallManager.start({ media: callTypeRef.current });
       InCallManager.setSpeakerphoneOn(true);
       setCallStatus("connected");
+
+      // Dismiss incoming call notification once call is picked
+      if (Notifications) {
+        if (Notifications.dismissNotificationAsync) {
+          Notifications.dismissNotificationAsync("777").catch(() => {});
+          if (callIdRef.current) {
+            Notifications.dismissNotificationAsync(`call_${callIdRef.current}`).catch(() => {});
+          }
+        }
+        if (Notifications.dismissAllNotificationsAsync) {
+          Notifications.dismissAllNotificationsAsync().catch(() => {});
+        }
+      }
     } catch (err) {
       console.error("Failed to accept call:", err);
       Toast.show({
@@ -471,8 +540,14 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   acceptCallRef.current = acceptCall;
 
   const rejectCall = useCallback(() => {
-    if (remoteUserRef.current) {
-      socket.emit("rejectCall", { toUserId: remoteUserRef.current.userId, callId: callIdRef.current });
+    const toUserId = remoteUserRef.current?.userId || "";
+    const callId = callIdRef.current;
+    console.log("[CallContext] rejectCall triggered:", { toUserId, callId });
+    if (callId || toUserId) {
+      socket.emit("rejectCall", { toUserId, callId });
+      if (callId) {
+        rejectCallApi(callId, toUserId).catch(() => {});
+      }
     }
     cleanup();
   }, [cleanup]);

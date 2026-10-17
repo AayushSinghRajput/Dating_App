@@ -122,3 +122,25 @@ export const getIceServers = async (req, res) => {
     res.status(200).json({ iceServers: DEFAULT_ICE_SERVERS });
   }
 };
+
+/**
+ * @desc    HTTP endpoint to reject/decline an incoming call.
+ *          Used as a fallback and by background notification actions when socket is inactive.
+ * @route   POST /api/calls/reject
+ * @access  Public
+ */
+export const rejectCallHttp = async (req, res) => {
+  try {
+    const { callId, toUserId, fromUserId } = req.body || {};
+    if (!callId && !toUserId && !fromUserId) {
+      return res.status(400).json({ message: "callId or toUserId is required" });
+    }
+    const { rejectActiveCall } = await import("../utils/socket.js");
+    const io = req.app.get("io");
+    await rejectActiveCall(io, callId, toUserId, fromUserId);
+    return res.status(200).json({ success: true, message: "Call rejected successfully" });
+  } catch (err) {
+    console.error("[WebRTC] Error in rejectCallHttp:", err);
+    return res.status(500).json({ message: "Failed to reject call" });
+  }
+};

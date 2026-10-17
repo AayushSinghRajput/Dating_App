@@ -26,11 +26,10 @@ try {
   if (Notifications?.setNotificationHandler) {
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
         shouldShowBanner: true,
         shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
       }),
     });
   }
@@ -42,66 +41,85 @@ export { Notifications };
 
 const PUSH_TOKEN_STORAGE_KEY = "expo_push_token";
 
+export async function setupNotificationChannelsAndCategoriesAsync(): Promise<void> {
+  if (!Notifications || Platform.OS !== "android") return;
+  try {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "Soulmate Notifications",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#e63946",
+      sound: "default",
+    });
+
+    // Remove older channels
+    await Notifications.deleteNotificationChannelAsync("voip_calls_v2").catch(() => {});
+    await Notifications.deleteNotificationChannelAsync("voip_calls_v3").catch(() => {});
+
+    // 30 seconds continuous ringing vibration pattern
+    const callVibrationPattern = [
+      0, 1200, 800, 1200, 800, 1200, 800, 1200, 800, 1200, 800,
+      1200, 800, 1200, 800, 1200, 800, 1200, 800, 1200, 800,
+      1200, 800, 1200, 800, 1200, 800, 1200, 800, 1200, 800,
+    ];
+
+    // High-importance channel specifically for incoming VoIP calls
+    await Notifications.setNotificationChannelAsync("voip_calls_v4", {
+      name: "Voice & Video Calls",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: callVibrationPattern,
+      lightColor: "#e63946",
+      sound: "default",
+      audioAttributes: {
+        usage: Notifications.AndroidAudioUsage.NOTIFICATION_RINGTONE,
+        contentType: Notifications.AndroidAudioContentType.SONIFICATION,
+        flags: {
+          enforceAudibility: true,
+          requestHardwareAudioVideoSynchronization: false,
+        },
+      },
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: true,
+      enableLights: true,
+      enableVibrate: true,
+      showBadge: true,
+    });
+
+    // Call action buttons: Accept & Decline
+    await Notifications.setNotificationCategoryAsync("incoming_call", [
+      {
+        identifier: "accept",
+        buttonTitle: "Accept",
+        options: {
+          opensAppToForeground: true,
+        },
+      },
+      {
+        identifier: "decline",
+        buttonTitle: "Decline",
+        options: {
+          opensAppToForeground: false,
+          isDestructive: true,
+        },
+      },
+    ]);
+  } catch (err) {
+    console.warn("[Push Notifications] Error configuring channels/categories:", err);
+  }
+}
+
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
   if (!Notifications || !Device) {
-    console.log(
-      "[Push Notifications] Native modules not linked in current dev build. Push notifications will activate after a new dev client build."
-    );
     return null;
   }
 
   try {
+    // Unconditionally configure channels and categories on both physical devices and emulators
+    await setupNotificationChannelsAndCategoriesAsync();
+
     if (!Device.isDevice) {
-      console.log("[Push Notifications] Must use physical device for push notifications.");
+      console.log("[Push Notifications] Emulator detected. Channels & categories configured; skipping token push registration.");
       return null;
-    }
-
-    // Set up Android notification channels & categories
-    if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "Soulmate Notifications",
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#e63946",
-        sound: "default",
-      });
-
-      // High-importance channel specifically for incoming VoIP calls
-      await Notifications.setNotificationChannelAsync("voip_calls_v2", {
-        name: "Voice & Video Calls",
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 1000, 500, 1000, 500, 1000],
-        lightColor: "#e63946",
-        sound: "default",
-        audioAttributes: {
-          usage: Notifications.AndroidAudioUsage.NOTIFICATION_COMMUNICATION_REQUEST,
-          contentType: Notifications.AndroidAudioContentType.SONIFICATION,
-        },
-        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-        bypassDnd: true,
-        enableLights: true,
-        enableVibrate: true,
-        showBadge: true,
-      });
-
-      // Call action buttons: Accept & Decline
-      await Notifications.setNotificationCategoryAsync("incoming_call", [
-        {
-          identifier: "accept",
-          buttonTitle: "Accept",
-          options: {
-            opensAppToForeground: true,
-          },
-        },
-        {
-          identifier: "decline",
-          buttonTitle: "Decline",
-          options: {
-            opensAppToForeground: false,
-            isDestructive: true,
-          },
-        },
-      ]);
     }
 
     // Request permissions
@@ -163,6 +181,7 @@ export function usePushNotifications() {
   useEffect(() => {
     if (!Notifications) return;
 
+    setupNotificationChannelsAndCategoriesAsync().catch(() => {});
     registerForPushNotificationsAsync();
 
     try {

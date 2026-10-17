@@ -60,3 +60,24 @@ export const getIceServers = async (): Promise<IceServerConfig[]> => {
 
   return DEFAULT_ICE_SERVERS;
 };
+
+/**
+ * Rejects or declines an active incoming call on the backend.
+ * Serves as a reliable fallback so the caller is immediately notified even if socket is reconnecting.
+ */
+export const rejectCallApi = async (callId: string, toUserId?: string): Promise<boolean> => {
+  if (!callId && !toUserId) return false;
+  try {
+    const res = await fetch(`${BASE_URL}/api/calls/reject`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ callId, toUserId }),
+    });
+    return res.ok;
+  } catch (error) {
+    console.warn("[CallService] Error notifying backend of call rejection:", error);
+    return false;
+  }
+};
