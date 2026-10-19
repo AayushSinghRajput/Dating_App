@@ -28,6 +28,8 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import callRoutes from "./routes/callRoutes.js";
 import legalRoutes from "./routes/legalRoutes.js";
+import configRoutes from "./routes/configRoutes.js";
+import AppConfig from "./models/appConfigModel.js";
 
 dotenv.config();
 validateEnv();
@@ -81,6 +83,48 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use("/api", apiLimiter);
 app.use("/api/auth", authLimiter);
 
+// In-memory cache for maintenance mode with a 10s TTL
+let maintenanceCache = { active: false, notice: "", expires: 0 };
+app.use(async (req, res, next) => {
+  // Bypass maintenance check for admin management, public config, legal routes, and static assets
+  if (
+    req.path.startsWith("/api/admin") ||
+    req.path.startsWith("/api/config") ||
+    req.path.startsWith("/api/announcements") ||
+    req.path.startsWith("/api/flags") ||
+    req.path.startsWith("/api/legal") ||
+    req.path.startsWith("/health") ||
+    !req.path.startsWith("/api")
+  ) {
+    return next();
+  }
+
+  const now = Date.now();
+  if (maintenanceCache.expires < now) {
+    try {
+      const config = await AppConfig.findOne({ key: "global_dating_config" })
+        .select("maintenanceMode maintenanceNotice")
+        .lean();
+      maintenanceCache = {
+        active: Boolean(config?.maintenanceMode),
+        notice: config?.maintenanceNotice || "We are currently performing scheduled system maintenance. Soulmate will be back online shortly.",
+        expires: now + 10000,
+      };
+    } catch {
+      maintenanceCache.expires = now + 10000;
+    }
+  }
+
+  if (maintenanceCache.active) {
+    return res.status(503).json({
+      message: maintenanceCache.notice,
+      maintenance: true,
+    });
+  }
+
+  next();
+});
+
 //HTTP server + socket.io
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
@@ -100,6 +144,11 @@ app.use("/api/premium", premiumRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/calls", callRoutes);
+app.use("/api/config", configRoutes);
+app.use("/api/plans", configRoutes);
+app.use("/api/flags", configRoutes);
+app.use("/api/coupons", configRoutes);
+app.use("/api/announcements", configRoutes);
 app.use("/", legalRoutes);
 
 app.get("/", (req, res) => {

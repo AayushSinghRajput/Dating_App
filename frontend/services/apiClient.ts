@@ -1,5 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from "react-native-toast-message";
+import * as Application from "expo-application";
+import * as Crypto from "expo-crypto";
+import { Platform } from "react-native";
 
 // Shared HTTP/auth infrastructure used by every feature service. Not a
 // feature itself — keep this file to plumbing only (base URL, token
@@ -22,15 +25,71 @@ export const BASE_URL = __DEV__
 
 console.log("[apiClient] Active BASE_URL:", BASE_URL, "__DEV__:", __DEV__);
 
-let isHandlingAuthFailure = false;
+let cachedDeviceId: string | null = null;
 
 /**
- * Handles 401 (Unauthorized) and 403 (Forbidden/Access Denied) HTTP responses.
+ * Returns a stable, persistent device identifier.
+ * Uses Android ID on Android or a stored UUID on iOS/web.
+ */
+export const getDeviceId = async (): Promise<string> => {
+  if (cachedDeviceId) return cachedDeviceId;
+  try {
+    let id = await AsyncStorage.getItem("@soulmate_device_id");
+    if (!id) {
+      if (Platform.OS === "android") {
+        id = Application.getAndroidId() || Crypto.randomUUID();
+      } else if (Platform.OS === "ios") {
+        id = (await Application.getIosIdForVendorAsync()) || Crypto.randomUUID();
+      } else {
+        id = Crypto.randomUUID();
+      }
+      if (id) {
+        await AsyncStorage.setItem("@soulmate_device_id", id);
+      }
+    }
+    cachedDeviceId = id || "unknown-device";
+    return cachedDeviceId;
+  } catch {
+    return "unknown-device";
+  }
+};
+
+let isHandlingAuthFailure = false;
+let isHandlingMaintenance = false;
+
+/**
+ * Handles 401 (Unauthorized), 403 (Forbidden/Access Denied), and 503 (Maintenance).
  * When the backend rejects the request due to an expired/invalid token or suspension,
  * this clears the stored session and informs the user via Toast.
  * Throttled to prevent multiple simultaneous requests from spamming logouts/toasts.
  */
 export const handleAuthFailure = async (response: Response): Promise<boolean> => {
+  if (response.status === 503) {
+    if (!isHandlingMaintenance) {
+      isHandlingMaintenance = true;
+      try {
+        let message = "We are currently undergoing scheduled maintenance. Please check back shortly.";
+        try {
+          const clone = response.clone();
+          const data = await clone.json();
+          if (data?.message) message = data.message;
+        } catch {}
+
+        Toast.show({
+          type: "error",
+          text1: "Maintenance Mode",
+          text2: message,
+          visibilityTime: 5000,
+        });
+      } finally {
+        setTimeout(() => {
+          isHandlingMaintenance = false;
+        }, 5000);
+      }
+    }
+    return true;
+  }
+
   if (response.status === 401 || response.status === 403) {
     const currentToken = token || (await AsyncStorage.getItem("token"));
     if (currentToken && !isHandlingAuthFailure) {
@@ -72,8 +131,15 @@ export const fetchWithTimeout = async (
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   try {
+    const deviceId = await getDeviceId().catch(() => "");
+    const headers = new Headers(options.headers || {});
+    if (deviceId && !headers.has("x-device-id")) {
+      headers.set("x-device-id", deviceId);
+    }
+
     const res = await fetch(url, {
       ...options,
+      headers,
       signal: controller.signal,
     });
     if (!url.includes("/api/auth/login") && !url.includes("/api/auth/register")) {
@@ -138,4 +204,59 @@ export const getHeaders = (withAuth: boolean = false): Record<string, string> =>
   };
   if (withAuth && token) headers.Authorization = `Bearer ${token}`;
   return headers;
+};
+
+// --- Client Configuration & Announcements ---
+
+export interface ClientLimits {
+  freeDailySwipeLimit: number;
+  premiumDailySwipeLimit: number;
+  freeSuperLikesPerWeek: number;
+  boostDurationMinutes: number;
+  defaultDiscoveryRadiusKm: number;
+  maxDiscoveryRadiusKm: number;
+}
+
+export interface ClientConfigResponse {
+  limits: ClientLimits;
+  maintenance: {
+    active: boolean;
+    notice: string;
+  };
+}
+
+export const fetchClientConfig = async (): Promise<ClientConfigResponse | null> => {
+  try {
+    const res = await fetchWithTimeout(`${BASE_URL}/api/config/client`, {
+      method: "GET",
+      headers: getHeaders(false),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+};
+
+export interface AnnouncementItem {
+  _id: string;
+  title: string;
+  message: string;
+  type: "info" | "warning" | "promo" | "critical";
+  ctaText?: string;
+  ctaLink?: string;
+}
+
+export const fetchActiveAnnouncements = async (): Promise<AnnouncementItem[]> => {
+  try {
+    const res = await fetchWithTimeout(`${BASE_URL}/api/announcements/active`, {
+      method: "GET",
+      headers: getHeaders(false),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.announcements || [];
+  } catch {
+    return [];
+  }
 };

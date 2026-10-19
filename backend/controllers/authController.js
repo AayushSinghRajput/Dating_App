@@ -1,11 +1,29 @@
 import User from "../models/userModel.js";
 import { generateToken } from "../utils/generate_token.js";
 import { generateUniqueReferralCode, applyReferralReward } from "../utils/referral.js";
+import { checkDeviceBlacklist } from "../utils/deviceCheck.js";
+
+function getClientDeviceInfo(req) {
+  const deviceId = (req.headers["x-device-id"] || req.body?.deviceId || "").toString().trim();
+  const hardwareFingerprint = (req.headers["x-hardware-fingerprint"] || req.body?.hardwareFingerprint || "").toString().trim();
+  const ip = (req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket?.remoteAddress || "").trim();
+  return { deviceId, hardwareFingerprint, ip };
+}
 
 // @desc    Register user
 // @route   POST /api/auth/register
 export const registerUser = async (req, res) => {
   const { username, email, password, acceptedTerms, referralCode } = req.body;
+  const { deviceId, hardwareFingerprint, ip } = getClientDeviceInfo(req);
+
+  // Check if device or IP is blacklisted
+  const blacklisted = await checkDeviceBlacklist(req);
+  if (blacklisted) {
+    return res.status(403).json({
+      message: `Access denied. This device has been suspended (${blacklisted.reason || "Policy violation"}).`,
+      banned: true,
+    });
+  }
 
   if (!username || !email || !password)
     return res.status(400).json({ message: "All fields are required" });
@@ -31,6 +49,9 @@ export const registerUser = async (req, res) => {
     termsAcceptedAt: new Date(),
     referralCode: await generateUniqueReferralCode(),
     referredBy: referrer?._id,
+    deviceId: deviceId || undefined,
+    hardwareFingerprint: hardwareFingerprint || undefined,
+    lastIp: ip || undefined,
   });
 
   if (referrer) {
@@ -50,6 +71,16 @@ export const registerUser = async (req, res) => {
 // @route   POST /api/auth/login
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
+  const { deviceId, hardwareFingerprint, ip } = getClientDeviceInfo(req);
+
+  // Check if device or IP is blacklisted
+  const blacklisted = await checkDeviceBlacklist(req);
+  if (blacklisted) {
+    return res.status(403).json({
+      message: `Access denied. This device has been suspended (${blacklisted.reason || "Policy violation"}).`,
+      banned: true,
+    });
+  }
 
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required" });
@@ -63,6 +94,22 @@ export const loginUser = async (req, res) => {
     });
   }
   if (user && (await user.matchPassword(password))) {
+    if (user.banned) {
+      return res.status(403).json({ message: "Your account has been suspended.", banned: true });
+    }
+    if (user.frozen) {
+      return res.status(403).json({
+        message: user.frozenReason || "Your account has been temporarily frozen by an administrator.",
+        frozen: true,
+      });
+    }
+
+    // Update user device and IP records
+    if (deviceId && user.deviceId !== deviceId) user.deviceId = deviceId;
+    if (hardwareFingerprint && user.hardwareFingerprint !== hardwareFingerprint) user.hardwareFingerprint = hardwareFingerprint;
+    if (ip && user.lastIp !== ip) user.lastIp = ip;
+    await user.save();
+
     return res.json({
       _id: user._id,
       username: user.username,
@@ -86,6 +133,17 @@ export const loginUser = async (req, res) => {
 // @access  Public
 export const googleAuth = async (req, res) => {
   const { idToken, acceptedTerms } = req.body;
+  const { deviceId, hardwareFingerprint, ip } = getClientDeviceInfo(req);
+
+  // Check if device or IP is blacklisted
+  const blacklisted = await checkDeviceBlacklist(req);
+  if (blacklisted) {
+    return res.status(403).json({
+      message: `Access denied. This device has been suspended (${blacklisted.reason || "Policy violation"}).`,
+      banned: true,
+    });
+  }
+
   if (!idToken) return res.status(400).json({ message: "idToken is required" });
 
   const verifyRes = await fetch(
@@ -127,10 +185,26 @@ export const googleAuth = async (req, res) => {
       termsAcceptedAt: new Date(),
       referralCode: await generateUniqueReferralCode(),
       emailVerified: payload.email_verified === "true" || payload.email_verified === true,
+      deviceId: deviceId || undefined,
+      hardwareFingerprint: hardwareFingerprint || undefined,
+      lastIp: ip || undefined,
     });
-  } else if (!user.googleId) {
-    // Existing email/password account signing in with Google for the first time — link it.
-    user.googleId = payload.sub;
+  } else {
+    if (user.banned) {
+      return res.status(403).json({ message: "Your account has been suspended.", banned: true });
+    }
+    if (user.frozen) {
+      return res.status(403).json({
+        message: user.frozenReason || "Your account has been temporarily frozen by an administrator.",
+        frozen: true,
+      });
+    }
+    if (!user.googleId) {
+      user.googleId = payload.sub;
+    }
+    if (deviceId && user.deviceId !== deviceId) user.deviceId = deviceId;
+    if (hardwareFingerprint && user.hardwareFingerprint !== hardwareFingerprint) user.hardwareFingerprint = hardwareFingerprint;
+    if (ip && user.lastIp !== ip) user.lastIp = ip;
     await user.save();
   }
 

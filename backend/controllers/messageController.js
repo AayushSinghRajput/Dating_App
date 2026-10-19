@@ -2,7 +2,7 @@ import Chat from "../models/chatModel.js";
 import Message from "../models/messageModel.js";
 import Profile from "../models/profileModel.js";
 import { isBlockedEitherWay } from "../utils/block.js";
-import { containsBannedContent } from "../utils/moderation.js";
+import { moderateContent } from "../utils/moderation.js";
 import { logEvent } from "../services/recommendation/eventLogger.js";
 import { sendPushToUser } from "../services/pushNotificationService.js";
 
@@ -126,13 +126,16 @@ export const sendMessage = async (req, res) => {
   if (!chatId || !text) {
     return res.status(400).json({ message: "Chat ID and text are required" });
   }
-  if (containsBannedContent(text)) {
-    return res.status(400).json({ message: "Your message was blocked by our content filter." });
+
+  const moderation = await moderateContent(text);
+  if (moderation.blocked) {
+    return res.status(400).json({ message: moderation.reason || "Your message was blocked by our content filter." });
   }
 
   await assertCanMessage(chatId, senderId);
 
-  const newMessage = await Message.create({ chat: chatId, sender: senderId, text });
+  const cleanText = moderation.text;
+  const newMessage = await Message.create({ chat: chatId, sender: senderId, text: cleanText });
   const messageWithProfile = await finalizeAndBroadcast(req, newMessage, senderId, { text: newMessage.text });
 
   res.status(201).json(messageWithProfile);

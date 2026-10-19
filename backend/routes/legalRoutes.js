@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import User from "../models/userModel.js";
+import DeletionRequest from "../models/deletionRequestModel.js";
 import { sendEmail } from "../utils/email.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -47,6 +48,17 @@ router.post("/api/legal/request-deletion", async (req, res) => {
         `[Account Deletion Request] Web request received for user ${user._id} (${normalizedEmail}). Reason: ${reason || "none"}`
       );
 
+      // Create or ensure pending DeletionRequest exists so Admin panel can view and process it
+      const existingReq = await DeletionRequest.findOne({ user: user._id, status: "pending" });
+      if (!existingReq) {
+        await DeletionRequest.create({
+          user: user._id,
+          reason: reason ? `[Web Request] ${reason}${details ? ` - ${details}` : ""}` : "Web deletion request (Google Play/App Store compliance)",
+          status: "pending",
+        });
+        console.log(`[Account Deletion Request] Queued DeletionRequest for user ${user._id}`);
+      }
+
       try {
         await sendEmail({
           to: normalizedEmail,
@@ -67,7 +79,7 @@ router.post("/api/legal/request-deletion", async (req, res) => {
             </p>
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
             <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-              Soulmate Dating App • com.aayushsinghrajput.Datingapp
+              Soulmate Dating App • com.aayushsinghrajput.soulmate
             </p>
           </div>`,
         });
