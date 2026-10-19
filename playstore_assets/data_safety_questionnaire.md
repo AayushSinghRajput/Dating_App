@@ -1,6 +1,6 @@
 # Google Play Console: Data Safety Questionnaire Guide
 **App Name:** Soulmate  
-**Package Name:** `com.aayushsinghrajput.Datingapp`  
+**Package Name:** `com.aayushsinghrajput.soulmate`  
 **Target Audience:** 18+ (Mature Dating & Matchmaking)  
 **Verification Status:** Verified for Play Store Policy & Compliance (2026)
 

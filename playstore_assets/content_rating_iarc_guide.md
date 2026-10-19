@@ -1,6 +1,6 @@
 # Google Play Console: Content Rating & IARC Questionnaire Guide
 **App Name:** Soulmate  
-**Package Name:** `com.aayushsinghrajput.Datingapp`  
+**Package Name:** `com.aayushsinghrajput.soulmate`  
 **Support Email:** `soulmatelumi@gmail.com`  
 **Classification:** Dating, Matchmaking & Social Discovery  
 **Compliance Target:** 18+ Mature (IARC / Google Play Policies 2026)
