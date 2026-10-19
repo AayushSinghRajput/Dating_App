@@ -43,19 +43,14 @@ export async function sendPushToUser(
         continue;
       }
 
-      const isCallSignaling =
-        type === "incoming_call" ||
-        type === "call_ended" ||
-        type === "call_rejected";
+      const isIncomingCall = type === "incoming_call";
+      const isCallTermination = type === "call_ended" || type === "call_rejected";
 
-      // For call signaling (incoming calls, ended, rejected):
-      // MUST NOT send top-level title, body, or channelId.
-      // Passing channelId, title, or body causes Expo and FCM to deliver an Android notification message,
-      // which Google Play Services intercepts in the system tray when the app is killed without waking onMessageReceived.
-      // Omitting channelId, title, and body ensures a 100% pure FCM DATA message,
-      // which forces Google Play Services to wake up CallFirebaseMessagingService.onMessageReceived(),
-      // start CallRingingService, play the ringtone, wake up the screen, and launch the incoming call screen.
-      const message = isCallSignaling
+      // For incoming calls: MUST include title, body, channelId ("voip_calls_v4"),
+      // and categoryId ("incoming_call") so Android system tray & Google Play Services
+      // will display the high-priority notification with ringtone, vibration, and Accept/Decline
+      // buttons even if the recipient device has the app killed / in sleep mode.
+      const message = isCallTermination
         ? {
             to: pushToken,
             data,
@@ -65,14 +60,19 @@ export async function sendPushToUser(
         : {
             to: pushToken,
             data,
-            title,
-            body,
+            title: isIncomingCall
+              ? (data?.fromName || "Incoming Call")
+              : title,
+            body: isIncomingCall
+              ? (data?.callType === "video" ? "Incoming Video Call..." : "Incoming Audio Call...")
+              : body,
             priority: "high",
-            channelId: channelId || "default",
-            sound: sound || "default",
-            sticky,
-            categoryId,
+            channelId: isIncomingCall ? "voip_calls_v4" : (channelId || "default"),
+            sound: "default",
+            sticky: isIncomingCall ? true : sticky,
+            categoryId: isIncomingCall ? "incoming_call" : categoryId,
             badge: 1,
+            _contentAvailable: true,
           };
 
       messages.push(message);

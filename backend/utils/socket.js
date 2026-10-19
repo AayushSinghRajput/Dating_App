@@ -20,8 +20,13 @@ export const getOnlineUserIds = () => {
   return Array.from(onlineUsers.keys());
 };
 
-// Global active calls tracker: callId -> { chatId, callerId, calleeId, callType, startedAt, answeredAt }
+// Global active calls tracker: callId -> { chatId, callerId, calleeId, callType, startedAt, answeredAt, offer }
 const activeCalls = new Map();
+
+export const getActiveCall = (callId) => {
+  if (!callId) return null;
+  return activeCalls.get(callId) || null;
+};
 
 export async function finalizeCall(io, callId, status) {
   const call = activeCalls.get(callId);

@@ -8,15 +8,13 @@ export interface IceServerConfig {
 }
 
 export const DEFAULT_ICE_SERVERS: IceServerConfig[] = [
-  { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
   {
     urls: [
-      "turn:openrelay.metered.ca:80",
-      "turn:openrelay.metered.ca:443",
-      "turn:openrelay.metered.ca:443?transport=tcp",
+      "stun:stun.l.google.com:19302",
+      "stun:stun1.l.google.com:19302",
+      "stun:stun2.l.google.com:19302",
+      "stun:stun.cloudflare.com:3478",
     ],
-    username: "openrelayproject",
-    credential: "openrelayproject",
   },
 ];
 
@@ -26,7 +24,7 @@ const CACHE_LIFETIME_MS = 30 * 60 * 1000; // 30 minutes in-memory cache
 
 /**
  * Fetches dedicated WebRTC ICE/TURN servers from the backend.
- * Falls back to public STUN/TURN if backend is unreachable or offline.
+ * Falls back to public STUN if backend is unreachable or offline.
  */
 export const getIceServers = async (): Promise<IceServerConfig[]> => {
   const now = Date.now();
@@ -35,16 +33,13 @@ export const getIceServers = async (): Promise<IceServerConfig[]> => {
   }
 
   const authToken = await AsyncStorage.getItem("token");
-  if (!authToken) {
-    return DEFAULT_ICE_SERVERS;
+  const headers: Record<string, string> = {};
+  if (authToken) {
+    headers["Authorization"] = `Bearer ${authToken}`;
   }
 
   try {
-    const res = await fetch(`${BASE_URL}/api/calls/ice-servers`, {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-    });
+    const res = await fetch(`${BASE_URL}/api/calls/ice-servers`, { headers });
 
     if (res.ok) {
       const data = await res.json();
@@ -59,6 +54,47 @@ export const getIceServers = async (): Promise<IceServerConfig[]> => {
   }
 
   return DEFAULT_ICE_SERVERS;
+};
+
+/**
+ * Retrieves the SDP offer for an active call from the backend.
+ * Critical fallback when push notification or socket didn't include the SDP offer.
+ */
+export const getCallOfferApi = async (callId: string): Promise<any | null> => {
+  if (!callId) return null;
+  try {
+    const res = await fetch(`${BASE_URL}/api/calls/${callId}/offer`);
+    if (res.ok) {
+      const data = await res.json();
+      return data?.offer || null;
+    }
+  } catch (error) {
+    console.warn("[CallService] Error fetching call offer via HTTP:", error);
+  }
+  return null;
+};
+
+/**
+ * Relays an answered call SDP answer to the caller via backend HTTP.
+ * Serves as a reliable backup when socket is reconnecting.
+ */
+export const answerCallApi = async (
+  callId: string,
+  toUserId: string,
+  answer: any
+): Promise<boolean> => {
+  if (!callId || !answer) return false;
+  try {
+    const res = await fetch(`${BASE_URL}/api/calls/answer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ callId, toUserId, answer }),
+    });
+    return res.ok;
+  } catch (error) {
+    console.warn("[CallService] Error relaying answer via HTTP:", error);
+    return false;
+  }
 };
 
 /**
