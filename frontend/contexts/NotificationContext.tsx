@@ -99,13 +99,26 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       router.replace("/auth/login");
     };
 
+    const handleAccountFrozen = async ({ message }: { message?: string }) => {
+      Toast.show({
+        type: "error",
+        text1: "Account Temporarily Frozen",
+        text2: message || "Your account has been temporarily frozen by an administrator.",
+        visibilityTime: 6000,
+      });
+      await clearToken();
+      router.replace("/auth/login");
+    };
+
     socket.on("newNotification", handleNewNotification);
     socket.on("notificationRemoved", handleNotificationRemoved);
     socket.on("accountBanned", handleAccountBanned);
+    socket.on("accountFrozen", handleAccountFrozen);
     return () => {
       socket.off("newNotification", handleNewNotification);
       socket.off("notificationRemoved", handleNotificationRemoved);
       socket.off("accountBanned", handleAccountBanned);
+      socket.off("accountFrozen", handleAccountFrozen);
     };
   }, [router]);
 

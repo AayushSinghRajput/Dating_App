@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
+import { checkDeviceBlacklist } from "../utils/deviceCheck.js";
 
 export const protect = async (req, res, next) => {
   let token;
@@ -18,6 +19,22 @@ export const protect = async (req, res, next) => {
       if (req.user.banned) {
         return res.status(403).json({ message: "Your account has been suspended.", banned: true });
       }
+      if (req.user.frozen) {
+        return res.status(403).json({
+          message: req.user.frozenReason || "Your account has been temporarily frozen by an administrator.",
+          frozen: true,
+        });
+      }
+
+      // Enforce device & network bans
+      const blacklisted = await checkDeviceBlacklist(req);
+      if (blacklisted) {
+        return res.status(403).json({
+          message: `Access denied. This device has been suspended (${blacklisted.reason || "Policy violation"}).`,
+          banned: true,
+        });
+      }
+
       next();
     } catch (error) {
         console.log("Middleware Error:",error);
