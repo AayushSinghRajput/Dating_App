@@ -24,7 +24,14 @@ import {
 import InCallManager from "react-native-incall-manager";
 import Toast from "react-native-toast-message";
 import { socket, connectSocket } from "../utils/socket";
-import { getIceServers, DEFAULT_ICE_SERVERS, rejectCallApi, endCallApi } from "@/services/callService";
+import {
+  getIceServers,
+  DEFAULT_ICE_SERVERS,
+  rejectCallApi,
+  endCallApi,
+  getCallOfferApi,
+  answerCallApi,
+} from "@/services/callService";
 import { Notifications } from "../src/hooks/usePushNotifications";
 
 const { CallRingingModule } = NativeModules;
@@ -146,17 +153,49 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const createPeerConnection = useCallback((toUserId: string, iceServers: any = DEFAULT_ICE_SERVERS) => {
-    const pc = new RTCPeerConnection({ iceServers });
+    console.log("[CallContext] Creating RTCPeerConnection with", iceServers?.length || 0, "ICE servers");
+    const pc = new RTCPeerConnection({
+      iceServers: Array.isArray(iceServers) && iceServers.length > 0 ? iceServers : DEFAULT_ICE_SERVERS,
+    });
 
     pc.onicecandidate = (event: any) => {
       if (event.candidate) {
-        socket.emit("iceCandidate", { toUserId, candidate: event.candidate });
+        const candidateData =
+          typeof event.candidate.toJSON === "function"
+            ? event.candidate.toJSON()
+            : event.candidate;
+        socket.emit("iceCandidate", { toUserId, candidate: candidateData });
       }
     };
 
     pc.ontrack = (event: any) => {
+      console.log("[CallContext] ontrack received:", event.track?.kind, "streams:", event.streams?.length);
       if (event.streams && event.streams[0]) {
         setRemoteStream(event.streams[0]);
+      } else if (event.track) {
+        const newStream = new MediaStream([event.track]);
+        setRemoteStream(newStream);
+      }
+    };
+
+    pc.oniceconnectionstatechange = () => {
+      console.log("[CallContext] ICE connection state:", pc.iceConnectionState);
+      if (pc.iceConnectionState === "failed") {
+        console.warn("[CallContext] ICE failed, attempting restart...");
+        try {
+          if (typeof (pc as any).restartIce === "function") {
+            (pc as any).restartIce();
+          }
+        } catch (e) {
+          console.warn("[CallContext] restartIce error:", e);
+        }
+      }
+    };
+
+    pc.onconnectionstatechange = () => {
+      console.log("[CallContext] Peer connection state:", pc.connectionState);
+      if (pc.connectionState === "connected") {
+        console.log("[CallContext] WebRTC P2P media connected successfully!");
       }
     };
 
@@ -165,14 +204,17 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const flushPendingCandidates = useCallback(async (pc: RTCPeerConnection) => {
-    for (const candidate of pendingCandidatesRef.current) {
+    if (pendingCandidatesRef.current.length === 0) return;
+    console.log("[CallContext] Flushing", pendingCandidatesRef.current.length, "pending ICE candidates");
+    const queued = [...pendingCandidatesRef.current];
+    pendingCandidatesRef.current = [];
+    for (const candidate of queued) {
       try {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (err) {
-        console.error("Failed to add queued ICE candidate:", err);
+        console.warn("[CallContext] Failed to add queued ICE candidate:", err);
       }
     }
-    pendingCandidatesRef.current = [];
   }, []);
 
   const handleIncomingCall = useCallback(
@@ -203,6 +245,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         callIdRef.current === callId &&
         (callStatusRef.current === "incoming-ringing" || callStatusRef.current === "connected")
       ) {
+        // If ringing without an offer (e.g. from push notification), save the late offer from socket!
+        if (offer && !pendingOfferRef.current) {
+          console.log("[CallContext] Late SDP offer attached to active ringing call:", callId);
+          pendingOfferRef.current = offer;
+        }
         return;
       }
 
@@ -433,7 +480,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             return;
           }
 
-          if (processedCallIdsRef.current.has(incomingCallId)) {
+          if (processedCallIdsRef.current.has(incomingCallId) && !callAction && callStatusRef.current !== "idle") {
             console.log("[CallContext] Deep link already processed, skipping replay:", incomingCallId);
             return;
           }
@@ -627,7 +674,56 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   );
 
   const acceptCall = useCallback(async () => {
-    if (!remoteUserRef.current || !pendingOfferRef.current) return;
+    if (!remoteUserRef.current) {
+      console.warn("[CallContext] Cannot accept call: remoteUser is null");
+      return;
+    }
+
+    const activeCallId = callIdRef.current;
+    let offer = pendingOfferRef.current;
+
+    // Resilient offer recovery: if offer wasn't received yet via socket or push
+    if (!offer && activeCallId) {
+      console.log("[CallContext] acceptCall: pendingOffer missing, retrieving from server for callId:", activeCallId);
+      // 1. Try socket checkCallStatus with timeout
+      offer = await new Promise((resolve) => {
+        let done = false;
+        const timer = setTimeout(() => {
+          if (!done) {
+            done = true;
+            resolve(null);
+          }
+        }, 1200);
+
+        socket.emit("checkCallStatus", { callId: activeCallId }, (res: any) => {
+          if (!done) {
+            done = true;
+            clearTimeout(timer);
+            resolve(res?.call?.offer || null);
+          }
+        });
+      });
+
+      // 2. Fallback to HTTP endpoint
+      if (!offer) {
+        offer = await getCallOfferApi(activeCallId);
+      }
+
+      if (offer) {
+        pendingOfferRef.current = offer;
+        console.log("[CallContext] Offer successfully retrieved from server!");
+      }
+    }
+
+    if (!offer) {
+      console.error("[CallContext] Failed to obtain call offer on accept");
+      Toast.show({
+        type: "error",
+        text1: "Connection Error",
+        text2: "Call data not received. Please try again.",
+      });
+      return;
+    }
 
     const granted = await requestCallPermissions(callTypeRef.current);
     if (!granted) {
@@ -655,17 +751,20 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         .getTracks()
         .forEach((track: any) => pc.addTrack(track, stream as any));
 
-      await pc.setRemoteDescription(new RTCSessionDescription(pendingOfferRef.current));
-      await flushPendingCandidates(pc);
-
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
+      await flushPendingCandidates(pc);
 
       socket.emit("answerCall", {
         toUserId: remoteUserRef.current.userId,
         answer,
         callId: callIdRef.current,
       });
+
+      if (activeCallId) {
+        answerCallApi(activeCallId, remoteUserRef.current.userId, answer).catch(() => {});
+      }
 
       InCallManager.stopRingtone();
       if (Platform.OS === "android" && CallRingingModule?.stopRinging) {

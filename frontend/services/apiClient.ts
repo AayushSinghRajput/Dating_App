@@ -20,6 +20,8 @@ export const BASE_URL = __DEV__
       ? process.env.EXPO_PUBLIC_API_URL
       : PRODUCTION_API_URL);
 
+console.log("[apiClient] Active BASE_URL:", BASE_URL, "__DEV__:", __DEV__);
+
 let isHandlingAuthFailure = false;
 
 /**
